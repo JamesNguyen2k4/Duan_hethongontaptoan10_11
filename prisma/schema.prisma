@@ -1,0 +1,319 @@
+// Prisma Schema – Hệ thống ôn tập Toán 10-11
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// PHÂN QUYỀN & TÀI KHOẢN
+// ─────────────────────────────────────────────
+
+enum VaiTro {
+  HOC_SINH
+  GIAO_VIEN
+  QUAN_TRI
+}
+
+model NguoiDung {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  tenHienThi    String
+  matKhauBam    String?
+  vaiTro        VaiTro    @default(HOC_SINH)
+  anhDaiDien    String?
+  taoLuc        DateTime  @default(now())
+  capNhatLuc    DateTime  @updatedAt
+  dangHoatDong  Boolean   @default(true)
+
+  // Auth.js relations
+  accounts      TaiKhoanOAuth[]
+  sessions      PhienDangNhap[]
+
+  // Học tập
+  lanLamBais    LanLamBai[]
+  theOnTaps     TheOnTap[]
+  tienDos       TienDo[]
+  baiViets      BaiViet[]
+  binhLuans     BinhLuan[]
+  baoCaos       BaoCao[]
+
+  @@map("nguoi_dung")
+}
+
+// Auth.js – OAuth accounts
+model TaiKhoanOAuth {
+  id                String   @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?  @db.Text
+  access_token      String?  @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?  @db.Text
+  session_state     String?
+
+  user NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("tai_khoan_oauth")
+}
+
+// Auth.js – Sessions
+model PhienDangNhap {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("phien_dang_nhap")
+}
+
+// Auth.js – Verification tokens (email verify, password reset)
+model MaXacThuc {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("ma_xac_thuc")
+}
+
+// ─────────────────────────────────────────────
+// LÝ THUYẾT: Lớp > Chương > Bài
+// ─────────────────────────────────────────────
+
+model Lop {
+  id       String   @id @default(cuid())
+  ten      String   // "Toán 10", "Toán 11"
+  thuTu    Int
+  chuongs  Chuong[]
+
+  @@map("lop")
+}
+
+model Chuong {
+  id      String  @id @default(cuid())
+  lopId   String
+  ten     String
+  thuTu   Int
+  moTa    String?
+
+  lop     Lop     @relation(fields: [lopId], references: [id], onDelete: Cascade)
+  bais    Bai[]
+  chuDes  ChuDe[]
+
+  @@map("chuong")
+}
+
+model Bai {
+  id          String   @id @default(cuid())
+  chuongId    String
+  tieu_de     String
+  noiDung     String   @db.Text   // Markdown + LaTeX
+  thuTu       Int
+  taoLuc      DateTime @default(now())
+  capNhatLuc  DateTime @updatedAt
+
+  chuong  Chuong     @relation(fields: [chuongId], references: [id], onDelete: Cascade)
+  tienDos TienDo[]
+
+  @@map("bai")
+}
+
+// ─────────────────────────────────────────────
+// NGÂN HÀNG BÀI TẬP
+// ─────────────────────────────────────────────
+
+enum LoaiBaiTap {
+  TRAC_NGHIEM
+  DIEN_DAP_AN
+  TU_LUAN
+}
+
+enum MucDo {
+  NHAN_BIET
+  THONG_HIEU
+  VAN_DUNG
+  VAN_DUNG_CAO
+}
+
+model ChuDe {
+  id       String  @id @default(cuid())
+  chuongId String
+  ten      String
+  thuTu    Int
+
+  chuong   Chuong    @relation(fields: [chuongId], references: [id], onDelete: Cascade)
+  baiTaps  BaiTap[]
+  baiViets BaiViet[]
+
+  @@map("chu_de")
+}
+
+model BaiTap {
+  id            String     @id @default(cuid())
+  chuDeId       String
+  deBai         String     @db.Text   // Markdown + LaTeX
+  loai          LoaiBaiTap
+  mucDo         MucDo
+  dapAn         String     @db.Text   // JSON cho trắc nghiệm, string cho điền đáp án
+  loiGiaiChiTiet String    @db.Text
+  dangBai       String?    // ví dụ: "giải phương trình bậc 2"
+  soLanLam      Int        @default(0)
+  soLanDung     Int        @default(0)
+  taoLuc        DateTime   @default(now())
+  capNhatLuc    DateTime   @updatedAt
+
+  chuDe     ChuDe      @relation(fields: [chuDeId], references: [id])
+  lanLamBais LanLamBai[]
+  theOnTaps  TheOnTap[]
+  baiViets   BaiViet[]
+
+  @@index([chuDeId, mucDo])
+  @@index([loai, mucDo])
+  @@map("bai_tap")
+}
+
+// ─────────────────────────────────────────────
+// LÀM BÀI & LỊCH SỬ
+// ─────────────────────────────────────────────
+
+enum KetQuaLamBai {
+  DUNG
+  SAI
+  CHO_CHAM  // tự luận chờ giáo viên chấm
+}
+
+model LanLamBai {
+  id          String        @id @default(cuid())
+  nguoiDungId String
+  baiTapId    String
+  baiLam      String        @db.Text  // JSON hoặc text bài tự luận
+  ketQua      KetQuaLamBai
+  thoiGianGiay Int?                   // thời gian làm bài tính bằng giây
+  thoiDiem    DateTime      @default(now())
+
+  nguoiDung NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+  baiTap    BaiTap    @relation(fields: [baiTapId], references: [id])
+
+  @@index([nguoiDungId, thoiDiem])
+  @@map("lan_lam_bai")
+}
+
+// ─────────────────────────────────────────────
+// ÔN TẬP NGẮT QUÃNG (SM-2)
+// ─────────────────────────────────────────────
+
+model TheOnTap {
+  id              String   @id @default(cuid())
+  nguoiDungId     String
+  baiTapId        String
+  soLanOnLienTiep Int      @default(0)
+  heSoDe          Float    @default(2.5)  // EF - Ease Factor
+  khoangCachNgay  Int      @default(1)
+  ngayOnKeTiep    DateTime @default(now())
+  capNhatLuc      DateTime @updatedAt
+
+  nguoiDung NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+  baiTap    BaiTap    @relation(fields: [baiTapId], references: [id])
+
+  @@unique([nguoiDungId, baiTapId])
+  @@index([nguoiDungId, ngayOnKeTiep])
+  @@map("the_on_tap")
+}
+
+// ─────────────────────────────────────────────
+// TIẾN ĐỘ HỌC LÝ THUYẾT
+// ─────────────────────────────────────────────
+
+model TienDo {
+  id          String   @id @default(cuid())
+  nguoiDungId String
+  baiId       String
+  daDanhDau   Boolean  @default(false)
+  thoiDiem    DateTime @default(now())
+
+  nguoiDung NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+  bai       Bai       @relation(fields: [baiId], references: [id])
+
+  @@unique([nguoiDungId, baiId])
+  @@map("tien_do")
+}
+
+// ─────────────────────────────────────────────
+// DIỄN ĐÀN
+// ─────────────────────────────────────────────
+
+enum TrangThaiBaiViet {
+  HIEN_THI
+  AN
+  DA_XOA
+}
+
+model BaiViet {
+  id          String           @id @default(cuid())
+  nguoiDungId String
+  chuDeId     String?
+  baiTapId    String?          // liên kết trực tiếp vào bài tập cụ thể
+  tieuDe      String
+  noiDung     String           @db.Text  // Markdown + LaTeX
+  trangThai   TrangThaiBaiViet @default(HIEN_THI)
+  taoLuc      DateTime         @default(now())
+  capNhatLuc  DateTime         @updatedAt
+
+  noiDungSearch String?        @db.Text
+
+  nguoiDung  NguoiDung  @relation(fields: [nguoiDungId], references: [id])
+  chuDe      ChuDe?     @relation(fields: [chuDeId], references: [id])
+  baiTap     BaiTap?    @relation(fields: [baiTapId], references: [id])
+  binhLuans  BinhLuan[]
+  baoCaos    BaoCao[]
+
+  @@index([trangThai, taoLuc(sort: Desc)])
+  @@map("bai_viet")
+}
+
+model BinhLuan {
+  id          String           @id @default(cuid())
+  baiVietId   String
+  nguoiDungId String
+  binhLuanChaId String?        // reply
+  noiDung     String           @db.Text
+  trangThai   TrangThaiBaiViet @default(HIEN_THI)
+  taoLuc      DateTime         @default(now())
+  capNhatLuc  DateTime         @updatedAt
+
+  baiViet     BaiViet    @relation(fields: [baiVietId], references: [id], onDelete: Cascade)
+  nguoiDung   NguoiDung  @relation(fields: [nguoiDungId], references: [id])
+  binhLuanCha BinhLuan?  @relation("BinhLuanCha", fields: [binhLuanChaId], references: [id])
+  binhLuanCon BinhLuan[] @relation("BinhLuanCha")
+  baoCaos     BaoCao[]
+
+  @@map("binh_luan")
+}
+
+model BaoCao {
+  id            String   @id @default(cuid())
+  nguoiDungId   String
+  baiVietId     String?
+  binhLuanId    String?
+  lyDo          String
+  taoLuc        DateTime @default(now())
+
+  nguoiDung NguoiDung @relation(fields: [nguoiDungId], references: [id])
+  baiViet   BaiViet?  @relation(fields: [baiVietId], references: [id])
+  binhLuan  BinhLuan? @relation(fields: [binhLuanId], references: [id])
+
+  @@map("bao_cao")
+}
