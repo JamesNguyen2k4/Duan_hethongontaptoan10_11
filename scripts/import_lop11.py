@@ -249,7 +249,11 @@ def is_solution_line(text):
     t = text.strip()
     if not t:
         return False
+    # Từ khóa đặc trưng của lời giải
     if re.match(r"^(?:Lời giải|Hướng dẫn|Chọn|Chọn|Đáp án|Ta có|Suy ra|Do đó|Vậy|Áp dụng|Theo bài|Theo giả thiết|Từ giả thiết|Mặt khác|Đẳng thức|Đặt|Xét|Nhận xét|Vì|Do|Bảng biến thiên|Đồ thị|Dấu\s+[\"=]|TH\d|Trường hợp|Kết luận|Như vậy|Tương tự|Kẻ|Gọi|Tam giác|Tứ giác|Hình chóp|Thiết diện|Góc giữa|Khoảng cách|Không gian mẫu|Biến cố|Xác suất|Số cách|Số phần tử|Điều kiện|ĐK|Tập nghiệm|Tập xác định|Phương trình tương đương|Hàm số|Đạo hàm|Giới hạn)\b", t, re.IGNORECASE):
+        return True
+    # Nhận diện giải thích từng phương án trong lời giải: "A sai vì...", "B đúng vì...", "Mệnh đề A sai..."
+    if re.match(r"^(?:[A-D]\s+(?:sai|đúng|thỏa|thoả|loại|không)|(?:Phương án|Mệnh đề|Khẳng định|Đáp án)\s+[A-D]\s+(?:sai|đúng|thỏa|thoả|loại))\b", t, re.IGNORECASE):
         return True
     if re.search(r"\b(?:ta có|suy ra|do đó|chọn [A-D]|đáp án [A-D]|vậy chọn [A-D])\b", t, re.IGNORECASE):
         return True
@@ -299,7 +303,7 @@ def parse_questions_from_paragraphs(paras):
         # Lọc bỏ các dòng tàn dư từ lời giải câu trước dính vào đầu đề bài câu sau
         while len(q_lines) > 1:
             first_l = q_lines[0].strip()
-            if re.match(r"^(Suy ra|Do đó|Vậy|Ta có|Theo bài|Áp dụng|Mặt khác|Đẳng thức|Từ giả thiết|Lời giải|Chọn|Chọn)\b", first_l, re.IGNORECASE) or (first_l.startswith("$") and ("=" in first_l or r"\approx" in first_l)):
+            if re.match(r"^(Suy ra|Do đó|Vậy|Ta có|Theo bài|Áp dụng|Mặt khác|Đẳng thức|Từ giả thiết|Lời giải|Chọn|Chọn|[A-D]\s+(?:sai|đúng|thỏa|thoả|loại|không)|(?:Phương án|Mệnh đề|Khẳng định|Đáp án)\s+[A-D])\b", first_l, re.IGNORECASE) or (first_l.startswith("$") and ("=" in first_l or r"\approx" in first_l)):
                 q_lines.pop(0)
             else:
                 break
@@ -378,7 +382,25 @@ def parse_questions_from_paragraphs(paras):
         norm_options = {k: normalize_math_text(v) for k, v in options.items()}
         norm_explanation = normalize_math_text(explanation)
 
-        if len(norm_options) >= 2 or norm_question:
+        # Kiểm tra tính hợp lệ của phương án: phải có đủ 4 phương án A, B, C, D và không phương án nào bị rỗng/chấm
+        valid_options_count = 0
+        has_empty_opt = False
+        for opt_key, opt_val in norm_options.items():
+            clean_val = re.sub(r'[\s;.,\$\\\{\}]+', '', opt_val)
+            if len(clean_val) > 0:
+                valid_options_count += 1
+            else:
+                has_empty_opt = True
+
+        is_broken = False
+        if len(norm_options) < 4 or valid_options_count < 4 or has_empty_opt:
+            is_broken = True
+        if norm_question.strip() in ("Cho . Kết quả đúng là:", "Cho . Kết quả đúng là") or len(norm_question.strip()) < 5:
+            is_broken = True
+        if re.match(r"^(?:Chọn|Chọn)\s+[A-D]\.?$", norm_question.strip()):
+            is_broken = True
+
+        if not is_broken:
             questions.append({
                 "id": f"bt-{uuid.uuid4().hex[:12]}",
                 "question": norm_question,

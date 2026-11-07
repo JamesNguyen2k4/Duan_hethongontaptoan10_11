@@ -23,6 +23,7 @@ interface NavigationProps {
   totalCount: number;
   prevBaiTapId: string | null;
   nextBaiTapId: string | null;
+  dangBaiQuery?: string;
 }
 
 interface Props {
@@ -114,7 +115,7 @@ export function PhongLamBaiForm({ baiTap, navigation }: Props) {
           prefetch={true}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98] text-xs font-semibold text-slate-700 transition-all shadow-2xs"
         >
-          <ArrowLeft className="w-3.5 h-3.5" /> Danh sách câu hỏi
+          <ArrowLeft className="w-3.5 h-3.5" /> Danh mục dạng bài
         </Link>
       </div>
 
@@ -125,6 +126,11 @@ export function PhongLamBaiForm({ baiTap, navigation }: Props) {
             <span className="text-xs font-bold bg-blue-600 text-white px-3 py-1 rounded-full shadow-2xs">
               Câu {navigation?.currentIndex || 1} / {navigation?.totalCount || 1}
             </span>
+            {baiTap.dangBai && (
+              <span className="text-xs font-semibold bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full border border-blue-200/60">
+                {baiTap.dangBai}
+              </span>
+            )}
             <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full">
               Mức độ: {baiTap.mucDo}
             </span>
@@ -136,7 +142,7 @@ export function PhongLamBaiForm({ baiTap, navigation }: Props) {
               <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
                 {navigation.prevBaiTapId ? (
                   <Link
-                    href={`/lam-bai/${navigation.prevBaiTapId}`}
+                    href={`/lam-bai/${navigation.prevBaiTapId}${navigation.dangBaiQuery || ""}`}
                     prefetch={true}
                     title="Câu trước đó"
                     className="p-1.5 hover:bg-white text-slate-700 rounded-lg transition-colors flex items-center gap-1 text-xs font-semibold shadow-2xs"
@@ -155,7 +161,7 @@ export function PhongLamBaiForm({ baiTap, navigation }: Props) {
 
                 {navigation.nextBaiTapId ? (
                   <Link
-                    href={`/lam-bai/${navigation.nextBaiTapId}`}
+                    href={`/lam-bai/${navigation.nextBaiTapId}${navigation.dangBaiQuery || ""}`}
                     prefetch={true}
                     title="Câu kế tiếp"
                     className="p-1.5 hover:bg-white text-slate-700 rounded-lg transition-colors flex items-center gap-1 text-xs font-semibold shadow-2xs"
@@ -320,7 +326,7 @@ export function PhongLamBaiForm({ baiTap, navigation }: Props) {
               {/* Nút làm câu tiếp theo */}
               {navigation?.nextBaiTapId ? (
                 <Link
-                  href={`/lam-bai/${navigation.nextBaiTapId}`}
+                  href={`/lam-bai/${navigation.nextBaiTapId}${navigation.dangBaiQuery || ""}`}
                   prefetch={true}
                   className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 cursor-pointer"
                 >
@@ -337,7 +343,7 @@ export function PhongLamBaiForm({ baiTap, navigation }: Props) {
                   className="px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span>Hoàn thành bài! Xem danh sách</span>
+                  <span>Hoàn thành dạng bài! Quay lại danh mục</span>
                 </Link>
               )}
             </div>

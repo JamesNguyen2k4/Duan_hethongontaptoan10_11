@@ -6,12 +6,16 @@ interface Props {
   params: {
     baiTapId: string;
   };
+  searchParams?: {
+    dangBai?: string;
+  };
 }
 
 export const dynamic = "force-dynamic";
 
-export default async function LamBaiDetailPage({ params }: Props) {
+export default async function LamBaiDetailPage({ params, searchParams }: Props) {
   const { baiTapId } = params;
+  const dangBaiFilter = searchParams?.dangBai;
 
   const baiTap = await db.baiTap.findUnique({
     where: { id: baiTapId },
@@ -28,19 +32,24 @@ export default async function LamBaiDetailPage({ params }: Props) {
     notFound();
   }
 
-  // Lấy toàn bộ danh sách ID các câu trong bài này để tính thứ tự & câu trước / câu sau
-  const allQuestionsInTopic = await db.baiTap.findMany({
-    where: { chuDeId: baiTap.chuDeId },
+  // Lọc theo Dạng bài nếu có yêu cầu luyện theo dạng
+  const whereScope: any = { chuDeId: baiTap.chuDeId };
+  if (dangBaiFilter) {
+    whereScope.dangBai = dangBaiFilter;
+  }
+
+  const allQuestionsInScope = await db.baiTap.findMany({
+    where: whereScope,
     orderBy: { taoLuc: "asc" },
     select: { id: true },
   });
 
-  const totalCount = allQuestionsInTopic.length;
-  const currentIndex = allQuestionsInTopic.findIndex((q) => q.id === baiTap.id);
-  const prevBaiTapId = currentIndex > 0 ? allQuestionsInTopic[currentIndex - 1].id : null;
+  const totalCount = allQuestionsInScope.length;
+  const currentIndex = allQuestionsInScope.findIndex((q) => q.id === baiTap.id);
+  const prevBaiTapId = currentIndex > 0 ? allQuestionsInScope[currentIndex - 1].id : null;
   const nextBaiTapId =
     currentIndex >= 0 && currentIndex < totalCount - 1
-      ? allQuestionsInTopic[currentIndex + 1].id
+      ? allQuestionsInScope[currentIndex + 1].id
       : null;
 
   let cacLuaChon = {};
@@ -69,6 +78,7 @@ export default async function LamBaiDetailPage({ params }: Props) {
           totalCount,
           prevBaiTapId,
           nextBaiTapId,
+          dangBaiQuery: dangBaiFilter ? `?dangBai=${encodeURIComponent(dangBaiFilter)}` : "",
         }}
       />
     </div>

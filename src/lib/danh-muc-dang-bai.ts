@@ -1,0 +1,390 @@
+// Danh mục các Dạng bài toán chuẩn hóa cho 33 Bài học Toán 11 (KNTT)
+
+export interface DangBaiInfo {
+  id: string; // VD: "lop11-b1-d1"
+  ten: string; // VD: "Dạng 1. Đơn vị đo góc & độ dài cung tròn"
+  moTa: string;
+}
+
+export interface BaiHocDangBaiConfig {
+  baiNum: number;
+  chuDeId: string;
+  chuongId: string;
+  tenBai: string;
+  dangs: DangBaiInfo[];
+}
+
+export const DANH_MUC_DANG_BAI: Record<string, BaiHocDangBaiConfig> = {
+  "lop11-c1-cd1": {
+    baiNum: 1,
+    chuDeId: "lop11-c1-cd1",
+    chuongId: "lop11-c1",
+    tenBai: "Bài 1. Giá trị lượng giác của góc lượng giác",
+    dangs: [
+      { id: "lop11-b1-d1", ten: "Dạng 1. Đơn vị đo góc & Độ dài cung tròn", moTa: "Chuyển đổi giữa độ và rađian, công thức tính độ dài cung tròn l = α.R" },
+      { id: "lop11-b1-d2", ten: "Dạng 2. Góc lượng giác & Biểu diễn trên đường tròn lượng giác", moTa: "Xác định điểm biểu diễn, công thức góc lượng giác cùng tia đầu, tia cuối" },
+      { id: "lop11-b1-d3", ten: "Dạng 3. Dấu của các giá trị lượng giác & Góc đặc biệt", moTa: "Xác định dấu của sin, cos, tan, cot theo các góc phần tư" },
+      { id: "lop11-b1-d4", ten: "Dạng 4. Tính giá trị & Rút gọn biểu thức lượng giác", moTa: "Sử dụng các hệ thức cơ bản, góc bù, phụ, hơn kém π để tính toán" },
+    ],
+  },
+  "lop11-c1-cd2": {
+    baiNum: 2,
+    chuDeId: "lop11-c1-cd2",
+    chuongId: "lop11-c1",
+    tenBai: "Bài 2. Công thức lượng giác",
+    dangs: [
+      { id: "lop11-b2-d1", ten: "Dạng 1. Áp dụng công thức cộng", moTa: "Công thức sin(a ± b), cos(a ± b), tan(a ± b)" },
+      { id: "lop11-b2-d2", ten: "Dạng 2. Công thức nhân đôi & Hạ bậc", moTa: "Công thức sin 2a, cos 2a, tan 2a và công thức hạ bậc hai, bậc ba" },
+      { id: "lop11-b2-d3", ten: "Dạng 3. Biến đổi tích thành tổng & Tổng thành tích", moTa: "Áp dụng biến đổi tích ↔ tổng trong giải toán và rút gọn" },
+      { id: "lop11-b2-d4", ten: "Dạng 4. Rút gọn & Chứng minh đẳng thức lượng giác", moTa: "Vận dụng tổng hợp các công thức lượng giác để rút gọn biểu thức phức tạp" },
+    ],
+  },
+  "lop11-c1-cd3": {
+    baiNum: 3,
+    chuDeId: "lop11-c1-cd3",
+    chuongId: "lop11-c1",
+    tenBai: "Bài 3. Hàm số lượng giác",
+    dangs: [
+      { id: "lop11-b3-d1", ten: "Dạng 1. Tập xác định của hàm số lượng giác", moTa: "Tìm điều kiện xác định cho hàm số chứa sin, cos, tan, cot" },
+      { id: "lop11-b3-d2", ten: "Dạng 2. Tính chẵn, lẻ & Tính tuần hoàn", moTa: "Xét tính chẵn lẻ f(-x) = ±f(x) và chu kỳ tuần hoàn cơ sở T" },
+      { id: "lop11-b3-d3", ten: "Dạng 3. Tập giá trị, GTLN & GTNN (Min-Max)", moTa: "Tìm GTLN, GTNN của hàm số lượng giác trên tập xác định hoặc đoạn" },
+      { id: "lop11-b3-d4", ten: "Dạng 4. Đồ thị & Tính đơn điệu của hàm số lượng giác", moTa: "Nhận dạng đồ thị, khoảng đồng biến và nghịch biến" },
+    ],
+  },
+  "lop11-c1-cd4": {
+    baiNum: 4,
+    chuDeId: "lop11-c1-cd4",
+    chuongId: "lop11-c1",
+    tenBai: "Bài 4. Phương trình lượng giác",
+    dangs: [
+      { id: "lop11-b4-d1", ten: "Dạng 1. Phương trình lượng giác cơ bản", moTa: "Giải sin x = m, cos x = m, tan x = m, cot x = m" },
+      { id: "lop11-b4-d2", ten: "Dạng 2. Phương trình lượng giác có điều kiện nghiệm", moTa: "Tìm số nghiệm hoặc nghiệm thuộc khoảng, đoạn cho trước" },
+      { id: "lop11-b4-d3", ten: "Dạng 3. Phương trình quy về phương trình cơ bản", moTa: "Phương trình bậc hai theo một hàm số lượng giác, đẳng cấp" },
+      { id: "lop11-b4-d4", ten: "Dạng 4. Bài toán thực tế & Ứng dụng phương trình", moTa: "Mô hình toán học chu kỳ sóng, thủy triều, dao động điều hòa" },
+    ],
+  },
+  "lop11-c2-cd5": {
+    baiNum: 5,
+    chuDeId: "lop11-c2-cd5",
+    chuongId: "lop11-c2",
+    tenBai: "Bài 5. Dãy số",
+    dangs: [
+      { id: "lop11-b5-d1", ten: "Dạng 1. Tìm số hạng & Công thức số hạng tổng quát", moTa: "Xác định các số hạng đầu, công thức truy hồi và tổng quát un" },
+      { id: "lop11-b5-d2", ten: "Dạng 2. Xét tính tăng, giảm của dãy số", moTa: "So sánh un+1 - un hoặc un+1 / un với 1" },
+      { id: "lop11-b5-d3", ten: "Dạng 3. Xét tính bị chặn của dãy số", moTa: "Chứng minh dãy số bị chặn trên, bị chặn dưới hoặc bị chặn" },
+    ],
+  },
+  "lop11-c2-cd6": {
+    baiNum: 6,
+    chuDeId: "lop11-c2-cd6",
+    chuongId: "lop11-c2",
+    tenBai: "Bài 6. Cấp số cộng",
+    dangs: [
+      { id: "lop11-b6-d1", ten: "Dạng 1. Nhận biết CSC & Xác định công sai d, số hạng đầu u1", moTa: "Kiểm tra dãy là CSC, tính công sai d và u1" },
+      { id: "lop11-b6-d2", ten: "Dạng 2. Tìm số hạng tổng quát un", moTa: "Áp dụng công thức un = u1 + (n - 1)d để tìm số hạng bất kỳ" },
+      { id: "lop11-b6-d3", ten: "Dạng 3. Tính tổng n số hạng đầu Sn", moTa: "Áp dụng công thức Sn = n/2 * (2u1 + (n - 1)d)" },
+      { id: "lop11-b6-d4", ten: "Dạng 4. Bài toán thực tế liên quan đến cấp số cộng", moTa: "Ứng dụng cấp số cộng trong đời sống, xếp hàng, số bậc thang" },
+    ],
+  },
+  "lop11-c2-cd7": {
+    baiNum: 7,
+    chuDeId: "lop11-c2-cd7",
+    chuongId: "lop11-c2",
+    tenBai: "Bài 7. Cấp số nhân",
+    dangs: [
+      { id: "lop11-b7-d1", ten: "Dạng 1. Nhận biết CSN & Xác định công bội q, số hạng đầu u1", moTa: "Kiểm tra dãy là CSN, tính công bội q và u1" },
+      { id: "lop11-b7-d2", ten: "Dạng 2. Tìm số hạng tổng quát un", moTa: "Áp dụng công thức un = u1 * q^(n - 1)" },
+      { id: "lop11-b7-d3", ten: "Dạng 3. Tính tổng n số hạng đầu Sn", moTa: "Áp dụng công thức Sn = u1 * (1 - q^n) / (1 - q)" },
+      { id: "lop11-b7-d4", ten: "Dạng 4. Bài toán thực tế & Ứng dụng cấp số nhân", moTa: "Tăng trưởng dân số, phân rã vi khuẩn, lãi kép ngân hàng" },
+    ],
+  },
+  "lop11-c3-cd8": {
+    baiNum: 8,
+    chuDeId: "lop11-c3-cd8",
+    chuongId: "lop11-c3",
+    tenBai: "Bài 8. Mẫu số liệu ghép nhóm",
+    dangs: [
+      { id: "lop11-b8-d1", ten: "Dạng 1. Thu thập & Tổ chức mẫu số liệu ghép nhóm", moTa: "Chuyển mẫu số liệu rời rạc sang mẫu ghép nhóm [a; b)" },
+      { id: "lop11-b8-d2", ten: "Dạng 2. Độ dài nhóm, giá trị đại diện & Tần số", moTa: "Tính độ dài nhóm, giá trị đại diện và bảng tần số tích lũy" },
+    ],
+  },
+  "lop11-c3-cd9": {
+    baiNum: 9,
+    chuDeId: "lop11-c3-cd9",
+    chuongId: "lop11-c3",
+    tenBai: "Bài 9. Các số đặc trưng đo xu thế trung tâm",
+    dangs: [
+      { id: "lop11-b9-d1", ten: "Dạng 1. Số trung bình & Mốt của mẫu ghép nhóm", moTa: "Công thức tính số trung bình cộng và mốt Mo của mẫu ghép nhóm" },
+      { id: "lop11-b9-d2", ten: "Dạng 2. Trung vị & Tứ phân vị (Q1, Me, Q3)", moTa: "Xác định nhóm chứa trung vị, tứ phân vị và công thức tính chi tiết" },
+      { id: "lop11-b9-d3", ten: "Dạng 3. So sánh & Ý nghĩa các số đặc trưng", moTa: "Đánh giá xu hướng trung tâm và so sánh độ đồng đều giữa các nhóm" },
+    ],
+  },
+  "lop11-c4-cd10": {
+    baiNum: 10,
+    chuDeId: "lop11-c4-cd10",
+    chuongId: "lop11-c4",
+    tenBai: "Bài 10. Đường thẳng và mặt phẳng trong không gian",
+    dangs: [
+      { id: "lop11-b10-d1", ten: "Dạng 1. Xác định giao tuyến của hai mặt phẳng", moTa: "Tìm hai điểm chung phân biệt để xác định giao tuyến" },
+      { id: "lop11-b10-d2", ten: "Dạng 2. Xác định giao điểm của đường thẳng và mặt phẳng", moTa: "Chọn mặt phẳng phụ chứa đường thẳng và tìm giao tuyến" },
+      { id: "lop11-b10-d3", ten: "Dạng 3. Tìm thiết diện của hình chóp / hình tứ diện", moTa: "Xác định đoạn giao tuyến với các mặt của khối đa diện" },
+      { id: "lop11-b10-d4", ten: "Dạng 4. Ba điểm thẳng hàng & Ba đường thẳng đồng quy", moTa: "Chứng minh các điểm cùng thuộc giao tuyến của hai mặt phẳng" },
+    ],
+  },
+  "lop11-c4-cd11": {
+    baiNum: 11,
+    chuDeId: "lop11-c4-cd11",
+    chuongId: "lop11-c4",
+    tenBai: "Bài 11. Hai đường thẳng song song",
+    dangs: [
+      { id: "lop11-b11-d1", ten: "Dạng 1. Chứng minh hai đường thẳng song song", moTa: "Sử dụng đường trung bình, định lý Ta-lét hoặc bắc cầu" },
+      { id: "lop11-b11-d2", ten: "Dạng 2. Tìm giao tuyến chứa hai đường song song", moTa: "Giao tuyến đi qua điểm chung và song song với hai đường" },
+      { id: "lop11-b11-d3", ten: "Dạng 3. Thiết diện chứa đường thẳng song song", moTa: "Dựng thiết diện qua một điểm hoặc chứa đường thẳng song song" },
+    ],
+  },
+  "lop11-c4-cd12": {
+    baiNum: 12,
+    chuDeId: "lop11-c4-cd12",
+    chuongId: "lop11-c4",
+    tenBai: "Bài 12. Đường thẳng và mặt phẳng song song",
+    dangs: [
+      { id: "lop11-b12-d1", ten: "Dạng 1. Chứng minh đường thẳng song song với mặt phẳng", moTa: "Chứng minh d // d' với d' nằm trong mặt phẳng (P)" },
+      { id: "lop11-b12-d2", ten: "Dạng 2. Tìm giao tuyến sử dụng quan hệ song song", moTa: "Mặt phẳng chứa đường thẳng song song cắt mặt phẳng khác" },
+      { id: "lop11-b12-d3", ten: "Dạng 3. Thiết diện song song với đường thẳng", moTa: "Thiết diện đi qua một điểm và song song với đường thẳng cho trước" },
+    ],
+  },
+  "lop11-c4-cd13": {
+    baiNum: 13,
+    chuDeId: "lop11-c4-cd13",
+    chuongId: "lop11-c4",
+    tenBai: "Bài 13. Hai mặt phẳng song song",
+    dangs: [
+      { id: "lop11-b13-d1", ten: "Dạng 1. Chứng minh hai mặt phẳng song song", moTa: "Chứng minh (P) chứa hai đường thẳng cắt nhau cùng song song với (Q)" },
+      { id: "lop11-b13-d2", ten: "Dạng 2. Thiết diện song song với một mặt phẳng", moTa: "Mặt phẳng cắt các mặt theo các đoạn giao tuyến song song tương ứng" },
+      { id: "lop11-b13-d3", ten: "Dạng 3. Định lý Ta-lét & Hình lăng trụ, hình hộp", moTa: "Tỉ số đoạn thẳng trên các cát tuyến, tính chất hình lăng trụ, hình hộp" },
+    ],
+  },
+  "lop11-c4-cd14": {
+    baiNum: 14,
+    chuDeId: "lop11-c4-cd14",
+    chuongId: "lop11-c4",
+    tenBai: "Bài 14. Phép chiếu song song",
+    dangs: [
+      { id: "lop11-b14-d1", ten: "Dạng 1. Tính chất của phép chiếu song song", moTa: "Bảo toàn tính thẳng hàng, thứ tự điểm, song song và tỉ số đoạn thẳng" },
+      { id: "lop11-b14-d2", ten: "Dạng 2. Hình biểu diễn của các hình không gian", moTa: "Vẽ và nhận biết hình biểu diễn của tam giác, hình bình hành, hình tròn" },
+    ],
+  },
+  "lop11-c5-cd15": {
+    baiNum: 15,
+    chuDeId: "lop11-c5-cd15",
+    chuongId: "lop11-c5",
+    tenBai: "Bài 15. Giới hạn của dãy số",
+    dangs: [
+      { id: "lop11-b15-d1", ten: "Dạng 1. Giới hạn hữu hạn của dãy số", moTa: "Tính lim un dạng phân thức đa thức lim (P(n)/Q(n))" },
+      { id: "lop11-b15-d2", ten: "Dạng 2. Giới hạn chứa căn thức (Nhân liên hợp)", moTa: "Khử dạng vô định ∞ - ∞ bằng phương pháp nhân liên hợp" },
+      { id: "lop11-b15-d3", ten: "Dạng 3. Giới hạn của dãy số chứa lũy thừa a^n", moTa: "Chia cho cơ số lớn nhất hoặc áp dụng lim q^n = 0 khi |q| < 1" },
+      { id: "lop11-b15-d4", ten: "Dạng 4. Tổng của cấp số nhân lùi vô hạn", moTa: "Áp dụng công thức S = u1 / (1 - q) với |q| < 1" },
+    ],
+  },
+  "lop11-c5-cd16": {
+    baiNum: 16,
+    chuDeId: "lop11-c5-cd16",
+    chuongId: "lop11-c5",
+    tenBai: "Bài 16. Giới hạn của hàm số",
+    dangs: [
+      { id: "lop11-b16-d1", ten: "Dạng 1. Giới hạn tại một điểm & Giới hạn một bên", moTa: "Tính lim x→x0 f(x) và giới hạn bên trái lim x→x0-, bên phải lim x→x0+" },
+      { id: "lop11-b16-d2", ten: "Dạng 2. Khử dạng vô định 0/0", moTa: "Phân tích đa thức thành nhân tử hoặc nhân lượng liên hợp" },
+      { id: "lop11-b16-d3", ten: "Dạng 3. Giới hạn của hàm số tại vô cực", moTa: "Tính lim x→±∞ f(x), chia cho lũy thừa bậc cao nhất" },
+      { id: "lop11-b16-d4", ten: "Dạng 4. Khử dạng vô định ∞ - ∞ và 0 * ∞", moTa: "Nhân lượng liên hợp hoặc quy đồng biến đổi về dạng cơ bản" },
+    ],
+  },
+  "lop11-c5-cd17": {
+    baiNum: 17,
+    chuDeId: "lop11-c5-cd17",
+    chuongId: "lop11-c5",
+    tenBai: "Bài 17. Hàm số liên tục",
+    dangs: [
+      { id: "lop11-b17-d1", ten: "Dạng 1. Xét tính liên tục của hàm số tại một điểm", moTa: "Kiểm tra điều kiện lim x→x0 f(x) = f(x0)" },
+      { id: "lop11-b17-d2", ten: "Dạng 2. Xét tính liên tục trên một khoảng / đoạn", moTa: "Hàm đa thức, phân thức liên tục trên từng khoảng xác định" },
+      { id: "lop11-b17-d3", ten: "Dạng 3. Ứng dụng chứng minh phương trình có nghiệm", moTa: "Định lý giá trị trung gian: f(a).f(b) < 0 ⇒ có nghiệm trong (a; b)" },
+    ],
+  },
+  "lop11-c6-cd18": {
+    baiNum: 18,
+    chuDeId: "lop11-c6-cd18",
+    chuongId: "lop11-c6",
+    tenBai: "Bài 18. Lũy thừa với số mũ thực",
+    dangs: [
+      { id: "lop11-b18-d1", ten: "Dạng 1. Tính toán & Biến đổi biểu thức lũy thừa", moTa: "Áp dụng các tính chất lũy thừa a^α . a^β, (a^α)^β" },
+      { id: "lop11-b18-d2", ten: "Dạng 2. Rút gọn biểu thức chứa căn & Lũy thừa", moTa: "Đưa căn thức về lũy thừa số mũ hữu tỉ để rút gọn" },
+      { id: "lop11-b18-d3", ten: "Dạng 3. So sánh các lũy thừa & Bài toán thực tế", moTa: "So sánh a^α và a^β dựa trên cơ số a > 1 hoặc 0 < a < 1" },
+    ],
+  },
+  "lop11-c6-cd19": {
+    baiNum: 19,
+    chuDeId: "lop11-c6-cd19",
+    chuongId: "lop11-c6",
+    tenBai: "Bài 19. Lôgarit",
+    dangs: [
+      { id: "lop11-b19-d1", ten: "Dạng 1. Tính giá trị biểu thức lôgarit", moTa: "Áp dụng định nghĩa và các công thức loga(xy), loga(x/y), loga(x^α)" },
+      { id: "lop11-b19-d2", ten: "Dạng 2. Đổi cơ số & Biểu diễn logarit theo các biến", moTa: "Công thức đổi cơ số loga b = logc b / logc a" },
+      { id: "lop11-b19-d3", ten: "Dạng 3. So sánh các lôgarit & Ứng dụng thực tế", moTa: "Độ pH, cường độ âm thanh (Decibel), độ Richter của động đất" },
+    ],
+  },
+  "lop11-c6-cd20": {
+    baiNum: 20,
+    chuDeId: "lop11-c6-cd20",
+    chuongId: "lop11-c6",
+    tenBai: "Bài 20. Hàm số mũ và hàm số lôgarit",
+    dangs: [
+      { id: "lop11-b20-d1", ten: "Dạng 1. Tập xác định & Tính chất của hàm số", moTa: "Tìm tập xác định hàm mũ y = a^u(x) và hàm logarit y = loga u(x)" },
+      { id: "lop11-b20-d2", ten: "Dạng 2. Đồ thị & Chiều biến thiên của hàm số", moTa: "Đồng biến khi a > 1, nghịch biến khi 0 < a < 1, nhận dạng đồ thị" },
+      { id: "lop11-b20-d3", ten: "Dạng 3. Bài toán thực tế về tăng trưởng & Phóng xạ", moTa: "Mô hình tăng trưởng mũ N(t) = N0.e^(kt) và chu kỳ bán rã" },
+    ],
+  },
+  "lop11-c6-cd21": {
+    baiNum: 21,
+    chuDeId: "lop11-c6-cd21",
+    chuongId: "lop11-c6",
+    tenBai: "Bài 21. Phương trình, bất phương trình mũ và lôgarit",
+    dangs: [
+      { id: "lop11-b21-d1", ten: "Dạng 1. Phương trình mũ", moTa: "Đưa về cùng cơ số, đặt ẩn phụ hoặc logarit hóa" },
+      { id: "lop11-b21-d2", ten: "Dạng 2. Phương trình lôgarit", moTa: "Đưa về cùng cơ số, đặt ẩn phụ, chú ý điều kiện nghiệm" },
+      { id: "lop11-b21-d3", ten: "Dạng 3. Bất phương trình mũ & Bất phương trình lôgarit", moTa: "Lưu ý đảo chiều bất phương trình khi cơ số 0 < a < 1" },
+      { id: "lop11-b21-d4", ten: "Dạng 4. Bài toán chứa tham số m & Ứng dụng thực tế", moTa: "Tìm m để phương trình/bất phương trình có nghiệm, có k nghiệm" },
+    ],
+  },
+  "lop11-c7-cd22": {
+    baiNum: 22,
+    chuDeId: "lop11-c7-cd22",
+    chuongId: "lop11-c7",
+    tenBai: "Bài 22. Hai đường thẳng vuông góc",
+    dangs: [
+      { id: "lop11-b22-d1", ten: "Dạng 1. Góc giữa hai vectơ & Tích vô hướng", moTa: "Công thức cos(u, v) = (u . v) / (|u| . |v|) trong không gian" },
+      { id: "lop11-b22-d2", ten: "Dạng 2. Góc giữa hai đường thẳng", moTa: "Xác định góc (a, b) thông qua góc giữa hai đường thẳng cắt nhau song song" },
+      { id: "lop11-b22-d3", ten: "Dạng 3. Chứng minh hai đường thẳng vuông góc", moTa: "Chứng minh tích vô hướng u . v = 0 hoặc góc giữa chúng bằng 90°" },
+    ],
+  },
+  "lop11-c7-cd23": {
+    baiNum: 23,
+    chuDeId: "lop11-c7-cd23",
+    chuongId: "lop11-c7",
+    tenBai: "Bài 23. Đường thẳng vuông góc với mặt phẳng",
+    dangs: [
+      { id: "lop11-b23-d1", ten: "Dạng 1. Chứng minh đường thẳng vuông góc với mặt phẳng", moTa: "Chứng minh d vuông góc với hai đường thẳng cắt nhau trong (P)" },
+      { id: "lop11-b23-d2", ten: "Dạng 2. Chứng minh hai đường thẳng vuông góc (dùng đường ⊥ mặt)", moTa: "Nếu d ⊥ (P) và a ⊂ (P) thì d ⊥ a" },
+      { id: "lop11-b23-d3", ten: "Dạng 3. Định lý ba đường vuông góc & Thiết diện", moTa: "Định lý ba đường vuông góc và bài toán thiết diện vuông góc" },
+    ],
+  },
+  "lop11-c7-cd24": {
+    baiNum: 24,
+    chuDeId: "lop11-c7-cd24",
+    chuongId: "lop11-c7",
+    tenBai: "Bài 24. Phép chiếu vuông góc - Góc giữa đường thẳng và mặt phẳng",
+    dangs: [
+      { id: "lop11-b24-d1", ten: "Dạng 1. Tìm hình chiếu của điểm, đoạn thẳng lên mặt phẳng", moTa: "Xác định chân đường vuông góc hạ từ đỉnh xuống đáy" },
+      { id: "lop11-b24-d2", ten: "Dạng 2. Xác định & Tính góc giữa đường thẳng và mặt phẳng", moTa: "Góc giữa đường thẳng d và hình chiếu d' của nó trên (P)" },
+    ],
+  },
+  "lop11-c7-cd25": {
+    baiNum: 25,
+    chuDeId: "lop11-c7-cd25",
+    chuongId: "lop11-c7",
+    tenBai: "Bài 25. Hai mặt phẳng vuông góc",
+    dangs: [
+      { id: "lop11-b25-d1", ten: "Dạng 1. Chứng minh hai mặt phẳng vuông góc", moTa: "Chứng minh (P) chứa một đường thẳng vuông góc với (Q)" },
+      { id: "lop11-b25-d2", ten: "Dạng 2. Góc giữa hai mặt phẳng (Góc nhị diện)", moTa: "Dựng hai đường thẳng cùng vuông góc với giao tuyến tại một điểm" },
+      { id: "lop11-b25-d3", ten: "Dạng 3. Hình lăng trụ đứng, hình hộp chữ nhật & Hình chóp đều", moTa: "Tính chất các cạnh bên vuông góc với đáy, các mặt bên là hình chữ nhật" },
+    ],
+  },
+  "lop11-c7-cd26": {
+    baiNum: 26,
+    chuDeId: "lop11-c7-cd26",
+    chuongId: "lop11-c7",
+    tenBai: "Bài 26. Khoảng cách trong không gian",
+    dangs: [
+      { id: "lop11-b26-d1", ten: "Dạng 1. Khoảng cách từ một điểm đến một đường thẳng / mặt phẳng", moTa: "Độ dài đoạn vuông góc hạ từ điểm đến đường thẳng hoặc mặt phẳng" },
+      { id: "lop11-b26-d2", ten: "Dạng 2. Khoảng cách giữa đường thẳng và mặt phẳng song song, giữa hai mặt phẳng song song", moTa: "Quy về khoảng cách từ một điểm bất kỳ đến mặt phẳng" },
+      { id: "lop11-b26-d3", ten: "Dạng 3. Khoảng cách giữa hai đường thẳng chéo nhau", moTa: "Đoạn vuông góc chung hoặc khoảng cách từ đường đến mặt phẳng song song chứa đường kia" },
+    ],
+  },
+  "lop11-c7-cd27": {
+    baiNum: 27,
+    chuDeId: "lop11-c7-cd27",
+    chuongId: "lop11-c7",
+    tenBai: "Bài 27. Thể tích khối đa diện",
+    dangs: [
+      { id: "lop11-b27-d1", ten: "Dạng 1. Thể tích khối lăng trụ, khối hộp, khối lập phương", moTa: "V = B . h với B là diện tích đáy, h là chiều cao" },
+      { id: "lop11-b27-d2", ten: "Dạng 2. Thể tích khối chóp & Khối chóp cụt đều", moTa: "V = 1/3 . B . h và công thức khối chóp cụt đều" },
+      { id: "lop11-b27-d3", ten: "Dạng 3. Tỉ số thể tích khối đa diện", moTa: "Áp dụng định lý Simpson (tỉ số thể tích) cho khối chóp tam giác" },
+    ],
+  },
+  "lop11-c8-cd28": {
+    baiNum: 28,
+    chuDeId: "lop11-c8-cd28",
+    chuongId: "lop11-c8",
+    tenBai: "Bài 28. Biến cố hợp, biến cố giao, biến cố độc lập",
+    dangs: [
+      { id: "lop11-b28-d1", ten: "Dạng 1. Mô tả không gian mẫu & Xác định các biến cố", moTa: "Liệt kê hoặc tính số phần tử của không gian mẫu Ω và biến cố A" },
+      { id: "lop11-b28-d2", ten: "Dạng 2. Biến cố hợp, biến cố giao, biến cố đối", moTa: "Phép toán hợp A ∪ B, giao A ∩ B (AB) và biến cố đối Ā" },
+      { id: "lop11-b28-d3", ten: "Dạng 3. Nhận biết & Xét tính độc lập của hai biến cố", moTa: "Biến cố A và B độc lập khi việc xảy ra của A không ảnh hưởng tới B" },
+    ],
+  },
+  "lop11-c8-cd29": {
+    baiNum: 29,
+    chuDeId: "lop11-c8-cd29",
+    chuongId: "lop11-c8",
+    tenBai: "Bài 29. Công thức cộng xác suất",
+    dangs: [
+      { id: "lop11-b29-d1", ten: "Dạng 1. Quy tắc cộng cho hai biến cố xung khắc", moTa: "Nếu A ∩ B = ∅ thì P(A ∪ B) = P(A) + P(B)" },
+      { id: "lop11-b29-d2", ten: "Dạng 2. Quy tắc cộng cho hai biến cố bất kỳ", moTa: "P(A ∪ B) = P(A) + P(B) - P(A ∩ B)" },
+      { id: "lop11-b29-d3", ten: "Dạng 3. Tính xác suất bằng biến cố đối", moTa: "P(Ā) = 1 - P(A), áp dụng cho bài toán 'ít nhất một', 'có ít nhất'" },
+    ],
+  },
+  "lop11-c8-cd30": {
+    baiNum: 30,
+    chuDeId: "lop11-c8-cd30",
+    chuongId: "lop11-c8",
+    tenBai: "Bài 30. Công thức nhân xác suất cho hai biến cố độc lập",
+    dangs: [
+      { id: "lop11-b30-d1", ten: "Dạng 1. Quy tắc nhân xác suất cho hai biến cố độc lập", moTa: "Nếu A và B độc lập thì P(AB) = P(A) . P(B)" },
+      { id: "lop11-b30-d2", ten: "Dạng 2. Phối hợp quy tắc cộng và quy tắc nhân", moTa: "Chia trường hợp xung khắc, mỗi trường hợp gồm các biến cố độc lập" },
+      { id: "lop11-b30-d3", ten: "Dạng 3. Bài toán thực tế về xác suất", moTa: "Xác suất bắn trúng bia, thi đỗ đại học, kiểm tra chất lượng sản phẩm" },
+    ],
+  },
+  "lop11-c9-cd31": {
+    baiNum: 31,
+    chuDeId: "lop11-c9-cd31",
+    chuongId: "lop11-c9",
+    tenBai: "Bài 31. Định nghĩa và ý nghĩa đạo hàm",
+    dangs: [
+      { id: "lop11-b31-d1", ten: "Dạng 1. Tính đạo hàm bằng định nghĩa tại một điểm", moTa: "f'(x0) = lim Δx→0 (Δy / Δx) = lim x→x0 (f(x) - f(x0)) / (x - x0)" },
+      { id: "lop11-b31-d2", ten: "Dạng 2. Ý nghĩa hình học của đạo hàm (Phương trình tiếp tuyến)", moTa: "Hệ số góc k = f'(x0) và phương trình tiếp tuyến y - y0 = f'(x0)(x - x0)" },
+      { id: "lop11-b31-d3", ten: "Dạng 3. Ý nghĩa vật lý của đạo hàm (Vận tốc tức thời)", moTa: "Vận tốc tức thời v(t) = s'(t) và cường độ dòng điện tức thời i(t) = q'(t)" },
+    ],
+  },
+  "lop11-c9-cd32": {
+    baiNum: 32,
+    chuDeId: "lop11-c9-cd32",
+    chuongId: "lop11-c9",
+    tenBai: "Bài 32. Các quy tắc tính đạo hàm",
+    dangs: [
+      { id: "lop11-b32-d1", ten: "Dạng 1. Đạo hàm của hàm đa thức, phân thức, căn thức", moTa: "Quy tắc đạo hàm tổng, hiệu, tích, thương (u ± v)', (u.v)', (u/v)'" },
+      { id: "lop11-b32-d2", ten: "Dạng 2. Đạo hàm của hàm số lượng giác", moTa: "(sin x)' = cos x, (cos x)' = -sin x, (tan x)' = 1/cos²x, (cot x)' = -1/sin²x" },
+      { id: "lop11-b32-d3", ten: "Dạng 3. Đạo hàm của hàm hợp", moTa: "Công thức y'x = y'u . u'x cho các hàm hợp đa thức và lượng giác" },
+      { id: "lop11-b32-d4", ten: "Dạng 4. Giải phương trình & Bất phương trình chứa đạo hàm", moTa: "Giải y' = 0, y' > 0, y' < 0 ứng dụng trong xét dấu và cực trị" },
+    ],
+  },
+  "lop11-c9-cd33": {
+    baiNum: 33,
+    chuDeId: "lop11-c9-cd33",
+    chuongId: "lop11-c9",
+    tenBai: "Bài 33. Đạo hàm cấp hai",
+    dangs: [
+      { id: "lop11-b33-d1", ten: "Dạng 1. Tính đạo hàm cấp hai của hàm số", moTa: "f''(x) = (f'(x))' - lấy đạo hàm lần hai của hàm số" },
+      { id: "lop11-b33-d2", ten: "Dạng 2. Ý nghĩa cơ học của đạo hàm cấp hai", moTa: "Gia tốc tức thời a(t) = v'(t) = s''(t) của chuyển động thẳng" },
+      { id: "lop11-b33-d3", ten: "Dạng 3. Phương trình chứa đạo hàm cấp hai", moTa: "Chứng minh đẳng thức hoặc giải phương trình vi phân y'' + ω²y = 0" },
+    ],
+  },
+};
+
