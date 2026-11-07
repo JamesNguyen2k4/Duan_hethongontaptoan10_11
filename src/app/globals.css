@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import "katex/dist/katex.min.css";
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -56,5 +58,92 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Loại bỏ độ trễ 300ms và tạo cảm giác bấm nhạy, mượt mà */
+  button, a, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+}
+
+/* Tinh chỉnh khoảng cách & độ thoáng cho công thức toán học KaTeX */
+.katex {
+  text-rendering: auto;
+}
+
+.katex-display {
+  margin: 1.5em 0 !important;
+  padding: 0.5em 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+/* Đảm bảo dòng văn bản chứa phân số không bị cấn viền */
+.prose p, .prose li, .prose blockquote {
+  line-height: 1.95;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  line-height: 1.5;
+}
+
+/* Tăng khoảng cách giữa các cột trong array / hệ phương trình */
+.katex .arraycolsep {
+  margin: 0 6px;
+}
+
+/* Đảm bảo danh sách đầu dòng (bullet / numbered list) không bao giờ bị rớt dòng tách rời khỏi dấu chấm */
+.prose ul {
+  list-style-type: disc !important;
+  list-style-position: outside !important;
+}
+
+.prose ol {
+  list-style-type: decimal !important;
+  list-style-position: outside !important;
+}
+
+.prose li {
+  list-style-position: outside !important;
+  margin-top: 0.35em !important;
+  margin-bottom: 0.35em !important;
+}
+
+.prose li > p {
+  display: inline !important;
+  margin: 0 !important;
+}
+
+/* Đảm bảo tương thích hoàn hảo cho các ký hiệu phủ định chồng hình như \ne (\neq) không bị tách thành / = */
+.katex .vbox, .katex .katex-vbox {
+  align-items: baseline;
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.katex .thinbox, .katex .katex-thinbox {
+  display: inline-flex;
+  flex-direction: row;
+  max-width: 0;
+  width: 0;
+}
+
+.katex .rlap {
+  position: relative;
+  width: 0;
+}
+
+.katex .rlap > .inner, .katex .rlap > .katex-inner {
+  position: absolute;
+  left: 0;
+}
+
+.katex .clap > .inner, .katex .llap > .inner, .katex .rlap > .inner,
+.katex .clap > .katex-inner, .katex .llap > .katex-inner, .katex .rlap > .katex-inner {
+  position: absolute;
+}
+
+.katex .clap > .fix, .katex .llap > .fix, .katex .rlap > .fix,
+.katex .clap > .katex-fix, .katex .llap > .katex-fix, .katex .rlap > .katex-fix {
+  display: inline-block;
 }
 
