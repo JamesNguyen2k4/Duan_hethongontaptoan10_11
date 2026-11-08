@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
+import { chonCauHoiThichUngZPD } from "@/lib/adaptive-engine";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,10 @@ interface Props {
   };
 }
 
-export default async function LuyenTapTheoChuDeRedirectPage({ params, searchParams }: Props) {
+export default async function LuyenTapTheoChuDeRedirectPage({
+  params,
+  searchParams,
+}: Props) {
   const { chuDeId } = params;
   const dangBai = searchParams?.dangBai;
   const session = await auth();
@@ -28,58 +32,21 @@ export default async function LuyenTapTheoChuDeRedirectPage({ params, searchPara
     notFound();
   }
 
-  const baseWhere: any = { chuDeId };
-  if (dangBai) {
-    baseWhere.dangBai = dangBai;
-  }
-
-  const dangBaiQuery = dangBai ? `?dangBai=${encodeURIComponent(dangBai)}` : "";
-
-  // 1. Nếu học sinh đã đăng nhập: Ưu tiên tìm câu trong bài (hoặc dạng này) mà học sinh CHƯA từng làm
-  if (session?.user?.id) {
-    const cauChuaLam = await db.baiTap.findFirst({
-      where: {
-        ...baseWhere,
-        lanLamBais: {
-          none: {
-            nguoiDungId: session.user.id,
-          },
-        },
-      },
-      orderBy: { taoLuc: "asc" },
-      select: { id: true },
-    });
-
-    if (cauChuaLam) {
-      redirect(`/lam-bai/${cauChuaLam.id}${dangBaiQuery}`);
-    }
-
-    // 2. Nếu đã làm hết câu: Ưu tiên câu làm SAI gần nhất để ôn luyện lại
-    const cauTungLamSai = await db.lanLamBai.findFirst({
-      where: {
-        nguoiDungId: session.user.id,
-        ketQua: "SAI",
-        baiTap: baseWhere,
-      },
-      orderBy: { thoiDiem: "desc" },
-      select: { baiTapId: true },
-    });
-
-    if (cauTungLamSai) {
-      redirect(`/lam-bai/${cauTungLamSai.baiTapId}${dangBaiQuery}`);
-    }
-  }
-
-  // 3. Nếu chưa đăng nhập hoặc đã làm đúng hết các câu: Bắt đầu từ câu 1 của dạng/bài
-  const cauDauTien = await db.baiTap.findFirst({
-    where: baseWhere,
-    orderBy: { taoLuc: "asc" },
-    select: { id: true },
+  // Sử dụng bộ chọn câu hỏi thích ứng ZPD (BKT + IRT 3PL + Spaced Repetition)
+  // chọn câu hỏi có xác suất trả lời đúng P(correct | theta_k, b_i) ~ 0.70
+  const selected = await chonCauHoiThichUngZPD({
+    nguoiDungId: session?.user?.id,
+    chuDeId,
+    dangBai: dangBai || undefined,
   });
 
-  if (cauDauTien) {
-    redirect(`/lam-bai/${cauDauTien.id}${dangBaiQuery}`);
+  if (selected?.baiTapId) {
+    const queryDang = dangBai || selected.dangBai;
+    const dangBaiQuery = queryDang
+      ? `?dangBai=${encodeURIComponent(queryDang)}`
+      : "";
+    redirect(`/lam-bai/${selected.baiTapId}${dangBaiQuery}`);
   }
 
-  redirect("/bai-tap");
+  redirect(`/bai-tap?chuDeId=${chuDeId}`);
 }

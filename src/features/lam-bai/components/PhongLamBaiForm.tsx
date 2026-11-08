@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { nopBaiTapAction } from "../actions/nop-bai";
-import { themVaoHangDoiOnTapAction } from "@/features/on-tap/actions/on-tap-actions";
 import {
   CheckCircle,
   XCircle,
@@ -10,10 +9,13 @@ import {
   ArrowRight,
   ArrowLeft,
   BookOpen,
-  Repeat,
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  Brain,
+  Target,
+  TrendingUp,
+  Award,
 } from "lucide-react";
 import Link from "next/link";
 import { MathRenderer } from "@/components/shared/MathRenderer";
@@ -26,12 +28,23 @@ interface NavigationProps {
   dangBaiQuery?: string;
 }
 
+interface AdaptiveContextProps {
+  xacSuatThanhThao: number;
+  nangLucIRT: number;
+  doBenTriNho: number;
+  soLanLuyen: number;
+  xacSuatDuDoan: number;
+  dangBaiFilter?: string;
+}
+
 interface Props {
   baiTap: {
     id: string;
     deBai: string;
     mucDo: string;
     dangBai: string | null;
+    doKhoIRT?: number;
+    doPhanBiet?: number;
     chuDe: {
       id: string;
       ten: string;
@@ -39,16 +52,19 @@ interface Props {
     };
     cacLuaChon: Record<string, string>;
   };
+  adaptiveContext?: AdaptiveContextProps;
   navigation?: NavigationProps;
 }
 
-export function PhongLamBaiForm({ baiTap, navigation }: Props) {
+export function PhongLamBaiForm({
+  baiTap,
+  adaptiveContext,
+  navigation,
+}: Props) {
   const [selectedOption, setSelectedOption] = useState<string>("");
   const [thoiGian, setThoiGian] = useState<number>(0);
   const [dangNop, setDangNop] = useState<boolean>(false);
   const [ketQua, setKetQua] = useState<any>(null);
-  const [daGhim, setDaGhim] = useState<boolean>(false);
-  const [dangGhim, setDangGhim] = useState<boolean>(false);
 
   // Bộ đếm thời gian làm bài
   useEffect(() => {
@@ -69,7 +85,12 @@ export function PhongLamBaiForm({ baiTap, navigation }: Props) {
     if (!selectedOption || dangNop) return;
     setDangNop(true);
     try {
-      const res = await nopBaiTapAction(baiTap.id, selectedOption, thoiGian);
+      const res = await nopBaiTapAction(
+        baiTap.id,
+        selectedOption,
+        thoiGian,
+        adaptiveContext?.dangBaiFilter
+      );
       if (res.ok) {
         setKetQua(res);
       } else {
@@ -80,12 +101,44 @@ export function PhongLamBaiForm({ baiTap, navigation }: Props) {
     }
   };
 
-  const progressPercent = navigation
-    ? Math.round((navigation.currentIndex / navigation.totalCount) * 100)
-    : 0;
+  // Tính % độ thành thạo hiển thị trực tiếp (cập nhật ngay khi học sinh vừa bấm Nộp bài)
+  const masteryBefore = Math.round(
+    (ketQua?.adaptiveUpdate?.xacSuatThanhThaoTruoc ??
+      adaptiveContext?.xacSuatThanhThao ??
+      0.25) * 100
+  );
+  const masteryCurrent = Math.round(
+    (ketQua?.adaptiveUpdate?.xacSuatThanhThaoMoi ??
+      adaptiveContext?.xacSuatThanhThao ??
+      0.25) * 100
+  );
+  const masteryDelta = masteryCurrent - masteryBefore;
+
+  const thetaCurrent =
+    ketQua?.adaptiveUpdate?.nangLucIRTMoi ??
+    adaptiveContext?.nangLucIRT ??
+    -0.4;
+  const stabilityCurrent =
+    ketQua?.adaptiveUpdate?.doBenTriNhoMoi ??
+    adaptiveContext?.doBenTriNho ??
+    1.0;
+
+  const doKhoIRT = baiTap.doKhoIRT ?? 0.0;
+  const zpdProbPercent = Math.round(
+    (adaptiveContext?.xacSuatDuDoan ?? 0.7) * 100
+  );
+
+  // Link câu tiếp theo ưu tiên câu được chọn động theo ZPD (IRT 3PL P ~ 0.70)
+  const adaptiveNextId =
+    ketQua?.nextAdaptiveQuestion?.baiTapId || navigation?.nextBaiTapId || null;
+  const nextDangQuery =
+    navigation?.dangBaiQuery ||
+    (ketQua?.nextAdaptiveQuestion?.dangBai
+      ? `?dangBai=${encodeURIComponent(ketQua.nextAdaptiveQuestion.dangBai)}`
+      : "");
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
+    <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-5">
       {/* Breadcrumb & Navigation Bar */}
       <div className="flex items-center justify-between gap-4 flex-wrap text-sm text-slate-500">
         <div className="flex items-center gap-2 flex-wrap">
@@ -119,8 +172,8 @@ export function PhongLamBaiForm({ baiTap, navigation }: Props) {
         </Link>
       </div>
 
-      {/* Top Status & Controls */}
-      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-3">
+      {/* Top Status, BKT Mastery Progress & ZPD Telemetry */}
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-bold bg-blue-600 text-white px-3 py-1 rounded-full shadow-2xs">
@@ -132,12 +185,12 @@ export function PhongLamBaiForm({ baiTap, navigation }: Props) {
               </span>
             )}
             <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full">
-              Mức độ: {baiTap.mucDo}
+              {baiTap.mucDo} • IRT b = {doKhoIRT >= 0 ? `+${doKhoIRT}` : doKhoIRT}
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Prev / Next question buttons */}
+            {/* Prev / Next sequential navigation */}
             {navigation && (
               <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
                 {navigation.prevBaiTapId ? (
@@ -157,7 +210,9 @@ export function PhongLamBaiForm({ baiTap, navigation }: Props) {
                   </span>
                 )}
 
-                <span className="text-xs font-semibold px-1 text-slate-400">|</span>
+                <span className="text-xs font-semibold px-1 text-slate-400">
+                  |
+                </span>
 
                 {navigation.nextBaiTapId ? (
                   <Link
@@ -186,15 +241,80 @@ export function PhongLamBaiForm({ baiTap, navigation }: Props) {
           </div>
         </div>
 
-        {/* Mini Progress Bar */}
-        {navigation && (
-          <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+        {/* Live BKT Mastery Progress Bar & IRT / FSRS Metrics */}
+        <div className="bg-slate-50/80 border border-slate-200/70 rounded-xl p-3.5 space-y-2">
+          <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
+            <div className="flex items-center gap-1.5 font-bold text-slate-800">
+              <Brain className="w-4 h-4 text-indigo-600" />
+              <span>Độ thành thạo dạng bài (BKT):</span>
+              <span
+                className={`px-2 py-0.5 rounded-md font-black ${
+                  masteryCurrent >= 85
+                    ? "bg-emerald-100 text-emerald-800"
+                    : masteryCurrent >= 60
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-amber-100 text-amber-800"
+                }`}
+              >
+                {masteryCurrent}%
+              </span>
+              {ketQua && masteryDelta !== 0 && (
+                <span
+                  className={`text-[11px] font-bold ${
+                    masteryDelta > 0 ? "text-emerald-600" : "text-rose-600"
+                  }`}
+                >
+                  ({masteryDelta > 0 ? `+${masteryDelta}%` : `${masteryDelta}%`})
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-500 flex-wrap">
+              <span title="Năng lực ẩn của học sinh theo lý thuyết đáp ứng câu hỏi IRT">
+                Năng lực θ ={" "}
+                <strong className="text-slate-700">
+                  {thetaCurrent >= 0 ? `+${thetaCurrent}` : thetaCurrent}
+                </strong>
+              </span>
+              <span>•</span>
+              <span title="Xác suất giải đúng dự đoán theo vùng phát triển gần ZPD">
+                Vùng ZPD:{" "}
+                <strong className="text-indigo-700">P ≈ {zpdProbPercent}%</strong>
+              </span>
+              <span>•</span>
+              <span title="Độ bền trí nhớ Ebbinghaus (chu kỳ ôn tập ngắt quãng)">
+                Độ bền nhớ:{" "}
+                <strong className="text-emerald-700">
+                  {stabilityCurrent} ngày
+                </strong>
+              </span>
+            </div>
+          </div>
+
+          {/* Thanh tiến trình BKT với vạch mốc 85% Mastery */}
+          <div className="relative w-full bg-slate-200/80 rounded-full h-2.5 overflow-hidden">
             <div
-              className="bg-blue-600 h-1.5 rounded-full transition-all duration-300 ease-out"
-              style={{ width: `${progressPercent}%` }}
+              className={`h-2.5 rounded-full transition-all duration-500 ease-out ${
+                masteryCurrent >= 85
+                  ? "bg-gradient-to-r from-emerald-500 to-teal-500"
+                  : "bg-gradient-to-r from-blue-600 to-indigo-600"
+              }`}
+              style={{ width: `${Math.min(100, Math.max(4, masteryCurrent))}%` }}
+            />
+            {/* Vạch đích 85% Thành thạo */}
+            <div
+              className="absolute top-0 bottom-0 w-0.5 bg-emerald-700/70"
+              style={{ left: "85%" }}
+              title="Ngưỡng công nhận Thành thạo (85%)"
             />
           </div>
-        )}
+          <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+            <span>Khởi đầu (25%)</span>
+            <span className="text-emerald-700 font-bold">
+              ★ Đích Thành thạo: 85%
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Question Card */}
@@ -210,13 +330,17 @@ export function PhongLamBaiForm({ baiTap, navigation }: Props) {
             const isCorrect = ketQua && ketQua.dapAnDung === key;
             const isWrong = ketQua && isSelected && ketQua.ketQua === "SAI";
 
-            let btnStyle = "border-slate-200 bg-white hover:bg-slate-50 text-slate-800";
+            let btnStyle =
+              "border-slate-200 bg-white hover:bg-slate-50 text-slate-800";
             if (isSelected && !ketQua) {
-              btnStyle = "border-blue-600 bg-blue-50/80 text-blue-900 ring-2 ring-blue-600";
+              btnStyle =
+                "border-blue-600 bg-blue-50/80 text-blue-900 ring-2 ring-blue-600";
             } else if (isCorrect) {
-              btnStyle = "border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-500";
+              btnStyle =
+                "border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-500";
             } else if (isWrong) {
-              btnStyle = "border-rose-500 bg-rose-50 text-rose-900 ring-2 ring-rose-500";
+              btnStyle =
+                "border-rose-500 bg-rose-50 text-rose-900 ring-2 ring-rose-500";
             }
 
             return (
@@ -229,7 +353,9 @@ export function PhongLamBaiForm({ baiTap, navigation }: Props) {
               >
                 <span
                   className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 transition-colors ${
-                    isSelected ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700"
+                    isSelected
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-100 text-slate-700"
                   }`}
                 >
                   {key}
@@ -250,42 +376,89 @@ export function PhongLamBaiForm({ baiTap, navigation }: Props) {
               disabled={!selectedOption || dangNop}
               className="px-7 py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] disabled:opacity-50 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-blue-500/20 flex items-center gap-2 cursor-pointer"
             >
-              {dangNop ? "Đang chấm bài..." : "Nộp bài ngay"}
+              {dangNop ? "Đang phân tích & chấm bài..." : "Nộp bài ngay"}
             </button>
           </div>
         ) : (
-          /* Result Notification & Explanation */
+          /* Result Notification, Adaptive Telemetry & Explanation */
           <div className="space-y-6 pt-6 border-t border-slate-200">
             <div
-              className={`p-5 rounded-2xl flex items-start gap-3.5 ${
+              className={`p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
                 ketQua.ketQua === "DUNG"
                   ? "bg-emerald-50 border border-emerald-200"
                   : "bg-rose-50 border border-rose-200"
               }`}
             >
-              {ketQua.ketQua === "DUNG" ? (
-                <CheckCircle className="w-6 h-6 text-emerald-600 shrink-0 mt-0.5" />
-              ) : (
-                <XCircle className="w-6 h-6 text-rose-600 shrink-0 mt-0.5" />
-              )}
-              <div className="space-y-1">
-                <h3
-                  className={`font-bold text-base ${
-                    ketQua.ketQua === "DUNG" ? "text-emerald-900" : "text-rose-900"
-                  }`}
-                >
-                  {ketQua.ketQua === "DUNG"
-                    ? "Tuyệt vời! Bạn đã chọn đáp án chính xác."
-                    : "Chưa chính xác!"}
-                </h3>
-                <p className="text-sm text-slate-700">
-                  Đáp án chuẩn xác là:{" "}
-                  <strong className="text-blue-700 uppercase font-black">
-                    {ketQua.dapAnDung}
-                  </strong>
-                </p>
+              <div className="flex items-start gap-3.5">
+                {ketQua.ketQua === "DUNG" ? (
+                  <CheckCircle className="w-6 h-6 text-emerald-600 shrink-0 mt-0.5" />
+                ) : (
+                  <XCircle className="w-6 h-6 text-rose-600 shrink-0 mt-0.5" />
+                )}
+                <div className="space-y-1">
+                  <h3
+                    className={`font-bold text-base ${
+                      ketQua.ketQua === "DUNG"
+                        ? "text-emerald-900"
+                        : "text-rose-900"
+                    }`}
+                  >
+                    {ketQua.ketQua === "DUNG"
+                      ? "Tuyệt vời! Bạn đã chọn đáp án chính xác."
+                      : "Chưa chính xác! Hệ thống đã điều chỉnh lộ trình cho bạn."}
+                  </h3>
+                  <p className="text-sm text-slate-700">
+                    Đáp án chuẩn xác là:{" "}
+                    <strong className="text-blue-700 uppercase font-black">
+                      {ketQua.dapAnDung}
+                    </strong>
+                  </p>
+                </div>
               </div>
+
+              {/* Khối thông báo cập nhật BKT + Spaced Repetition */}
+              {ketQua.adaptiveUpdate && (
+                <div className="bg-white/90 backdrop-blur-xs rounded-xl p-3 border border-slate-200/80 text-xs space-y-1 shrink-0">
+                  <div className="flex items-center gap-1.5 font-bold text-slate-800">
+                    <TrendingUp className="w-3.5 h-3.5 text-blue-600" />
+                    <span>
+                      Thành thạo: {masteryBefore}% →{" "}
+                      <strong className="text-blue-700">{masteryCurrent}%</strong>
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-500 font-medium">
+                    Lịch ôn ngắt quãng kế tiếp:{" "}
+                    <strong className="text-slate-700">
+                      sau {ketQua.adaptiveUpdate.khoangCachOnNgay} ngày
+                    </strong>
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Banner chúc mừng khi cán mốc 85% Mastery */}
+            {ketQua.adaptiveUpdate?.daDatThanhThao && (
+              <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-4 rounded-2xl flex items-center justify-between gap-4 shadow-md">
+                <div className="flex items-center gap-3">
+                  <Award className="w-7 h-7 text-amber-300 shrink-0" />
+                  <div>
+                    <h4 className="font-black text-sm">
+                      Chúc mừng! Bạn đã làm chủ dạng toán này (Mastery ≥ 85%)
+                    </h4>
+                    <p className="text-xs text-emerald-50">
+                      Hệ thống đã ghi nhận vào trí nhớ dài hạn và sẽ nhắc ôn ngắt quãng sau{" "}
+                      {ketQua.adaptiveUpdate.khoangCachOnNgay} ngày.
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href={`/bai-tap?chuDeId=${baiTap.chuDe.id}`}
+                  className="px-3.5 py-2 bg-white text-emerald-900 font-bold text-xs rounded-xl shrink-0 hover:bg-emerald-50 transition-colors"
+                >
+                  Chuyển dạng bài mới →
+                </Link>
+              </div>
+            )}
 
             {/* Explanation box */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-3">
@@ -297,50 +470,48 @@ export function PhongLamBaiForm({ baiTap, navigation }: Props) {
               </div>
             </div>
 
-            {/* Next Question & Actions Banner */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  type="button"
-                  disabled={daGhim || dangGhim}
-                  onClick={async () => {
-                    setDangGhim(true);
-                    try {
-                      const res = await themVaoHangDoiOnTapAction(baiTap.id);
-                      if (res.ok) setDaGhim(true);
-                    } finally {
-                      setDangGhim(false);
-                    }
-                  }}
-                  className={`px-4 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    daGhim
-                      ? "bg-amber-50 text-amber-800 border-amber-300"
-                      : "bg-white text-slate-700 border-slate-200 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-200"
-                  }`}
-                >
-                  <Repeat className="w-3.5 h-3.5 text-amber-600" />
-                  {daGhim ? "✓ Đã ghim vào Ôn tập (SM-2)" : "Ghim vào Ôn tập SM-2"}
-                </button>
+            {/* Next Adaptive Question (ZPD) & Actions Banner */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 bg-indigo-100/80 px-2.5 py-1 rounded-lg">
+                    <Target className="w-3.5 h-3.5" /> Điều phối câu tiếp theo (Vùng ZPD ~ 70%)
+                  </span>
+                </div>
+                {ketQua.nextAdaptiveQuestion && (
+                  <p className="text-xs text-slate-600">
+                    {ketQua.nextAdaptiveQuestion.lyDoChon} • Độ khó câu kế:{" "}
+                    <strong>
+                      b ={" "}
+                      {ketQua.nextAdaptiveQuestion.doKhoIRT >= 0
+                        ? `+${ketQua.nextAdaptiveQuestion.doKhoIRT}`
+                        : ketQua.nextAdaptiveQuestion.doKhoIRT}
+                    </strong>{" "}
+                    (Xác suất đúng dự kiến:{" "}
+                    <strong>
+                      {Math.round(ketQua.nextAdaptiveQuestion.xacSuatDuDoan * 100)}%
+                    </strong>
+                    )
+                  </p>
+                )}
               </div>
 
-              {/* Nút làm câu tiếp theo */}
-              {navigation?.nextBaiTapId ? (
+              {/* Nút làm câu tiếp theo được chọn bởi thuật toán ZPD */}
+              {adaptiveNextId ? (
                 <Link
-                  href={`/lam-bai/${navigation.nextBaiTapId}${navigation.dangBaiQuery || ""}`}
+                  href={`/lam-bai/${adaptiveNextId}${nextDangQuery}`}
                   prefetch={true}
-                  className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 cursor-pointer"
+                  className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 cursor-pointer shrink-0"
                 >
-                  <span>Làm câu tiếp theo</span>
-                  <span className="text-xs bg-white/20 px-2 py-0.5 rounded-md">
-                    {navigation.currentIndex + 1}/{navigation.totalCount}
-                  </span>
+                  <Sparkles className="w-4 h-4 fill-current" />
+                  <span>Câu tiếp theo (Thích ứng ZPD)</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               ) : (
                 <Link
                   href={`/bai-tap?chuDeId=${baiTap.chuDe.id}`}
                   prefetch={true}
-                  className="px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 cursor-pointer"
+                  className="px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 cursor-pointer shrink-0"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>Hoàn thành dạng bài! Quay lại danh mục</span>

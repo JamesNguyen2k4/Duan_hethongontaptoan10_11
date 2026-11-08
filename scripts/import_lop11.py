@@ -268,6 +268,15 @@ def parse_questions_from_paragraphs(paras):
         if re.match(r"^(?:Lời giải|Hướng dẫn|Chọn|Chọn|Đáp án)", p_strip, re.IGNORECASE):
             continue
         if re.search(r"(?:^|[\.\s])A\.\s*", p_strip):
+            # Kiểm tra xem dòng không rỗng gần nhất phía trước có phải là Lời giải hoặc Chọn [A-D] không
+            # Nếu có thì đây là dòng giải thích phương án A trong lời giải của câu trước, không phải câu hỏi mới!
+            prev_p = ""
+            for k in range(i - 1, max(-1, i - 4), -1):
+                if paras[k].strip():
+                    prev_p = paras[k].strip()
+                    break
+            if re.match(r"^(?:Lời giải|Hướng dẫn|Chọn\s+(?:đáp án\s+)?[A-D]|Chọn\s+(?:đáp án\s+)?[A-D]|Đáp án\s+[A-D])", prev_p, re.IGNORECASE):
+                continue
             a_indices.append(i)
 
     questions = []
@@ -397,7 +406,9 @@ def parse_questions_from_paragraphs(paras):
             is_broken = True
         if norm_question.strip() in ("Cho . Kết quả đúng là:", "Cho . Kết quả đúng là") or len(norm_question.strip()) < 5:
             is_broken = True
-        if re.match(r"^(?:Chọn|Chọn)\s+[A-D]\.?$", norm_question.strip()):
+        if re.match(r"^(?:Chọn|Chọn)\s+(?:đáp án\s+)?[A-D]\.?$", norm_question.strip(), re.IGNORECASE):
+            is_broken = True
+        if re.match(r"^(?:Lời giải|Hướng dẫn giải)", norm_question.strip(), re.IGNORECASE):
             is_broken = True
 
         if not is_broken:

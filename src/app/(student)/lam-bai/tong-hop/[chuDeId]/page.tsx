@@ -13,12 +13,20 @@ interface Props {
   };
   searchParams: {
     soCau?: string;
+    mode?: string; // "chan-doan" (Cold-Start Placement) | "tong-hop"
   };
 }
 
-export default async function LuyenTapTongHopPage({ params, searchParams }: Props) {
+export default async function LuyenTapTongHopPage({
+  params,
+  searchParams,
+}: Props) {
   const { chuDeId } = params;
-  const targetCount = Math.min(30, Math.max(5, parseInt(searchParams.soCau || "15", 10)));
+  const isChanDoan = searchParams.mode === "chan-doan";
+  const targetCount = Math.min(
+    30,
+    Math.max(5, parseInt(searchParams.soCau || (isChanDoan ? "8" : "15"), 10))
+  );
 
   // Lấy thông tin chủ đề / bài học
   const chuDe = await db.chuDe.findUnique({
@@ -40,6 +48,7 @@ export default async function LuyenTapTongHopPage({ params, searchParams }: Prop
       deBai: true,
       dangBai: true,
       mucDo: true,
+      doKhoIRT: true,
       dapAn: true,
     },
   });
@@ -48,9 +57,36 @@ export default async function LuyenTapTongHopPage({ params, searchParams }: Prop
     notFound();
   }
 
-  // Thuật toán bốc ngẫu nhiên phân hóa (Fisher-Yates shuffle)
-  const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
-  const selected = shuffled.slice(0, targetCount);
+  // Lấy mẫu phân tầng (Stratified Sampling) đều qua từng Dạng bài (Knowledge Component)
+  // đảm bảo đề Chẩn đoán đầu vào (Cold-Start) hoặc Đề tổng hợp bao phủ đủ mọi dạng toán trong bài
+  const byDang = new Map<string, typeof allQuestions>();
+  for (const q of allQuestions) {
+    const key = q.dangBai || "Dạng khác";
+    if (!byDang.has(key)) byDang.set(key, []);
+    byDang.get(key)!.push(q);
+  }
+
+  // Xáo trộn ngẫu nhiên trong từng dạng bài
+  const buckets = Array.from(byDang.values()).map((bucket) =>
+    [...bucket].sort(() => Math.random() - 0.5)
+  );
+
+  const selected: typeof allQuestions = [];
+  let round = 0;
+  while (selected.length < targetCount) {
+    let addedInRound = false;
+    for (const bucket of buckets) {
+      if (round < bucket.length && selected.length < targetCount) {
+        selected.push(bucket[round]);
+        addedInRound = true;
+      }
+    }
+    if (!addedInRound) break;
+    round++;
+  }
+
+  // Sắp xếp từ độ khó IRT thấp đến cao để trải nghiệm làm bài mượt mà
+  selected.sort((a, b) => a.doKhoIRT - b.doKhoIRT);
 
   const formattedQuestions: CauHoiTongHopItem[] = selected.map((q) => {
     let cacLuaChon = {};
@@ -64,6 +100,7 @@ export default async function LuyenTapTongHopPage({ params, searchParams }: Prop
       deBai: q.deBai,
       dangBai: q.dangBai,
       mucDo: q.mucDo,
+      doKhoIRT: q.doKhoIRT,
       cacLuaChon,
     };
   });
@@ -75,8 +112,8 @@ export default async function LuyenTapTongHopPage({ params, searchParams }: Prop
         chuDeTen={chuDe.ten}
         chuongTen={chuDe.chuong.ten}
         danhSachCauHoi={formattedQuestions}
+        cheDo={isChanDoan ? "CHAN_DOAN_DAU_VAO" : "LUYEN_TONG_HOP"}
       />
     </div>
   );
 }
-

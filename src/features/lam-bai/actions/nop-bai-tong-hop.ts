@@ -2,13 +2,18 @@
 
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { capNhatTheOnTapSM2 } from "@/lib/spaced-repetition";
+import {
+  capNhatMoHinhNguoiHoc,
+  layNangLucTheoChuDe,
+  ThongTinNangLucDangBai,
+} from "@/lib/adaptive-engine";
 
 export interface KetQuaChiTietCau {
   id: string;
   deBai: string;
   dangBai: string | null;
   mucDo: string;
+  doKhoIRT: number;
   cacLuaChon: Record<string, string>;
   luaChonCuaHocSinh: string | null;
   dapAnDung: string;
@@ -26,6 +31,7 @@ export interface KetQuaPhienTongHop {
   tongSoCau: number;
   thoiGianGiay: number;
   chiTietCacCau: KetQuaChiTietCau[];
+  hoSoNangLucSauBaiThi?: ThongTinNangLucDangBai[];
 }
 
 export async function nopBaiTapTongHopAction(
@@ -37,7 +43,6 @@ export async function nopBaiTapTongHopAction(
   const session = await auth();
   const userId = session?.user?.id;
 
-  // Lấy dữ liệu chi tiết của toàn bộ câu hỏi trong đề từ database
   const baiTaps = await db.baiTap.findMany({
     where: {
       id: { in: danhSachCauHoiIds },
@@ -50,6 +55,10 @@ export async function nopBaiTapTongHopAction(
   let soCauSai = 0;
   let soCauChuaLam = 0;
   const chiTietCacCau: KetQuaChiTietCau[] = [];
+  const avgTimePerQ = Math.max(
+    10,
+    Math.round(thoiGianGiay / Math.max(1, danhSachCauHoiIds.length))
+  );
 
   for (const qId of danhSachCauHoiIds) {
     const bt = baiTapMap.get(qId);
@@ -65,8 +74,11 @@ export async function nopBaiTapTongHopAction(
       parsedDapAn = bt.dapAn;
     }
 
-    const luaChon = cauTraLoiMap[qId] ? cauTraLoiMap[qId].trim().toUpperCase() : null;
-    const dung = luaChon !== null && luaChon === parsedDapAn.trim().toUpperCase();
+    const luaChon = cauTraLoiMap[qId]
+      ? cauTraLoiMap[qId].trim().toUpperCase()
+      : null;
+    const dung =
+      luaChon !== null && luaChon === parsedDapAn.trim().toUpperCase();
 
     if (luaChon === null) {
       soCauChuaLam++;
@@ -76,34 +88,28 @@ export async function nopBaiTapTongHopAction(
       soCauSai++;
     }
 
-    // Nếu học sinh đã đăng nhập: Lưu lịch sử và cập nhật Spaced Repetition (SM-2)
+    // Nếu học sinh đã đăng nhập: Lưu lịch sử và cập nhật Mô hình người học hợp nhất (BKT + IRT + FSRS/SM-2)
     if (userId) {
-      // 1. Lưu bản ghi lượt làm
       await db.lanLamBai.create({
         data: {
           nguoiDungId: userId,
           baiTapId: bt.id,
           baiLam: luaChon || "CHUA_LAM",
           ketQua: dung ? "DUNG" : "SAI",
-          thoiGianGiay: Math.round(thoiGianGiay / danhSachCauHoiIds.length),
+          thoiGianGiay: avgTimePerQ,
         },
       });
 
-      // 2. Cập nhật lượt làm bài tập
-      await db.baiTap.update({
-        where: { id: bt.id },
-        data: {
-          soLanLam: { increment: 1 },
-          soLanDung: dung ? { increment: 1 } : undefined,
-        },
+      await capNhatMoHinhNguoiHoc({
+        nguoiDungId: userId,
+        baiTapId: bt.id,
+        chuDeId: bt.chuDeId,
+        dangBai: bt.dangBai,
+        dung,
+        thoiGianGiay: avgTimePerQ,
+        doKhoIRT: bt.doKhoIRT,
+        doPhanBiet: bt.doPhanBiet,
       });
-
-      // 3. Tự động đưa câu sai vào SM-2 ôn lại
-      if (!dung) {
-        await capNhatTheOnTapSM2(userId, bt.id, 1); // điểm nhớ = 1 (cần ôn lại ngay)
-      } else {
-        await capNhatTheOnTapSM2(userId, bt.id, 4); // điểm nhớ = 4 (làm tốt)
-      }
     }
 
     chiTietCacCau.push({
@@ -111,12 +117,18 @@ export async function nopBaiTapTongHopAction(
       deBai: bt.deBai,
       dangBai: bt.dangBai,
       mucDo: bt.mucDo,
+      doKhoIRT: bt.doKhoIRT,
       cacLuaChon,
       luaChonCuaHocSinh: luaChon,
       dapAnDung: parsedDapAn,
       dung,
       loiGiaiChiTiet: bt.loiGiaiChiTiet,
     });
+  }
+
+  let hoSoNangLucSauBaiThi: ThongTinNangLucDangBai[] | undefined = undefined;
+  if (userId) {
+    hoSoNangLucSauBaiThi = await layNangLucTheoChuDe(userId, chuDeId);
   }
 
   const tongSoCau = danhSachCauHoiIds.length;
@@ -131,6 +143,6 @@ export async function nopBaiTapTongHopAction(
     tongSoCau,
     thoiGianGiay,
     chiTietCacCau,
+    hoSoNangLucSauBaiThi,
   };
 }
-

@@ -36,12 +36,13 @@ model NguoiDung {
   sessions      PhienDangNhap[]
 
   // Học tập
-  lanLamBais    LanLamBai[]
-  theOnTaps     TheOnTap[]
-  tienDos       TienDo[]
-  baiViets      BaiViet[]
-  binhLuans     BinhLuan[]
-  baoCaos       BaoCao[]
+  lanLamBais      LanLamBai[]
+  theOnTaps       TheOnTap[]
+  nangLucDangBais NangLucDangBai[]
+  tienDos         TienDo[]
+  baiViets        BaiViet[]
+  binhLuans       BinhLuan[]
+  baoCaos         BaoCao[]
 
   @@map("nguoi_dung")
 }
@@ -154,33 +155,37 @@ model ChuDe {
   ten      String
   thuTu    Int
 
-  chuong   Chuong    @relation(fields: [chuongId], references: [id], onDelete: Cascade)
-  baiTaps  BaiTap[]
-  baiViets BaiViet[]
+  chuong          Chuong           @relation(fields: [chuongId], references: [id], onDelete: Cascade)
+  baiTaps         BaiTap[]
+  nangLucDangBais NangLucDangBai[]
+  baiViets        BaiViet[]
 
   @@map("chu_de")
 }
 
 model BaiTap {
-  id            String     @id @default(cuid())
-  chuDeId       String
-  deBai         String     @db.Text   // Markdown + LaTeX
-  loai          LoaiBaiTap
-  mucDo         MucDo
-  dapAn         String     @db.Text   // JSON cho trắc nghiệm, string cho điền đáp án
-  loiGiaiChiTiet String    @db.Text
-  dangBai       String?    // ví dụ: "giải phương trình bậc 2"
-  soLanLam      Int        @default(0)
-  soLanDung     Int        @default(0)
-  taoLuc        DateTime   @default(now())
-  capNhatLuc    DateTime   @updatedAt
+  id             String     @id @default(cuid())
+  chuDeId        String
+  deBai          String     @db.Text   // Markdown + LaTeX
+  loai           LoaiBaiTap
+  mucDo          MucDo
+  dapAn          String     @db.Text   // JSON cho trắc nghiệm, string cho điền đáp án
+  loiGiaiChiTiet String     @db.Text
+  dangBai        String?    // ví dụ: "Dạng 1. ..."
+  doKhoIRT       Float      @default(0.0) // Tham số độ khó IRT b_i trong [-3.0, +3.0]
+  doPhanBiet     Float      @default(1.0) // Hệ số phân biệt IRT a_i trong [0.5, 2.5]
+  soLanLam       Int        @default(0)
+  soLanDung      Int        @default(0)
+  taoLuc         DateTime   @default(now())
+  capNhatLuc     DateTime   @updatedAt
 
-  chuDe     ChuDe      @relation(fields: [chuDeId], references: [id])
+  chuDe      ChuDe       @relation(fields: [chuDeId], references: [id])
   lanLamBais LanLamBai[]
   theOnTaps  TheOnTap[]
   baiViets   BaiViet[]
 
   @@index([chuDeId, mucDo])
+  @@index([chuDeId, dangBai])
   @@index([loai, mucDo])
   @@map("bai_tap")
 }
@@ -226,11 +231,40 @@ model TheOnTap {
   capNhatLuc      DateTime @updatedAt
 
   nguoiDung NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
-  baiTap    BaiTap    @relation(fields: [baiTapId], references: [id])
+  baiTap    BaiTap    @relation(fields: [baiTapId], references: [id], onDelete: Cascade)
 
   @@unique([nguoiDungId, baiTapId])
   @@index([nguoiDungId, ngayOnKeTiep])
   @@map("the_on_tap")
+}
+
+// ─────────────────────────────────────────────
+// MÔ HÌNH NGƯỜI HỌC HỢP NHẤT (BKT + IRT + FSRS/SM-2)
+// ─────────────────────────────────────────────
+
+model NangLucDangBai {
+  id               String   @id @default(cuid())
+  nguoiDungId      String
+  chuDeId          String
+  dangBai          String   // Knowledge Component (KC)
+  xacSuatThanhThao Float    @default(0.25) // BKT P(L_t) trong [0.01, 0.99]
+  nangLucIRT       Float    @default(0.0)  // IRT theta_k trong [-3.0, +3.0]
+  doBenTriNho      Float    @default(1.0)  // Stability S (tính bằng ngày)
+  heSoDe           Float    @default(2.5)  // Ease Factor EF
+  soLanLuyen       Int      @default(0)
+  soLanDung        Int      @default(0)
+  soChuoiDung      Int      @default(0)
+  lanLuyenCuoi     DateTime @default(now())
+  ngayOnKeTiep     DateTime @default(now())
+  capNhatLuc       DateTime @updatedAt
+
+  nguoiDung NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+  chuDe     ChuDe     @relation(fields: [chuDeId], references: [id], onDelete: Cascade)
+
+  @@unique([nguoiDungId, chuDeId, dangBai])
+  @@index([nguoiDungId, ngayOnKeTiep])
+  @@index([nguoiDungId, chuDeId])
+  @@map("nang_luc_dang_bai")
 }
 
 // ─────────────────────────────────────────────

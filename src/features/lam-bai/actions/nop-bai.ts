@@ -2,9 +2,17 @@
 
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { capNhatTheOnTapSM2 } from "@/lib/spaced-repetition";
+import {
+  capNhatMoHinhNguoiHoc,
+  chonCauHoiThichUngZPD,
+} from "@/lib/adaptive-engine";
 
-export async function nopBaiTapAction(baiTapId: string, luaChonHocSinh: string, thoiGianGiay: number) {
+export async function nopBaiTapAction(
+  baiTapId: string,
+  luaChonHocSinh: string,
+  thoiGianGiay: number,
+  dangBaiFilter?: string
+) {
   const session = await auth();
   if (!session?.user?.id) {
     return { ok: false, message: "Vui lòng đăng nhập để làm bài" };
@@ -26,10 +34,11 @@ export async function nopBaiTapAction(baiTapId: string, luaChonHocSinh: string, 
     dapAnDung = baiTap.dapAn;
   }
 
-  const dung = luaChonHocSinh.trim().toUpperCase() === dapAnDung.trim().toUpperCase();
+  const dung =
+    luaChonHocSinh.trim().toUpperCase() === dapAnDung.trim().toUpperCase();
 
   // 1. Lưu bản ghi lần làm bài
-  const lanLam = await db.lanLamBai.create({
+  await db.lanLamBai.create({
     data: {
       nguoiDungId: session.user.id,
       baiTapId: baiTap.id,
@@ -39,29 +48,51 @@ export async function nopBaiTapAction(baiTapId: string, luaChonHocSinh: string, 
     },
   });
 
-  // 2. Cập nhật thống kê câu hỏi
-  await db.baiTap.update({
-    where: { id: baiTap.id },
-    data: {
-      soLanLam: { increment: 1 },
-      soLanDung: dung ? { increment: 1 } : undefined,
-    },
+  // 2. Cập nhật Mô hình người học hợp nhất: BKT + IRT 3PL + FSRS/SM-2
+  const adaptiveUpdate = await capNhatMoHinhNguoiHoc({
+    nguoiDungId: session.user.id,
+    baiTapId: baiTap.id,
+    chuDeId: baiTap.chuDeId,
+    dangBai: baiTap.dangBai,
+    dung,
+    thoiGianGiay,
+    doKhoIRT: baiTap.doKhoIRT,
+    doPhanBiet: baiTap.doPhanBiet,
   });
 
-  // 3. Tích hợp Spaced Repetition (Adaptive SM-2):
-  // Nếu sai hoặc làm đúng chậm (>60s) -> đưa vào hàng đợi ôn tập ngắt quãng
-  let chatLuongNho = 4;
-  if (!dung) chatLuongNho = 1;
-  else if (thoiGianGiay > 60) chatLuongNho = 3;
-  else chatLuongNho = 5;
-
-  await capNhatTheOnTapSM2(session.user.id, baiTap.id, chatLuongNho);
+  // 3. Tự động chọn câu hỏi tiếp theo trong Vùng phát triển gần (ZPD: P(correct) ~ 70%)
+  const nextZPD = await chonCauHoiThichUngZPD({
+    nguoiDungId: session.user.id,
+    chuDeId: baiTap.chuDeId,
+    dangBai: dangBaiFilter || baiTap.dangBai || undefined,
+    excludeBaiTapId: baiTap.id,
+  });
 
   return {
     ok: true,
     ketQua: dung ? "DUNG" : "SAI",
     dapAnDung: dapAnDung,
     loiGiaiChiTiet: baiTap.loiGiaiChiTiet,
+    adaptiveUpdate: {
+      dangBai: adaptiveUpdate.dangBai,
+      xacSuatThanhThaoTruoc: adaptiveUpdate.xacSuatThanhThaoTruoc,
+      xacSuatThanhThaoMoi: adaptiveUpdate.xacSuatThanhThaoMoi,
+      nangLucIRTTruoc: adaptiveUpdate.nangLucIRTTruoc,
+      nangLucIRTMoi: adaptiveUpdate.nangLucIRTMoi,
+      doBenTriNhoMoi: adaptiveUpdate.doBenTriNhoMoi,
+      khoangCachOnNgay: adaptiveUpdate.khoangCachOnNgay,
+      trangThai: adaptiveUpdate.trangThai,
+      nhanTrangThai: adaptiveUpdate.nhanTrangThai,
+      daDatThanhThao: adaptiveUpdate.daDatThanhThao,
+    },
+    nextAdaptiveQuestion: nextZPD
+      ? {
+          baiTapId: nextZPD.baiTapId,
+          dangBai: nextZPD.dangBai,
+          xacSuatDuDoan: nextZPD.xacSuatDuDoan,
+          doKhoIRT: nextZPD.doKhoIRT,
+          lyDoChon: nextZPD.lyDoChon,
+        }
+      : null,
   };
 }
-

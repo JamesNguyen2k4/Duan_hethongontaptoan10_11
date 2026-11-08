@@ -2,7 +2,16 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import Link from "next/link";
-import { BookOpen, Layers, TrendingUp, Repeat, ArrowRight, Award, Clock } from "lucide-react";
+import {
+  BookOpen,
+  Layers,
+  Repeat,
+  Clock,
+  MessageSquare,
+  Sparkles,
+} from "lucide-react";
+import { phanTichDiemYeuHocSinh } from "@/features/phan-tich/services/adaptive";
+import { BangPhanTichNangLuc } from "@/features/phan-tich/components/BangPhanTichNangLuc";
 
 export const dynamic = "force-dynamic";
 
@@ -10,9 +19,7 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/dang-nhap");
 
-  const [totalBais, totalBaiTaps, lanLams, theOns] = await Promise.all([
-    db.bai.count(),
-    db.baiTap.count(),
+  const [lanLams, analysisData] = await Promise.all([
     db.lanLamBai.findMany({
       where: { nguoiDungId: session.user.id },
       take: 5,
@@ -23,16 +30,10 @@ export default async function DashboardPage() {
         },
       },
     }),
-    db.theOnTap.count({
-      where: {
-        nguoiDungId: session.user.id,
-        ngayOnKeTiep: { lte: new Date() },
-      },
-    }),
+    phanTichDiemYeuHocSinh(session.user.id),
   ]);
 
-  const soCauDung = lanLams.filter((l) => l.ketQua === "DUNG").length;
-  const tiLeDung = lanLams.length > 0 ? Math.round((soCauDung / lanLams.length) * 100) : 0;
+  const dangCanOnDauTien = analysisData.dangBaiCanOnList?.[0];
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
@@ -41,28 +42,46 @@ export default async function DashboardPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <span className="text-xs bg-white/20 backdrop-blur-md px-3 py-1 rounded-full font-bold uppercase tracking-wider">
-              {session.user.role === "HOC_SINH" ? "Học sinh" : session.user.role}
+              {session.user.role === "HOC_SINH"
+                ? "Học sinh"
+                : session.user.role}
+            </span>
+            <span className="text-xs bg-amber-400/20 text-amber-200 border border-amber-300/30 px-3 py-1 rounded-full font-bold">
+              BKT + IRT 3PL + Spaced Repetition
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
             Xin chào, {session.user?.name}! 👋
           </h1>
           <p className="text-blue-100 text-xs sm:text-sm max-w-xl leading-relaxed">
-            Chào mừng bạn quay lại hệ thống ôn tập Toán 10–11 theo phương pháp học khép kín & học thích ứng (Adaptive Learning).
+            Hệ thống tự động theo dõi hồ sơ năng lực, điều phối câu hỏi vừa sức
+            trong Vùng phát triển gần (ZPD ≈ 70%) và nhắc ôn ngắt quãng ngay
+            trước khi kiến thức bị lãng quên.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          {theOns > 0 && (
+        <div className="flex items-center gap-3 flex-wrap">
+          {dangCanOnDauTien ? (
             <Link
-              href="/on-tap"
+              href={`/lam-bai/chu-de/${
+                dangCanOnDauTien.chuDeId
+              }?dangBai=${encodeURIComponent(dangCanOnDauTien.dangBai)}`}
               className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5"
             >
-              <Repeat className="w-4 h-4" /> Có {theOns} thẻ cần ôn ngay!
+              <Repeat className="w-4 h-4" /> Ôn ngay{" "}
+              {analysisData.soDangCanOn} dạng bài đang suy giảm trí nhớ!
+            </Link>
+          ) : (
+            <Link
+              href="/bai-tap"
+              className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5"
+            >
+              <Sparkles className="w-4 h-4" /> Bắt đầu Luyện tập thích ứng →
             </Link>
           )}
 
-          {(session.user.role === "QUAN_TRI" || session.user.role === "GIAO_VIEN") && (
+          {(session.user.role === "QUAN_TRI" ||
+            session.user.role === "GIAO_VIEN") && (
             <Link
               href="/admin"
               className="px-4 py-2.5 bg-white text-slate-900 hover:bg-slate-100 font-bold text-xs rounded-xl shadow-md transition-all"
@@ -73,8 +92,8 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* 4 Feature Action Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* 3 Core Learning Pillars */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <Link
           href="/ly-thuyet"
           prefetch={true}
@@ -83,9 +102,12 @@ export default async function DashboardPage() {
           <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
             <BookOpen className="w-5 h-5" />
           </div>
-          <h2 className="font-bold text-slate-900 text-base">Học Lý Thuyết</h2>
+          <h2 className="font-bold text-slate-900 text-base">
+            1. Học Lý Thuyết & Phương Pháp
+          </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Toàn bộ 9 chương sách KNTT kèm công thức KaTeX và phương pháp giải.
+            Toàn bộ 9 chương sách KNTT kèm công thức KaTeX và phương pháp giải
+            từng dạng toán.
           </p>
         </Link>
 
@@ -97,40 +119,35 @@ export default async function DashboardPage() {
           <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
             <Layers className="w-5 h-5" />
           </div>
-          <h2 className="font-bold text-slate-900 text-base">Ngân Hàng Bài Tập</h2>
+          <h2 className="font-bold text-slate-900 text-base">
+            2. Luyện Tập Thích Ứng & Ôn Ngắt Quãng
+          </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Hơn 3.500 câu hỏi trắc nghiệm phân hóa 4 mức độ có đáp án & lời giải chi tiết.
+            Hơn 3.500 câu hỏi phân theo 107 dạng toán, tự động điều chỉnh độ khó
+            IRT và lịch ôn tập Ebbinghaus.
           </p>
         </Link>
 
         <Link
-          href="/phan-tich"
+          href="/dien-dan"
           prefetch={true}
-          className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm hover:border-purple-400 hover:shadow-md active:scale-[0.98] transition-all group cursor-pointer select-none"
+          className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm hover:border-emerald-400 hover:shadow-md active:scale-[0.98] transition-all group cursor-pointer select-none"
         >
-          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <TrendingUp className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <MessageSquare className="w-5 h-5" />
           </div>
-          <h2 className="font-bold text-slate-900 text-base">Học Thích Ứng (AI)</h2>
+          <h2 className="font-bold text-slate-900 text-base">
+            3. Diễn Đàn Thảo Luận Toán
+          </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Biểu đồ Radar chẩn đoán điểm yếu và tự động gợi ý bài tập tương ứng.
-          </p>
-        </Link>
-
-        <Link
-          href="/on-tap"
-          prefetch={true}
-          className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm hover:border-amber-400 hover:shadow-md active:scale-[0.98] transition-all group cursor-pointer select-none"
-        >
-          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <Repeat className="w-5 h-5" />
-          </div>
-          <h2 className="font-bold text-slate-900 text-base">Ôn Tập Ngắt Quãng</h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Thuật toán SM-2 nhắc nhở thông minh không để quên kiến thức.
+            Trao đổi phương pháp giải nhanh, đặt câu hỏi trực tiếp gắn với từng
+            bài tập cụ thể.
           </p>
         </Link>
       </div>
+
+      {/* Hồ sơ Năng lực & Học thích ứng hợp nhất (Radar + Đường cong quên + ZPD) */}
+      <BangPhanTichNangLuc data={analysisData} />
 
       {/* Recent History */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">
@@ -138,7 +155,10 @@ export default async function DashboardPage() {
           <h2 className="font-bold text-slate-800 text-base flex items-center gap-2">
             <Clock className="w-4 h-4 text-blue-600" /> Bài làm gần đây của bạn
           </h2>
-          <Link href="/bai-tap" className="text-xs font-semibold text-blue-600 hover:underline">
+          <Link
+            href="/bai-tap"
+            className="text-xs font-semibold text-blue-600 hover:underline"
+          >
             Luyện thêm câu hỏi mới →
           </Link>
         </div>
@@ -146,18 +166,42 @@ export default async function DashboardPage() {
         {lanLams.length > 0 ? (
           <div className="divide-y divide-slate-100">
             {lanLams.map((l) => (
-              <div key={l.id} className="py-3 flex items-center justify-between gap-4">
+              <div
+                key={l.id}
+                className="py-3 flex items-center justify-between gap-4"
+              >
                 <div className="space-y-1">
-                  <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-full">
-                    {l.baiTap.chuDe.ten}
-                  </span>
-                  <p className="text-xs text-slate-800 line-clamp-1">{l.baiTap.deBai}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Link
+                      href={`/bai-tap?chuDeId=${l.baiTap.chuDeId}`}
+                      className="text-xs font-bold text-slate-800 hover:text-blue-600 bg-slate-100 px-2.5 py-0.5 rounded-full transition-colors"
+                    >
+                      {l.baiTap.chuDe.ten}
+                    </Link>
+                    <span className="text-[11px] font-medium text-slate-500">
+                      Mức độ: {l.baiTap.mucDo}
+                    </span>
+                  </div>
+                  {l.baiTap.dangBai && (
+                    <Link
+                      href={`/lam-bai/chu-de/${l.baiTap.chuDeId}?dangBai=${encodeURIComponent(
+                        l.baiTap.dangBai
+                      )}`}
+                      className="text-xs font-semibold text-blue-700 hover:underline block"
+                    >
+                      {l.baiTap.dangBai} →
+                    </Link>
+                  )}
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                    l.ketQua === "DUNG" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
-                  }`}>
+                  <span
+                    className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                      l.ketQua === "DUNG"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-rose-100 text-rose-800"
+                    }`}
+                  >
                     {l.ketQua === "DUNG" ? "Đúng" : "Sai"}
                   </span>
                   <p className="text-[10px] text-slate-400 mt-0.5">
@@ -169,7 +213,8 @@ export default async function DashboardPage() {
           </div>
         ) : (
           <p className="text-xs text-slate-400 py-6 text-center">
-            Bạn chưa có lần làm bài nào. Hãy vào mục <strong>Ngân hàng bài tập</strong> để bắt đầu thử sức!
+            Bạn chưa có lần làm bài nào. Hãy vào mục{" "}
+            <strong>Luyện tập thích ứng</strong> để bắt đầu thử sức!
           </p>
         )}
       </div>
