@@ -244,7 +244,13 @@ export function PhienLuyenTapTongHop({
                             className={`h-2 rounded-full ${
                               pct >= 85 ? "bg-emerald-500" : "bg-blue-600"
                             }`}
-                            style={{ width: `${Math.min(100, Math.max(5, pct))}%` }}
+                            style={{
+                              width: `${
+                                nl.soLanLuyen === 0
+                                  ? 0
+                                  : Math.min(100, Math.max(4, pct))
+                              }%`,
+                            }}
                           />
                           <div
                             className="absolute top-0 bottom-0 w-0.5 bg-emerald-700/70"
@@ -255,7 +261,10 @@ export function PhienLuyenTapTongHop({
 
                       <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
                         <span>
-                          Thành thạo: <strong>{pct}%</strong>
+                          Đã luyện:{" "}
+                          <strong>
+                            {nl.soLanDung}/{nl.soLanLuyen} câu đúng
+                          </strong>
                         </span>
                         <Link
                           href={`/lam-bai/chu-de/${chuDeId}?dangBai=${encodeURIComponent(

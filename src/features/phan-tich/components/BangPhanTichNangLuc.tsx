@@ -196,7 +196,10 @@ export function BangPhanTichNangLuc({ data }: Props) {
                       </h4>
                       <p className="text-[11px] text-slate-600">
                         Độ thành thạo: <strong>{pct}%</strong> • Ghi nhớ:{" "}
-                        <strong>{retentionPct}%</strong>
+                        <strong>{retentionPct}%</strong> • Đã luyện:{" "}
+                        <strong>
+                          {item.soLanDung}/{item.soLanLuyen} câu đúng
+                        </strong>
                       </p>
                     </div>
                     <Link
@@ -297,7 +300,12 @@ export function BangPhanTichNangLuc({ data }: Props) {
 
                   <div className="flex items-center justify-between gap-2 text-[11px] text-slate-500 pt-1 border-t border-slate-200/60">
                     <span>
-                      Ghi nhớ: <strong className="text-slate-700">{rPct}%</strong>
+                      Đã luyện:{" "}
+                      <strong className="text-slate-700">
+                        {d.soLanDung}/{d.soLanLuyen} câu đúng
+                      </strong>{" "}
+                      • Ghi nhớ:{" "}
+                      <strong className="text-slate-700">{rPct}%</strong>
                     </span>
 
                     <Link

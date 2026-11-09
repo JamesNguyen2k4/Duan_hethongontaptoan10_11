@@ -5,6 +5,7 @@ import { PhongLamBaiForm } from "@/features/lam-bai/components/PhongLamBaiForm";
 import {
   layNangLucTheoChuDe,
   tinhXacSuatIRT3PL,
+  chuanHoaThamSoCauHoi,
 } from "@/lib/adaptive-engine";
 
 interface Props {
@@ -71,13 +72,19 @@ export default async function LamBaiDetailPage({
     nangLucList[0] ||
     null;
 
+  const calibratedItem = chuanHoaThamSoCauHoi(
+    baiTap.mucDo,
+    baiTap.doKhoIRT,
+    baiTap.doPhanBiet
+  );
+
   const xacSuatDuDoanZPD = nangLucHienTai
     ? tinhXacSuatIRT3PL(
         nangLucHienTai.nangLucIRT,
-        baiTap.doKhoIRT,
-        baiTap.doPhanBiet
+        calibratedItem.b,
+        calibratedItem.a
       )
-    : tinhXacSuatIRT3PL(-0.4, baiTap.doKhoIRT, baiTap.doPhanBiet);
+    : tinhXacSuatIRT3PL(-1.0, calibratedItem.b, calibratedItem.a);
 
   let cacLuaChon = {};
   try {
@@ -103,7 +110,7 @@ export default async function LamBaiDetailPage({
           cacLuaChon,
         }}
         adaptiveContext={{
-          xacSuatThanhThao: nangLucHienTai?.xacSuatHieuDung ?? 0.25,
+          xacSuatThanhThao: nangLucHienTai?.xacSuatHieuDung ?? 0,
           nangLucIRT: nangLucHienTai?.nangLucIRT ?? -0.4,
           doBenTriNho: nangLucHienTai?.doBenTriNho ?? 1.0,
           soLanLuyen: nangLucHienTai?.soLanLuyen ?? 0,

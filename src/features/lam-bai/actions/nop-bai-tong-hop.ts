@@ -105,6 +105,7 @@ export async function nopBaiTapTongHopAction(
         baiTapId: bt.id,
         chuDeId: bt.chuDeId,
         dangBai: bt.dangBai,
+        mucDo: bt.mucDo,
         dung,
         thoiGianGiay: avgTimePerQ,
         doKhoIRT: bt.doKhoIRT,

@@ -105,12 +105,12 @@ export function PhongLamBaiForm({
   const masteryBefore = Math.round(
     (ketQua?.adaptiveUpdate?.xacSuatThanhThaoTruoc ??
       adaptiveContext?.xacSuatThanhThao ??
-      0.25) * 100
+      0) * 100
   );
   const masteryCurrent = Math.round(
     (ketQua?.adaptiveUpdate?.xacSuatThanhThaoMoi ??
       adaptiveContext?.xacSuatThanhThao ??
-      0.25) * 100
+      0) * 100
   );
   const masteryDelta = masteryCurrent - masteryBefore;
 
@@ -292,7 +292,13 @@ export function PhongLamBaiForm({
                   ? "bg-gradient-to-r from-emerald-500 to-teal-500"
                   : "bg-gradient-to-r from-blue-600 to-indigo-600"
               }`}
-              style={{ width: `${Math.min(100, Math.max(4, masteryCurrent))}%` }}
+              style={{
+                width: `${
+                  masteryCurrent === 0
+                    ? 0
+                    : Math.min(100, Math.max(4, masteryCurrent))
+                }%`,
+              }}
             />
             {/* Vạch đích 85% Thành thạo */}
             <div
@@ -302,7 +308,7 @@ export function PhongLamBaiForm({
             />
           </div>
           <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
-            <span>Khởi đầu (25%)</span>
+            <span>Khởi đầu (0%)</span>
             <span className="text-emerald-700 font-bold">
               ★ Đích Thành thạo: 85%
             </span>
@@ -464,42 +470,87 @@ export function PhongLamBaiForm({
             </div>
 
             {/* Next Adaptive Question & Actions Banner */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 bg-indigo-100/80 px-2.5 py-1 rounded-lg">
-                    <Target className="w-3.5 h-3.5" /> Gợi ý câu hỏi tiếp theo
-                  </span>
-                </div>
-                {ketQua.nextAdaptiveQuestion && (
+            {ketQua.adaptiveUpdate?.daDatThanhThao ? (
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-lg">
+                      <Award className="w-3.5 h-3.5" /> Đã hoàn thành mục tiêu Thành thạo (≥ 85%)
+                    </span>
+                  </div>
                   <p className="text-xs text-slate-600">
-                    {ketQua.nextAdaptiveQuestion.lyDoChon}
+                    Bạn đã làm chủ dạng bài này ở cả mức độ Vận dụng! Hãy quay lại danh mục để chuyển sang dạng bài tiếp theo hoặc luyện thêm nếu muốn nâng cao.
                   </p>
-                )}
-              </div>
+                </div>
 
-              {/* Nút làm câu tiếp theo */}
-              {adaptiveNextId ? (
-                <Link
-                  href={`/lam-bai/${adaptiveNextId}${nextDangQuery}`}
-                  prefetch={true}
-                  className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 cursor-pointer shrink-0"
-                >
-                  <Sparkles className="w-4 h-4 fill-current" />
-                  <span>Làm câu tiếp theo</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              ) : (
-                <Link
-                  href={`/bai-tap?chuDeId=${baiTap.chuDe.id}`}
-                  prefetch={true}
-                  className="px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 cursor-pointer shrink-0"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Hoàn thành dạng bài! Quay lại danh mục</span>
-                </Link>
-              )}
-            </div>
+                <div className="flex items-center gap-2.5 flex-wrap shrink-0">
+                  {adaptiveNextId && (
+                    <Link
+                      href={`/lam-bai/${adaptiveNextId}${nextDangQuery}`}
+                      prefetch={true}
+                      className="px-4 py-3 rounded-xl border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>Luyện thêm câu nâng cao</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  )}
+                  <Link
+                    href={`/bai-tap?chuDeId=${baiTap.chuDe.id}`}
+                    prefetch={true}
+                    className="px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 cursor-pointer"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Hoàn thành dạng bài! Chuyển dạng mới</span>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 bg-indigo-100/80 px-2.5 py-1 rounded-lg">
+                      <Target className="w-3.5 h-3.5" /> Gợi ý câu hỏi tiếp theo theo độ khó thích ứng
+                    </span>
+                  </div>
+                  {ketQua.nextAdaptiveQuestion && (
+                    <p className="text-xs text-slate-600">
+                      {ketQua.nextAdaptiveQuestion.lyDoChon}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2.5 flex-wrap shrink-0">
+                  <Link
+                    href={`/bai-tap?chuDeId=${baiTap.chuDe.id}`}
+                    prefetch={true}
+                    className="px-4 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-all cursor-pointer"
+                  >
+                    Tạm dừng / Đổi dạng
+                  </Link>
+
+                  {adaptiveNextId ? (
+                    <Link
+                      href={`/lam-bai/${adaptiveNextId}${nextDangQuery}`}
+                      prefetch={true}
+                      className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 cursor-pointer shrink-0"
+                    >
+                      <Sparkles className="w-4 h-4 fill-current" />
+                      <span>Làm câu tiếp theo</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  ) : (
+                    <Link
+                      href={`/bai-tap?chuDeId=${baiTap.chuDe.id}`}
+                      prefetch={true}
+                      className="px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 cursor-pointer shrink-0"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>Hoàn thành dạng bài! Quay lại danh mục</span>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

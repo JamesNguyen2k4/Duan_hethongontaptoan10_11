@@ -48,12 +48,13 @@ export async function nopBaiTapAction(
     },
   });
 
-  // 2. Cập nhật Mô hình người học hợp nhất: BKT + IRT 3PL + FSRS/SM-2
+  // 2. Cập nhật Mô hình người học hợp nhất: BKT + IRT 3PL + PFA + FSRS/SM-2
   const adaptiveUpdate = await capNhatMoHinhNguoiHoc({
     nguoiDungId: session.user.id,
     baiTapId: baiTap.id,
     chuDeId: baiTap.chuDeId,
     dangBai: baiTap.dangBai,
+    mucDo: baiTap.mucDo,
     dung,
     thoiGianGiay,
     doKhoIRT: baiTap.doKhoIRT,

@@ -1,7 +1,9 @@
 import { db } from "@/lib/db";
+import { DANH_MUC_DANG_BAI } from "@/lib/danh-muc-dang-bai";
 import {
   capNhatMoHinhNguoiHoc,
   tinhDoDuyTriTriNho,
+  tinhDoThanhThaoThucTe,
   phanLoaiTrangThaiDangBai,
   quyDoiThetaSangMucDo,
   tinhXacSuatIRT3PL,
@@ -72,6 +74,7 @@ export async function phanTichDiemYeuHocSinh(nguoiDungId: string) {
         baiTapId: item.baiTapId,
         chuDeId: item.baiTap.chuDeId,
         dangBai: item.baiTap.dangBai,
+        mucDo: item.baiTap.mucDo,
         dung: item.ketQua === "DUNG",
         thoiGianGiay: item.thoiGianGiay || 40,
         doKhoIRT: item.baiTap.doKhoIRT,
@@ -86,11 +89,19 @@ export async function phanTichDiemYeuHocSinh(nguoiDungId: string) {
 
   const now = new Date();
 
-  // 3. Tính toán trạng thái thời gian thực (bao gồm suy giảm trí nhớ Ebbinghaus) cho từng Dạng bài
+  // 3. Tính toán trạng thái thời gian thực (bao gồm suy giảm trí nhớ Ebbinghaus) cho từng Dạng bài đã luyện
   const danhSachDangBai: ThongKeDangBaiChiTiet[] = nangLucRecords
+    .filter((rec) => rec.soLanLuyen > 0)
     .map((rec) => {
       const doNho = tinhDoDuyTriTriNho(rec.lanLuyenCuoi, rec.doBenTriNho, now);
-      const pEff = Number((rec.xacSuatThanhThao * doNho).toFixed(4));
+      const pEff = tinhDoThanhThaoThucTe(
+        rec.xacSuatThanhThao,
+        rec.soLanLuyen,
+        rec.soLanDung,
+        doNho,
+        rec.soChuoiDung,
+        rec.nangLucIRT
+      );
       const { trangThai, nhanTrangThai } = phanLoaiTrangThaiDangBai(
         rec.soLanLuyen,
         rec.xacSuatThanhThao,
@@ -159,7 +170,11 @@ export async function phanTichDiemYeuHocSinh(nguoiDungId: string) {
   const diemYeuList: ThongKeChuDe[] = [];
 
   for (const [cdId, g] of Object.entries(chuDeGroup)) {
-    const doThanhThao = Number((g.sumPEff / g.countDang).toFixed(2));
+    const totalDangsInChuDe = Math.max(
+      g.countDang,
+      DANH_MUC_DANG_BAI[cdId]?.dangs.length || g.countDang
+    );
+    const doThanhThao = Number((g.sumPEff / totalDangsInChuDe).toFixed(2));
     const doNhoTrungBinh = Number((g.sumR / g.countDang).toFixed(2));
     const nangLucIRT = Number((g.sumTheta / g.countDang).toFixed(2));
     const tiLeDung = Number(((g.soDung / Math.max(1, g.tongLam)) * 100).toFixed(0));

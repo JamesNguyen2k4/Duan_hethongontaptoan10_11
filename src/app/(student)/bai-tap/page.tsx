@@ -20,6 +20,7 @@ import { DANH_MUC_DANG_BAI } from "@/lib/danh-muc-dang-bai";
 import {
   layNangLucTheoChuDe,
   tinhDoDuyTriTriNho,
+  tinhDoThanhThaoThucTe,
   phanLoaiTrangThaiDangBai,
 } from "@/lib/adaptive-engine";
 
@@ -88,7 +89,7 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
               nangLucDangs.length) *
               100
           )
-        : 25;
+        : 0;
 
     return (
       <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8 animate-in fade-in duration-200">
@@ -269,15 +270,6 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                 Theo dõi mức độ thành thạo và khả năng ghi nhớ kiến thức theo từng dạng bài.
               </p>
             </div>
-
-            <div className="flex items-center gap-2 text-xs font-semibold">
-              <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                🟢 ≥ 85%: Đã thành thạo
-              </span>
-              <span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-                🟡 &lt; 70%: Cần ôn lại
-              </span>
-            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
@@ -347,9 +339,11 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                             Độ thành thạo:{" "}
                             <strong
                               className={
-                                masteryPct >= 85
-                                    ? "text-emerald-600"
-                                  : masteryPct < 60 && dang.soLanLuyen > 0
+                                dang.soLanLuyen === 0
+                                  ? "text-slate-400"
+                                  : masteryPct >= 85
+                                  ? "text-emerald-600"
+                                  : masteryPct < 60
                                   ? "text-amber-600"
                                   : "text-blue-600"
                               }
@@ -395,8 +389,8 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                           style={{
                             width: `${
                               dang.soLanLuyen === 0
-                                ? 6
-                                : Math.min(100, Math.max(8, masteryPct))
+                                ? 0
+                                : Math.min(100, Math.max(4, masteryPct))
                             }%`,
                           }}
                         />
@@ -458,42 +452,51 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
   ]);
 
   const now = new Date();
-  const processedMastery = allUserMastery.map((rec) => {
-    const r = tinhDoDuyTriTriNho(rec.lanLuyenCuoi, rec.doBenTriNho, now);
-    const pEff = Number((rec.xacSuatThanhThao * r).toFixed(4));
-    const status = phanLoaiTrangThaiDangBai(
-      rec.soLanLuyen,
-      rec.xacSuatThanhThao,
-      pEff,
-      r,
-      rec.ngayOnKeTiep,
-      now
-    );
-    return {
-      ...rec,
-      doNhoHienTai: r,
-      xacSuatHieuDung: pEff,
-      trangThai: status.trangThai,
-      nhanTrangThai: status.nhanTrangThai,
-    };
-  });
+  const processedMastery = allUserMastery
+    .filter((rec) => rec.soLanLuyen > 0)
+    .map((rec) => {
+      const r = tinhDoDuyTriTriNho(rec.lanLuyenCuoi, rec.doBenTriNho, now);
+      const pEff = tinhDoThanhThaoThucTe(
+        rec.xacSuatThanhThao,
+        rec.soLanLuyen,
+        rec.soLanDung,
+        r,
+        rec.soChuoiDung,
+        rec.nangLucIRT
+      );
+      const status = phanLoaiTrangThaiDangBai(
+        rec.soLanLuyen,
+        rec.xacSuatThanhThao,
+        pEff,
+        r,
+        rec.ngayOnKeTiep,
+        now
+      );
+      return {
+        ...rec,
+        doNhoHienTai: r,
+        xacSuatHieuDung: pEff,
+        trangThai: status.trangThai,
+        nhanTrangThai: status.nhanTrangThai,
+      };
+    });
 
   // Gom thống kê theo chuDeId để hiển thị trên từng bài học
   const chuDeMasteryMap = new Map<
     string,
-    { count: number; mastered: number; decaying: number; avgPct: number }
+    { count: number; mastered: number; decaying: number; sumPct: number }
   >();
   for (const m of processedMastery) {
     const cur = chuDeMasteryMap.get(m.chuDeId) || {
       count: 0,
       mastered: 0,
       decaying: 0,
-      avgPct: 0,
+      sumPct: 0,
     };
     cur.count += 1;
     if (m.trangThai === "THANH_THAO") cur.mastered += 1;
     if (m.trangThai === "CAN_ON_LAI") cur.decaying += 1;
-    cur.avgPct += m.xacSuatHieuDung * 100;
+    cur.sumPct += m.xacSuatHieuDung * 100;
     chuDeMasteryMap.set(m.chuDeId, cur);
   }
 
@@ -563,7 +566,9 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                   const dangCount =
                     DANH_MUC_DANG_BAI[chuDe.id]?.dangs.length || 3;
                   const stat = chuDeMasteryMap.get(chuDe.id);
-                  const avgPct = stat ? Math.round(stat.avgPct / stat.count) : null;
+                  const avgPct = stat
+                    ? Math.round(stat.sumPct / Math.max(1, dangCount))
+                    : null;
 
                   return (
                     <div
