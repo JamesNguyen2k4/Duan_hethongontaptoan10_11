@@ -185,7 +185,7 @@ export function PhongLamBaiForm({
               </span>
             )}
             <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full">
-              {baiTap.mucDo} • IRT b = {doKhoIRT >= 0 ? `+${doKhoIRT}` : doKhoIRT}
+              {baiTap.mucDo}
             </span>
           </div>
 
@@ -246,7 +246,7 @@ export function PhongLamBaiForm({
           <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
             <div className="flex items-center gap-1.5 font-bold text-slate-800">
               <Brain className="w-4 h-4 text-indigo-600" />
-              <span>Độ thành thạo dạng bài (BKT):</span>
+              <span>Độ thành thạo dạng bài:</span>
               <span
                 className={`px-2 py-0.5 rounded-md font-black ${
                   masteryCurrent >= 85
@@ -270,24 +270,17 @@ export function PhongLamBaiForm({
             </div>
 
             <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-500 flex-wrap">
-              <span title="Năng lực ẩn của học sinh theo lý thuyết đáp ứng câu hỏi IRT">
-                Năng lực θ ={" "}
-                <strong className="text-slate-700">
-                  {thetaCurrent >= 0 ? `+${thetaCurrent}` : thetaCurrent}
-                </strong>
+              <span>
+                Độ phù hợp: <strong className="text-indigo-700">{zpdProbPercent}%</strong>
               </span>
-              <span>•</span>
-              <span title="Xác suất giải đúng dự đoán theo vùng phát triển gần ZPD">
-                Vùng ZPD:{" "}
-                <strong className="text-indigo-700">P ≈ {zpdProbPercent}%</strong>
-              </span>
-              <span>•</span>
-              <span title="Độ bền trí nhớ Ebbinghaus (chu kỳ ôn tập ngắt quãng)">
-                Độ bền nhớ:{" "}
-                <strong className="text-emerald-700">
-                  {stabilityCurrent} ngày
-                </strong>
-              </span>
+              {adaptiveContext && adaptiveContext.soLanLuyen > 0 && (
+                <>
+                  <span>•</span>
+                  <span>
+                    Đã luyện: <strong className="text-slate-700">{adaptiveContext.soLanLuyen} câu</strong>
+                  </span>
+                </>
+              )}
             </div>
           </div>
 
@@ -427,7 +420,7 @@ export function PhongLamBaiForm({
                     </span>
                   </div>
                   <div className="text-[11px] text-slate-500 font-medium">
-                    Lịch ôn ngắt quãng kế tiếp:{" "}
+                    Nhắc nhở ôn lại:{" "}
                     <strong className="text-slate-700">
                       sau {ketQua.adaptiveUpdate.khoangCachOnNgay} ngày
                     </strong>
@@ -436,17 +429,17 @@ export function PhongLamBaiForm({
               )}
             </div>
 
-            {/* Banner chúc mừng khi cán mốc 85% Mastery */}
+            {/* Banner chúc mừng khi cán mốc 85% */}
             {ketQua.adaptiveUpdate?.daDatThanhThao && (
               <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-4 rounded-2xl flex items-center justify-between gap-4 shadow-md">
                 <div className="flex items-center gap-3">
                   <Award className="w-7 h-7 text-amber-300 shrink-0" />
                   <div>
                     <h4 className="font-black text-sm">
-                      Chúc mừng! Bạn đã làm chủ dạng toán này (Mastery ≥ 85%)
+                      Chúc mừng! Bạn đã nắm vững dạng toán này (Đạt ≥ 85%)
                     </h4>
                     <p className="text-xs text-emerald-50">
-                      Hệ thống đã ghi nhận vào trí nhớ dài hạn và sẽ nhắc ôn ngắt quãng sau{" "}
+                      Hệ thống đã ghi nhận kết quả và sẽ nhắc bạn ôn lại sau{" "}
                       {ketQua.adaptiveUpdate.khoangCachOnNgay} ngày.
                     </p>
                   </div>
@@ -470,33 +463,22 @@ export function PhongLamBaiForm({
               </div>
             </div>
 
-            {/* Next Adaptive Question (ZPD) & Actions Banner */}
+            {/* Next Adaptive Question & Actions Banner */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 bg-indigo-100/80 px-2.5 py-1 rounded-lg">
-                    <Target className="w-3.5 h-3.5" /> Điều phối câu tiếp theo (Vùng ZPD ~ 70%)
+                    <Target className="w-3.5 h-3.5" /> Gợi ý câu hỏi tiếp theo
                   </span>
                 </div>
                 {ketQua.nextAdaptiveQuestion && (
                   <p className="text-xs text-slate-600">
-                    {ketQua.nextAdaptiveQuestion.lyDoChon} • Độ khó câu kế:{" "}
-                    <strong>
-                      b ={" "}
-                      {ketQua.nextAdaptiveQuestion.doKhoIRT >= 0
-                        ? `+${ketQua.nextAdaptiveQuestion.doKhoIRT}`
-                        : ketQua.nextAdaptiveQuestion.doKhoIRT}
-                    </strong>{" "}
-                    (Xác suất đúng dự kiến:{" "}
-                    <strong>
-                      {Math.round(ketQua.nextAdaptiveQuestion.xacSuatDuDoan * 100)}%
-                    </strong>
-                    )
+                    {ketQua.nextAdaptiveQuestion.lyDoChon}
                   </p>
                 )}
               </div>
 
-              {/* Nút làm câu tiếp theo được chọn bởi thuật toán ZPD */}
+              {/* Nút làm câu tiếp theo */}
               {adaptiveNextId ? (
                 <Link
                   href={`/lam-bai/${adaptiveNextId}${nextDangQuery}`}
@@ -504,7 +486,7 @@ export function PhongLamBaiForm({
                   className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 cursor-pointer shrink-0"
                 >
                   <Sparkles className="w-4 h-4 fill-current" />
-                  <span>Câu tiếp theo (Thích ứng ZPD)</span>
+                  <span>Làm câu tiếp theo</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               ) : (

@@ -47,16 +47,15 @@ export default async function DashboardPage() {
                 : session.user.role}
             </span>
             <span className="text-xs bg-amber-400/20 text-amber-200 border border-amber-300/30 px-3 py-1 rounded-full font-bold">
-              BKT + IRT 3PL + Spaced Repetition
+              Học Tập Cá Nhân Hóa
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
             Xin chào, {session.user?.name}! 👋
           </h1>
           <p className="text-blue-100 text-xs sm:text-sm max-w-xl leading-relaxed">
-            Hệ thống tự động theo dõi hồ sơ năng lực, điều phối câu hỏi vừa sức
-            trong Vùng phát triển gần (ZPD ≈ 70%) và nhắc ôn ngắt quãng ngay
-            trước khi kiến thức bị lãng quên.
+            Hệ thống tự động theo dõi tiến độ, điều phối câu hỏi vừa sức theo
+            trình độ của bạn và nhắc nhở ôn tập kịp thời.
           </p>
         </div>
 
@@ -69,7 +68,7 @@ export default async function DashboardPage() {
               className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5"
             >
               <Repeat className="w-4 h-4" /> Ôn ngay{" "}
-              {analysisData.soDangCanOn} dạng bài đang suy giảm trí nhớ!
+              {analysisData.soDangCanOn} dạng bài cần củng cố!
             </Link>
           ) : (
             <Link
@@ -124,7 +123,7 @@ export default async function DashboardPage() {
           </h2>
           <p className="text-xs text-slate-500 mt-1">
             Hơn 3.500 câu hỏi phân theo 107 dạng toán, tự động điều chỉnh độ khó
-            IRT và lịch ôn tập Ebbinghaus.
+            phù hợp và nhắc nhở ôn tập thông minh.
           </p>
         </Link>
 

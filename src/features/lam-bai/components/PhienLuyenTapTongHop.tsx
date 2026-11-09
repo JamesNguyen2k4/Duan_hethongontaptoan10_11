@@ -123,7 +123,7 @@ export function PhienLuyenTapTongHop({
               <div className="flex items-center gap-2 text-blue-100 text-xs font-bold uppercase tracking-wider">
                 <Award className="w-4 h-4 text-amber-300" />
                 {cheDo === "CHAN_DOAN_DAU_VAO"
-                  ? "Kết quả Chẩn đoán Năng lực Đầu vào (Cold-Start Placement)"
+                  ? "Kết quả Khảo sát Năng lực Ban đầu"
                   : "Kết quả Luyện tập Tổng hợp"}
               </div>
               <h1 className="text-2xl sm:text-3xl font-black">{chuDeTen}</h1>
@@ -132,8 +132,8 @@ export function PhienLuyenTapTongHop({
                 <strong className="text-white">
                   {formatThoiGian(ketQua.thoiGianGiay)}
                 </strong>{" "}
-                • Hệ thống BKT + IRT 3PL & FSRS đã tự động cập nhật hồ sơ năng
-                lực và lịch ôn tập ngắt quãng cho từng dạng bài.
+                • Hệ thống đã tự động cập nhật tiến độ học tập và mức độ ghi nhớ
+                cho từng dạng bài.
               </p>
             </div>
 
@@ -182,7 +182,7 @@ export function PhienLuyenTapTongHop({
               className="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-slate-950 font-black text-xs transition-all flex items-center gap-1.5 shadow-md"
             >
               <Sparkles className="w-3.5 h-3.5 fill-current" /> Bắt đầu Luyện
-              thích ứng ZPD theo lỗ hổng →
+              thích ứng các dạng cần củng cố →
             </Link>
             <Link
               href={`/lam-bai/tong-hop/${chuDeId}?soCau=${tongSoCau}&t=${Date.now()}`}
@@ -199,17 +199,17 @@ export function PhienLuyenTapTongHop({
           </div>
         </div>
 
-        {/* Bảng cập nhật Hồ sơ năng lực BKT + IRT theo từng Dạng bài */}
+        {/* Bảng cập nhật Hồ sơ năng lực theo từng Dạng bài */}
         {ketQua.hoSoNangLucSauBaiThi &&
           ketQua.hoSoNangLucSauBaiThi.length > 0 && (
             <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
                   <Brain className="w-5 h-5 text-indigo-600" />
-                  Hồ sơ Năng lực & Độ thành thạo BKT vừa cập nhật:
+                  Độ thành thạo các dạng bài vừa cập nhật:
                 </h2>
                 <span className="text-xs font-semibold text-slate-500">
-                  Ngưỡng làm chủ: 85%
+                  Mục tiêu thành thạo: 85%
                 </span>
               </div>
 
@@ -255,8 +255,7 @@ export function PhienLuyenTapTongHop({
 
                       <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
                         <span>
-                          θ = {nl.nangLucIRT >= 0 ? `+${nl.nangLucIRT}` : nl.nangLucIRT} • Độ bền:{" "}
-                          {nl.doBenTriNho} ngày
+                          Thành thạo: <strong>{pct}%</strong>
                         </span>
                         <Link
                           href={`/lam-bai/chu-de/${chuDeId}?dangBai=${encodeURIComponent(
@@ -264,7 +263,7 @@ export function PhienLuyenTapTongHop({
                           )}`}
                           className="text-blue-600 font-bold hover:underline flex items-center gap-1"
                         >
-                          <Play className="w-3 h-3 fill-current" /> Luyện ZPD
+                          <Play className="w-3 h-3 fill-current" /> Luyện tập
                         </Link>
                       </div>
                     </div>
@@ -348,8 +347,7 @@ export function PhienLuyenTapTongHop({
                       </span>
                     )}
                     <span className="text-slate-500 font-medium">
-                      {q.mucDo} • IRT b ={" "}
-                      {q.doKhoIRT >= 0 ? `+${q.doKhoIRT}` : q.doKhoIRT}
+                      {q.mucDo}
                     </span>
                   </div>
 
@@ -448,11 +446,11 @@ export function PhienLuyenTapTongHop({
                 <>
                   <Target className="w-5 h-5 text-amber-500" />
                   <span>
-                    Chẩn Đoán Năng Lực Đầu Vào ({tongSoCau} câu phân tầng IRT)
+                    Khảo Sát Năng Lực Ban Đầu ({tongSoCau} câu)
                   </span>
                 </>
               ) : (
-                <span>Luyện Tập Tổng Hợp (Đề {tongSoCau} câu phân tầng)</span>
+                <span>Luyện Tập Tổng Hợp ({tongSoCau} câu)</span>
               )}
             </h1>
           </div>
@@ -536,10 +534,7 @@ export function PhienLuyenTapTongHop({
                 </span>
               )}
               <span className="text-xs bg-slate-50 text-slate-500 px-2.5 py-1 rounded-full font-medium">
-                {currentQ.mucDo} • IRT b ={" "}
-                {(currentQ.doKhoIRT ?? 0) >= 0
-                  ? `+${currentQ.doKhoIRT ?? 0}`
-                  : currentQ.doKhoIRT ?? 0}
+                {currentQ.mucDo}
               </span>
             </div>
 
@@ -651,7 +646,7 @@ export function PhienLuyenTapTongHop({
                 disabled={isSubmitting}
                 className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-md shadow-blue-500/20 cursor-pointer"
               >
-                {isSubmitting ? "Đang phân tích BKT/IRT..." : "Nộp bài ngay"}
+                {isSubmitting ? "Đang chấm điểm..." : "Nộp bài ngay"}
               </button>
             </div>
           </div>

@@ -127,13 +127,12 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
             <div className="space-y-2.5 max-w-2xl">
               <div className="flex items-center gap-2 text-blue-100 text-xs font-bold uppercase tracking-wider flex-wrap">
                 <span className="inline-flex items-center gap-1 bg-white/15 px-2.5 py-1 rounded-full">
-                  <Brain className="w-3.5 h-3.5 text-amber-300" /> Học Thích Ứng
-                  Hợp Nhất (BKT + IRT 3PL + Spaced Repetition)
+                  <Brain className="w-3.5 h-3.5 text-amber-300" /> Hệ Thống Luyện Tập Thích Ứng Thông Minh
                 </span>
                 {soDangCanOn > 0 && (
                   <span className="inline-flex items-center gap-1 bg-amber-400 text-slate-950 px-2.5 py-1 rounded-full font-black">
                     <Repeat className="w-3.5 h-3.5" /> {soDangCanOn} dạng bài
-                    đang suy giảm trí nhớ
+                    cần ôn lại
                   </span>
                 )}
               </div>
@@ -143,10 +142,8 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
               </h1>
 
               <p className="text-blue-100 text-xs sm:text-sm leading-relaxed">
-                Hệ thống tự động chọn câu hỏi trong{" "}
-                <strong>Vùng phát triển gần (ZPD: xác suất đúng ~70%)</strong>{" "}
-                và kết hợp <strong>lặp lại ngắt quãng Ebbinghaus</strong> ngay
-                khi độ nhớ dạng bài suy giảm dưới ngưỡng an toàn.
+                Hệ thống tự động chọn câu hỏi vừa sức theo trình độ của bạn
+                và nhắc nhở ôn tập kịp thời ngay khi cần củng cố kiến thức.
               </p>
             </div>
 
@@ -159,26 +156,28 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                 Độ thành thạo bài học
               </span>
               <span className="text-[11px] text-amber-300 font-bold block">
-                ★ {soDangThanhThao}/{nangLucDangs.length} dạng đã làm chủ
+                ★ {soDangThanhThao}/{nangLucDangs.length} dạng đã nắm vững
               </span>
             </div>
           </div>
 
-          {/* Gợi ý Cold-Start hoặc Luyện thích ứng AI */}
+          {/* Gợi ý Khảo sát hoặc Luyện thích ứng */}
           <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-4 border border-white/15 relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4" />
                 {isColdStart
-                  ? "Khởi động nguội (Cold-Start Placement): Bạn mới bắt đầu bài học này!"
+                  ? "Khảo sát ban đầu: Bạn mới bắt đầu bài học này!"
                   : soDangCanOn > 0
-                  ? `Cảnh báo đường cong lãng quên: Có ${soDangCanOn} dạng toán cần ôn khôi phục trí nhớ!`
-                  : "Lộ trình thích ứng cá nhân hóa theo năng lực θ của bạn"}
+                  ? `Nhắc nhở ôn tập: Có ${soDangCanOn} dạng toán bạn nên củng cố lại!`
+                  : "Lộ trình luyện tập cá nhân hóa phù hợp với bạn"}
               </div>
               <p className="text-xs text-blue-100">
                 {isColdStart
-                  ? "Hãy làm bài Chẩn đoán nhanh (8 câu phân tầng qua mọi dạng bài) để AI xác định chính xác năng lực θ và P(L0) ban đầu."
-                  : "Bấm Luyện thích ứng ZPD để hệ thống tự động chọn dạng bài cần ưu tiên và câu hỏi vừa sức nhất (P ≈ 70%)."}
+                  ? "Hãy làm bài Khảo sát nhanh (8 câu bao quát các dạng bài) để hệ thống nhận diện trình độ và gợi ý bài tập chuẩn xác nhất."
+                  : soDangCanOn > 0
+                  ? "Ôn tập lại các dạng bài đã học để kiến thức luôn vững vàng và không bị quên lãng."
+                  : "Bấm Luyện thích ứng để hệ thống tự động chọn dạng bài cần ưu tiên và câu hỏi vừa sức nhất."}
               </p>
             </div>
 
@@ -189,7 +188,7 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                   prefetch={true}
                   className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-slate-950 font-black text-xs transition-all flex items-center gap-1.5 shadow-md cursor-pointer"
                 >
-                  <Target className="w-4 h-4" /> Chẩn đoán đầu vào (8 câu)
+                  <Target className="w-4 h-4" /> Khảo sát ban đầu (8 câu)
                 </Link>
               )}
 
@@ -205,8 +204,8 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                 <Play className="w-3.5 h-3.5 fill-current" />
                 <span>
                   {soDangCanOn > 0
-                    ? "Ôn ngắt quãng & Thích ứng ngay"
-                    : "Luyện thích ứng ZPD (AI chọn câu)"}
+                    ? "Ôn tập ngay"
+                    : "Luyện thích ứng"}
                 </span>
               </Link>
             </div>
@@ -215,7 +214,7 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
           {/* Các nút chọn Đề thi tổng hợp ngẫu nhiên */}
           <div className="pt-2 border-t border-white/15 relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-xs font-bold text-blue-100">
-              <span>THI THỬ TỔNG HỢP PHÂN TẦNG ({totalQuestionsInLesson} CÂU):</span>
+              <span>THI THỬ TỔNG HỢP ({totalQuestionsInLesson} CÂU):</span>
             </div>
 
             <div className="flex items-center gap-2.5 flex-wrap">
@@ -264,12 +263,10 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
             <div>
               <h2 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
                 <Layers className="w-5 h-5 text-blue-600" />
-                Các dạng bài toán (Knowledge Components) & Trạng thái Trí nhớ:
+                Các dạng bài toán trọng tâm & Tiến độ học tập:
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Độ thành thạo thực tế{" "}
-                <strong>P_eff(L) = P(L_t) × 0.80^(Δt / S)</strong> kết hợp trực
-                tiếp xác suất làm chủ BKT và đường cong lãng quên Ebbinghaus.
+                Theo dõi mức độ thành thạo và khả năng ghi nhớ kiến thức theo từng dạng bài.
               </p>
             </div>
 
@@ -293,7 +290,7 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
               let cardBorder = "border-slate-200/90 hover:border-blue-300";
               let btnStyle =
                 "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20";
-              let btnLabel = "Luyện thích ứng (ZPD)";
+              let btnLabel = "Luyện thích ứng";
 
               if (dang.trangThai === "THANH_THAO") {
                 badgeStyle =
@@ -301,14 +298,14 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                 cardBorder = "border-emerald-200/90 hover:border-emerald-400";
                 btnStyle =
                   "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20";
-                btnLabel = "Thử thách duy trì";
+                btnLabel = "Luyện nâng cao";
               } else if (dang.trangThai === "CAN_ON_LAI") {
                 badgeStyle = "bg-amber-50 text-amber-800 border-amber-300";
                 cardBorder =
                   "border-amber-300 bg-amber-50/15 hover:border-amber-400";
                 btnStyle =
                   "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20";
-                btnLabel = "Ôn khôi phục trí nhớ";
+                btnLabel = "Ôn tập lại";
               } else if (dang.trangThai === "DANG_REN_LUYEN") {
                 badgeStyle = "bg-blue-50 text-blue-700 border-blue-200";
               }
@@ -342,7 +339,7 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                       </p>
                     )}
 
-                    {/* Thanh đo lường kép: BKT Mastery & Ebbinghaus Memory Stability */}
+                    {/* Thanh tiến trình thành thạo */}
                     <div className="pl-8 pt-1 space-y-2">
                       <div className="flex items-center justify-between text-xs gap-4 flex-wrap">
                         <div className="flex items-center gap-3 flex-wrap">
@@ -351,7 +348,7 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                             <strong
                               className={
                                 masteryPct >= 85
-                                  ? "text-emerald-600"
+                                    ? "text-emerald-600"
                                   : masteryPct < 60 && dang.soLanLuyen > 0
                                   ? "text-amber-600"
                                   : "text-blue-600"
@@ -368,20 +365,11 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                             <>
                               <span className="text-slate-300">•</span>
                               <span className="text-slate-600">
-                                Độ nhớ hiện tại:{" "}
-                                <strong>{retentionPct}%</strong> (Độ bền S ={" "}
-                                {dang.doBenTriNho} ngày)
+                                Ghi nhớ: <strong>{retentionPct}%</strong>
                               </span>
                               <span className="text-slate-300">•</span>
                               <span className="text-slate-600">
-                                Năng lực IRT:{" "}
-                                <strong>
-                                  θ ={" "}
-                                  {dang.nangLucIRT >= 0
-                                    ? `+${dang.nangLucIRT}`
-                                    : dang.nangLucIRT}
-                                </strong>{" "}
-                                ({dang.mucDoGoiY})
+                                Mức độ: <strong>{dang.mucDoGoiY}</strong>
                               </span>
                             </>
                           )}
@@ -469,11 +457,6 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
       : Promise.resolve([]),
   ]);
 
-  const totalAllQuestions = chuongs.reduce(
-    (sum, ch) => sum + ch.chuDes.reduce((s, cd) => s + cd._count.baiTaps, 0),
-    0
-  );
-
   const now = new Date();
   const processedMastery = allUserMastery.map((rec) => {
     const r = tinhDoDuyTriTriNho(rec.lanLuyenCuoi, rec.doBenTriNho, now);
@@ -494,16 +477,6 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
       nhanTrangThai: status.nhanTrangThai,
     };
   });
-
-  const decayingDangs = processedMastery
-    .filter((m) => m.trangThai === "CAN_ON_LAI")
-    .sort((a, b) => a.xacSuatHieuDung - b.xacSuatHieuDung);
-  const masteredDangsCount = processedMastery.filter(
-    (m) => m.trangThai === "THANH_THAO"
-  ).length;
-  const activeZpdCount = processedMastery.filter(
-    (m) => m.trangThai === "DANG_REN_LUYEN"
-  ).length;
 
   // Gom thống kê theo chuDeId để hiển thị trên từng bài học
   const chuDeMasteryMap = new Map<
@@ -526,88 +499,6 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
-      {/* Hero Banner Hợp Nhất */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-blue-500/10 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-        <div className="absolute right-0 top-0 w-96 h-96 bg-white/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-
-        <div className="relative space-y-2 z-10 max-w-2xl">
-          <div className="flex items-center gap-2 text-blue-100 text-xs font-bold uppercase tracking-wider">
-            <GraduationCap className="w-4 h-4" /> Hệ Thống Học Thích Ứng & Lặp
-            Lại Ngắt Quãng Hợp Nhất
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-            Ngân Hàng Bài Tập Phân Dạng (BKT + IRT + FSRS)
-          </h1>
-          <p className="text-blue-50 text-xs sm:text-sm leading-relaxed">
-            Hơn <strong>{totalAllQuestions} câu hỏi trắc nghiệm</strong> được
-            hiệu chỉnh độ khó <strong>IRT 3PL</strong> theo từng{" "}
-            <strong>Dạng bài toán</strong>, tự động điều phối câu hỏi vừa sức (
-            <strong>ZPD ≈ 70%</strong>) và nhắc ôn ngắt quãng ngay trước khi bạn
-            quên.
-          </p>
-        </div>
-
-        <div className="relative z-10 flex items-center gap-3 shrink-0 flex-wrap">
-          <Link
-            href="/dashboard"
-            prefetch={true}
-            className="px-5 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition-all shadow-lg shadow-amber-400/20 flex items-center gap-2"
-          >
-            <Brain className="w-4 h-4" /> Xem Hồ sơ Năng lực & Biểu đồ Radar →
-          </Link>
-        </div>
-      </div>
-
-      {/* Thanh Trạng Thái Học Thích Ứng & Nhắc Ôn Ngắt Quãng Trực Tiếp */}
-      {userId && processedMastery.length > 0 && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
-              <Sparkles className="w-4 h-4 text-indigo-600" />
-              <span>Trạng thái Mô hình Người học & Trí nhớ dài hạn của bạn:</span>
-            </div>
-
-            <div className="flex items-center gap-3 text-xs font-bold flex-wrap">
-              <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                🟢 Đã làm chủ (≥85%): {masteredDangsCount} dạng
-              </span>
-              <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                🔵 Đang luyện ZPD: {activeZpdCount} dạng
-              </span>
-              <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-300">
-                🟡 Đang quên • Cần ôn lại: {decayingDangs.length} dạng
-              </span>
-            </div>
-          </div>
-
-          {decayingDangs.length > 0 && (
-            <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="text-xs font-black text-amber-900 flex items-center gap-1.5">
-                  <Repeat className="w-4 h-4 text-amber-600" />
-                  Đường cong lãng quên Ebbinghaus: Phát hiện{" "}
-                  {decayingDangs.length} dạng toán đang suy giảm trí nhớ!
-                </div>
-                <p className="text-xs text-amber-800">
-                  Ưu tiên ôn ngay:{" "}
-                  <strong>{decayingDangs[0].dangBai}</strong> (
-                  {decayingDangs[0].chuDe.ten} • Độ thành thạo hiệu dụng còn{" "}
-                  {Math.round(decayingDangs[0].xacSuatHieuDung * 100)}%)
-                </p>
-              </div>
-              <Link
-                href={`/lam-bai/chu-de/${
-                  decayingDangs[0].chuDeId
-                }?dangBai=${encodeURIComponent(decayingDangs[0].dangBai)}`}
-                className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shrink-0 transition-all shadow-xs flex items-center gap-1.5"
-              >
-                <Play className="w-3.5 h-3.5 fill-current" /> Ôn khôi phục ngay
-              </Link>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Quick Chapter Filter Buttons */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -712,8 +603,8 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                           )}
                         </div>
                         <p className="text-xs text-slate-400">
-                          Luyện thích ứng theo từng dạng toán (BKT + IRT ZPD) kèm
-                          kiểm tra chẩn đoán và thi tổng hợp phân tầng.
+                          Luyện tập cá nhân hóa theo từng dạng toán kèm kiểm tra
+                          nhanh và đề tổng hợp.
                         </p>
                       </div>
 

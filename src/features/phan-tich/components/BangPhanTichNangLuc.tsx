@@ -81,7 +81,7 @@ export function BangPhanTichNangLuc({ data }: Props) {
             <span className="text-3xl font-black text-blue-600">
               {data.soDangDaLuyen ?? danhSachDangBai.length}
             </span>
-            <span className="text-xs text-slate-400">dạng bài (KC)</span>
+            <span className="text-xs text-slate-400">dạng bài</span>
           </div>
         </div>
 
@@ -93,20 +93,20 @@ export function BangPhanTichNangLuc({ data }: Props) {
             <span className="text-3xl font-black text-emerald-600">
               {data.soDangThanhThao ?? 0}
             </span>
-            <span className="text-xs text-slate-400">dạng đạt P(L) ≥ 85%</span>
+            <span className="text-xs text-slate-400">dạng đạt (≥ 85%)</span>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Cần ôn ngắt quãng / Bù lỗ hổng
+            Cần ôn tập lại
           </p>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-3xl font-black text-amber-600">
               {data.soDangCanOn ?? dangBaiCanOnList.length}
             </span>
             <span className="text-xs text-slate-400">
-              dạng suy giảm trí nhớ / yếu
+              dạng cần củng cố
             </span>
           </div>
         </div>
@@ -116,12 +116,10 @@ export function BangPhanTichNangLuc({ data }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
           <div className="flex items-center gap-2 font-bold text-slate-800 text-sm">
-            <TrendingUp className="w-4 h-4 text-blue-600" /> Biểu đồ Radar: Độ
-            thành thạo BKT & Độ duy trì trí nhớ Ebbinghaus
+            <TrendingUp className="w-4 h-4 text-blue-600" /> Biểu đồ Năng lực: Mức độ thành thạo & Khả năng ghi nhớ
           </div>
           <p className="text-xs text-slate-500">
-            Kết hợp xác suất làm chủ kiến thức P(L_t) và tỷ lệ duy trì trí nhớ
-            R(t) = 0.80^(Δt/S) (ngưỡng làm chủ 85%).
+            Đánh giá mức độ làm chủ kiến thức và khả năng ghi nhớ theo từng bài học (ngưỡng làm chủ 85%).
           </p>
           {chartData.length > 0 ? (
             <div className="h-[290px] w-full">
@@ -136,14 +134,14 @@ export function BangPhanTichNangLuc({ data }: Props) {
                   <Tooltip />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   <Radar
-                    name="Độ thành thạo thực tế (%)"
+                    name="Độ thành thạo (%)"
                     dataKey="doThanhThao"
                     stroke="#2563eb"
                     fill="#3b82f6"
                     fillOpacity={0.45}
                   />
                   <Radar
-                    name="Độ duy trì trí nhớ R(t) (%)"
+                    name="Khả năng ghi nhớ (%)"
                     dataKey="doNho"
                     stroke="#10b981"
                     fill="#10b981"
@@ -156,8 +154,8 @@ export function BangPhanTichNangLuc({ data }: Props) {
             <div className="h-[240px] flex flex-col items-center justify-center text-xs text-slate-400 gap-3">
               <Brain className="w-8 h-8 text-slate-300" />
               <span>
-                Hãy bắt đầu luyện tập hoặc làm bài Chẩn đoán đầu vào để kích
-                hoạt mô hình BKT + IRT.
+                Hãy bắt đầu luyện tập hoặc làm bài khảo sát để kích
+                hoạt đánh giá năng lực.
               </span>
             </div>
           )}
@@ -167,11 +165,10 @@ export function BangPhanTichNangLuc({ data }: Props) {
         <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 font-bold text-slate-800 text-sm">
-              <Repeat className="w-4 h-4 text-amber-600" /> Hàng đợi Ôn tập Ngắt
-              quãng & Lỗ hổng Dạng bài
+              <Repeat className="w-4 h-4 text-amber-600" /> Danh sách Dạng bài cần ưu tiên Ôn tập
             </div>
             <span className="text-[11px] font-semibold text-slate-400">
-              Ưu tiên theo P_eff(L)
+              Ưu tiên theo độ cần ôn
             </span>
           </div>
 
@@ -198,13 +195,8 @@ export function BangPhanTichNangLuc({ data }: Props) {
                         {item.dangBai}
                       </h4>
                       <p className="text-[11px] text-slate-600">
-                        Thành thạo hiệu dụng: <strong>{pct}%</strong> • Độ nhớ
-                        hiện tại: <strong>{retentionPct}%</strong> • Năng lực θ ={" "}
-                        <strong>
-                          {item.nangLucIRT >= 0
-                            ? `+${item.nangLucIRT}`
-                            : item.nangLucIRT}
-                        </strong>
+                        Độ thành thạo: <strong>{pct}%</strong> • Ghi nhớ:{" "}
+                        <strong>{retentionPct}%</strong>
                       </p>
                     </div>
                     <Link
@@ -213,7 +205,7 @@ export function BangPhanTichNangLuc({ data }: Props) {
                       }?dangBai=${encodeURIComponent(item.dangBai)}`}
                       className="text-xs bg-amber-500 text-white font-bold px-3.5 py-2 rounded-xl hover:bg-amber-600 transition-colors whitespace-nowrap shadow-xs shrink-0"
                     >
-                      Ôn ZPD ngay
+                      Ôn tập ngay
                     </Link>
                   </div>
                 );
@@ -224,7 +216,7 @@ export function BangPhanTichNangLuc({ data }: Props) {
               <CheckCircle className="w-6 h-6 text-emerald-600 shrink-0" />
               <div className="text-xs space-y-1">
                 <strong className="block font-bold">
-                  Trí nhớ dài hạn và độ thành thạo đang ở trạng thái tối ưu!
+                  Kiến thức của bạn đang ở trạng thái rất tốt!
                 </strong>
                 <span>
                   Không có dạng toán nào bị suy giảm dưới ngưỡng an toàn. Hãy
@@ -236,19 +228,17 @@ export function BangPhanTichNangLuc({ data }: Props) {
         </div>
       </div>
 
-      {/* Detailed Learner Model Table (BKT + IRT + FSRS per Problem Type) */}
+      {/* Detailed Learner Model Table */}
       {danhSachDangBai.length > 0 && (
         <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
                 <Layers className="w-5 h-5 text-indigo-600" />
-                Bảng chi tiết Mô hình Người học theo từng Dạng toán (Knowledge
-                Components)
+                Chi tiết mức độ nắm vững theo từng Dạng bài toán
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Theo dõi trực tiếp xác suất làm chủ BKT P(L_t), năng lực ẩn IRT
-                θ_k và chu kỳ bền vững trí nhớ S (ngày).
+                Theo dõi chi tiết tiến độ thành thạo và khả năng ghi nhớ của từng dạng bài.
               </p>
             </div>
           </div>
@@ -307,12 +297,7 @@ export function BangPhanTichNangLuc({ data }: Props) {
 
                   <div className="flex items-center justify-between gap-2 text-[11px] text-slate-500 pt-1 border-t border-slate-200/60">
                     <span>
-                      θ ={" "}
-                      <strong className="text-slate-700">
-                        {d.nangLucIRT >= 0 ? `+${d.nangLucIRT}` : d.nangLucIRT}
-                      </strong>{" "}
-                      • Nhớ: <strong className="text-slate-700">{rPct}%</strong>{" "}
-                      (S = {d.doBenTriNho} ngày)
+                      Ghi nhớ: <strong className="text-slate-700">{rPct}%</strong>
                     </span>
 
                     <Link
@@ -321,7 +306,7 @@ export function BangPhanTichNangLuc({ data }: Props) {
                       }?dangBai=${encodeURIComponent(d.dangBai)}`}
                       className="text-blue-600 font-bold hover:underline flex items-center gap-1 shrink-0"
                     >
-                      <Play className="w-3 h-3 fill-current" /> Luyện ZPD
+                      <Play className="w-3 h-3 fill-current" /> Luyện tập
                     </Link>
                   </div>
                 </div>

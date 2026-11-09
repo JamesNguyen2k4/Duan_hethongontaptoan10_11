@@ -521,7 +521,7 @@ export async function chonCauHoiThichUngZPD(params: {
 }) {
   const { nguoiDungId, chuDeId, excludeBaiTapId } = params;
   let targetDangBai = params.dangBai;
-  let lyDoChon = "Câu hỏi khởi động phù hợp với trình độ hiện tại (Vùng ZPD ~ 70%)";
+  let lyDoChon = "Câu hỏi phù hợp với trình độ hiện tại của bạn";
 
   const nangLucList = await layNangLucTheoChuDe(nguoiDungId, chuDeId);
 
@@ -534,7 +534,7 @@ export async function chonCauHoiThichUngZPD(params: {
 
     if (dangCanOn) {
       targetDangBai = dangCanOn.dangBai;
-      lyDoChon = `Ôn tập ngắt quãng: Dạng bài này đang suy giảm trí nhớ (${Math.round(
+      lyDoChon = `Ôn tập kịp thời: Dạng bài này bạn nên củng cố lại kiến thức (${Math.round(
         dangCanOn.xacSuatHieuDung * 100
       )}%)`;
     } else {
@@ -545,7 +545,7 @@ export async function chonCauHoiThichUngZPD(params: {
 
       if (dangDangHoc) {
         targetDangBai = dangDangHoc.dangBai;
-        lyDoChon = `Rèn luyện thích ứng ZPD: Củng cố dạng bài lên ngưỡng thành thạo 85% (hiện đạt ${Math.round(
+        lyDoChon = `Luyện tập thích ứng: Củng cố dạng bài để đạt mức thành thạo (hiện đạt ${Math.round(
           dangDangHoc.xacSuatHieuDung * 100
         )}%)`;
       } else {
@@ -575,17 +575,15 @@ export async function chonCauHoiThichUngZPD(params: {
 
   if (params.dangBai && nangLucDang) {
     if (nangLucDang.trangThai === "CAN_ON_LAI") {
-      lyDoChon = `Ôn tập khôi phục trí nhớ (${Math.round(
+      lyDoChon = `Ôn tập củng cố kiến thức (${Math.round(
         nangLucDang.doNhoHienTai * 100
-      )}% độ nhớ) • Mục tiêu ZPD P ≈ 70%`;
+      )}% mức độ ghi nhớ)`;
     } else if (nangLucDang.trangThai === "THANH_THAO") {
-      lyDoChon = `Đã thành thạo (${Math.round(
+      lyDoChon = `Đã nắm vững (${Math.round(
         nangLucDang.xacSuatHieuDung * 100
       )}%) • Câu hỏi thử thách nâng cao`;
     } else {
-      lyDoChon = `Chọn theo năng lực θ = ${theta >= 0 ? `+${theta}` : theta} • Độ khó mục tiêu b* = ${
-        bTarget >= 0 ? `+${bTarget}` : bTarget
-      } (Xác suất giải đúng ~70%)`;
+      lyDoChon = "Câu hỏi vừa sức, phù hợp với năng lực hiện tại của bạn";
     }
   }
 
