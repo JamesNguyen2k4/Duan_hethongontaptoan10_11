@@ -320,6 +320,13 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                       >
                         {dang.nhanTrangThai}
                       </span>
+                      {dang.thongTinLich && dang.soLanLuyen > 0 && (
+                        <span
+                          className={`text-[11px] px-2.5 py-0.5 rounded-full border ${dang.thongTinLich.mauSacBadge}`}
+                        >
+                          {dang.thongTinLich.vanBanLich}
+                        </span>
+                      )}
                       <span className="text-xs font-semibold bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full">
                         {dang.soCauTrongNganHang} câu
                       </span>
@@ -365,6 +372,14 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                               <span className="text-slate-600">
                                 Mức độ: <strong>{dang.mucDoGoiY}</strong>
                               </span>
+                              {dang.doBenTriNho && (
+                                <>
+                                  <span className="text-slate-300">•</span>
+                                  <span className="text-slate-600">
+                                    Độ bền: <strong>{dang.doBenTriNho} ngày</strong>
+                                  </span>
+                                </>
+                              )}
                             </>
                           )}
                         </div>

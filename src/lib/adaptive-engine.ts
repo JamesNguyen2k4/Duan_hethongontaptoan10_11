@@ -1,11 +1,19 @@
 import { db } from "@/lib/db";
 import { DANH_MUC_DANG_BAI } from "@/lib/danh-muc-dang-bai";
-import { capNhatTheOnTapSM2 } from "@/lib/spaced-repetition";
+import {
+  FSRS_CONFIG,
+  FSRSGrade,
+  tinhRetrievabilityFSRS,
+  tinhKhoangCachFSRS,
+  tinhToanFSRS,
+  capNhatTheOnTapFSRS,
+  dinhDangLichOnTapFSRS,
+} from "@/lib/spaced-repetition";
 
 /**
  * ============================================================================
- * LÕI HỌC THÍCH ỨNG LAI (BKT + IRT + PFA) & LẶP LẠI NGẮT QUÃNG HỢP NHẤT
- * (Hybrid KT-IRT-PFA Adaptive Learning & Spaced Repetition Engine)
+ * LÕI HỌC THÍCH ỨNG LAI (BKT + IRT + PFA) & ÔN TẬP NGẮT QUÃNG FSRS
+ * (Hybrid KT-IRT-PFA Adaptive Learning & FSRS Memory Scheduler)
  * ============================================================================
  * Tích hợp và chuẩn hóa 4 mô hình đo lường giáo dục & khoa học nhận thức:
  *
@@ -29,10 +37,12 @@ import { capNhatTheOnTapSM2 } from "@/lib/spaced-repetition";
  *      m_PFA = beta_0 + gamma * s + rho * f + delta * streak
  *    - Dễ giải thích, phản ánh trực diện kết quả rèn luyện thực tế của học sinh.
  *
- * 4. Đường cong lãng quên Ebbinghaus & FSRS/SM-2 Memory Decay:
- *    - Độ thành thạo hiệu dụng suy giảm theo thời gian:
- *      P_eff(L) = P_mastery * 0.80^(delta_t / S)
- *    - Tự động kích hoạt ôn tập ngắt quãng khi P_eff(L) suy giảm dưới ngưỡng an toàn.
+ * 4. Mô hình Trí nhớ Khoa học Hiện đại FSRS (Free Spaced Repetition Scheduler):
+ *    - Theo dõi 3 trụ cột nhận thức: Retrievability (R), Stability (S), Difficulty (D).
+ *    - Suy giảm trí nhớ theo định luật hàm mũ công suất:
+ *      R(t, S) = (1 + 19/81 * (t / S))^(-0.5)
+ *      với mức ghi nhớ mục tiêu R_target = 0.90 (tại t = S, R = 90%).
+ *    - Tự động lập lịch khoảng cách ôn tập I = S ngày và kích hoạt ôn tập khi R(t) < 0.90.
  */
 
 export const BKT_DEFAULTS = {
@@ -43,7 +53,7 @@ export const BKT_DEFAULTS = {
   MASTERY_THRESHOLD: 0.85, // Ngưỡng công nhận Đã Thành Thạo (Mastered: 85%)
   MIN_PRACTICE_FOR_MASTERY: 10, // Số câu luyện tối thiểu để công nhận Thành thạo thực sự
   TARGET_SAMPLE_SIZE: 12, // Quy mô mẫu chuẩn cho 1 dạng bài để độ tin cậy mẫu đạt 100%
-  REVIEW_DECAY_THRESHOLD: 0.70, // Ngưỡng suy giảm trí nhớ cần ôn lại (< 70%)
+  REVIEW_DECAY_THRESHOLD: 0.90, // Ngưỡng suy giảm trí nhớ FSRS cần ôn lại (< 90%)
   ZPD_TARGET_PROB: 0.70, // Xác suất trả lời đúng tối ưu trong vùng ZPD (70%)
 };
 
@@ -252,6 +262,12 @@ export interface ThongTinNangLucDangBai {
   soChuoiDung: number;
   lanLuyenCuoi: Date | null;
   ngayOnKeTiep: Date | null;
+  thongTinLich?: {
+    trangThaiLich: "CHUA_CO" | "QUA_HAN" | "DEN_HAN" | "SAP_TOI";
+    vanBanLich: string;
+    soNgayConLai: number;
+    mauSacBadge: string;
+  };
   trangThai: TrangThaiDangBai;
   nhanTrangThai: string;
   mucDoGoiY: "NHAN_BIET" | "THONG_HIEU" | "VAN_DUNG" | "VAN_DUNG_CAO";
@@ -294,8 +310,9 @@ export function tinhDoKhoMucTieuZPD(
 }
 
 /**
- * 3. Tính hệ số duy trì trí nhớ Ebbinghaus R(t) = 0.80^(delta_t / S)
- * Khi delta_t = S (đúng vào ngày đến hạn ôn tập ngayOnKeTiep), R(S) = 0.80.
+ * 3. Tính Khả năng duy trì trí nhớ Retrievability R(t) theo chuẩn FSRS
+ * R(t, S) = (1 + 19/81 * (t / S))^(-0.5)
+ * Khi t = S (số ngày trôi qua đúng bằng độ bền Stability), Retrievability giảm về đúng 90% (0.90).
  */
 export function tinhDoDuyTriTriNho(
   lanLuyenCuoi: Date | null,
@@ -305,14 +322,11 @@ export function tinhDoDuyTriTriNho(
   if (!lanLuyenCuoi) return 1.0;
   const diffMs = Math.max(0, now.getTime() - new Date(lanLuyenCuoi).getTime());
   const deltaDays = diffMs / (1000 * 60 * 60 * 24);
-  const stability = Math.max(0.5, doBenTriNho);
-  // R(t) = 0.80^(deltaDays / stability)
-  const retention = Math.pow(0.8, deltaDays / stability);
-  return Number(Math.max(0.15, Math.min(1.0, retention)).toFixed(4));
+  return tinhRetrievabilityFSRS(deltaDays, doBenTriNho);
 }
 
 /**
- * 4. Phân loại trạng thái Dạng bài từ P(L_t), R(t), P_eff(L) và số lần luyện
+ * 4. Phân loại trạng thái Dạng bài theo chuẩn FSRS (R, S, D) và Năng lực thực tế
  */
 export function phanLoaiTrangThaiDangBai(
   soLanLuyen: number,
@@ -330,11 +344,10 @@ export function phanLoaiTrangThaiDangBai(
   }
 
   const isDueByDate = ngayOnKeTiep ? new Date(ngayOnKeTiep) <= now : false;
-  // Nếu đã từng đạt độ thành thạo khá (>= 0.55) nhưng trí nhớ suy giảm hoặc đã đến hạn ôn
-  if (
-    (xacSuatThanhThao >= 0.55 && xacSuatHieuDung < BKT_DEFAULTS.REVIEW_DECAY_THRESHOLD && doNhoHienTai < 0.85) ||
-    (isDueByDate && xacSuatHieuDung < 0.82)
-  ) {
+  const isMemoryDecayed = doNhoHienTai < FSRS_CONFIG.TARGET_RETENTION;
+
+  // Nếu đến ngày hẹn ôn hoặc Retrievability giảm dưới 90% (chuẩn FSRS)
+  if (isDueByDate || isMemoryDecayed) {
     return {
       trangThai: "CAN_ON_LAI",
       nhanTrangThai: "Đang quên • Cần ôn lại",
@@ -370,7 +383,7 @@ export function quyDoiThetaSangMucDo(
 }
 
 /**
- * 6. Cập nhật hợp nhất BKT + IRT 3PL + FSRS/SM-2 sau mỗi lần học sinh nộp 1 câu hỏi
+ * 6. Cập nhật hợp nhất BKT + IRT 3PL + FSRS Memory sau mỗi lần học sinh nộp 1 câu hỏi
  */
 export async function capNhatMoHinhNguoiHoc(params: {
   nguoiDungId: string;
@@ -520,55 +533,52 @@ export async function capNhatMoHinhNguoiHoc(params: {
   );
 
   // -------------------------------------------------------------------------
-  // BƯỚC D: Cập nhật Độ bền trí nhớ (Stability S - FSRS/SM-2) & Lịch ôn tập
+  // BƯỚC D: Cập nhật Mô hình Trí nhớ FSRS (Retrievability R, Stability S, Difficulty D)
   // -------------------------------------------------------------------------
-  let chatLuongNho = 4;
+  // Phân cấp mức đánh giá FSRS Grade:
+  // 1: Again (Sai / Quên kiến thức)
+  // 2: Hard (Đúng nhưng vất vả > 75s)
+  // 3: Good (Đúng tốc độ tiêu chuẩn)
+  // 4: Easy (Đúng nhanh <= 35s hoặc chinh phục thành công câu Vận dụng/VDC khó)
+  let fsrsGrade: FSRSGrade = 3;
   if (!dung) {
-    chatLuongNho = 1;
+    fsrsGrade = 1;
   } else if (thoiGianGiay > 75) {
-    chatLuongNho = 3;
-  } else if (thoiGianGiay <= 35 || doKhoIRT >= 0.7) {
-    chatLuongNho = 5;
+    fsrsGrade = 2;
+  } else if ((thoiGianGiay > 0 && thoiGianGiay <= 35) || doKhoIRT >= 0.75) {
+    fsrsGrade = 4;
   } else {
-    chatLuongNho = 4;
+    fsrsGrade = 3;
   }
 
-  // Cập nhật Ease Factor EF
-  let efNew =
-    efPrev + (0.1 - (5 - chatLuongNho) * (0.08 + (5 - chatLuongNho) * 0.02));
-  efNew = Number(Math.max(1.3, Math.min(3.0, efNew)).toFixed(2));
+  const elapsedDaysDang = lanLuyenCuoiPrev
+    ? Math.max(
+        0,
+        (now.getTime() - new Date(lanLuyenCuoiPrev).getTime()) /
+          (1000 * 60 * 60 * 24)
+      )
+    : 0;
 
-  let soChuoiDungNew = dung ? soChuoiDungPrev + 1 : 0;
-  let stabilityNew = stabilityPrev;
+  // Difficulty D trong FSRS có miền [1.0 .. 10.0] (mặc định 5.0)
+  // Nếu dữ liệu cũ đang lưu EF từ SM-2 (<= 3.0), tự động quy đổi về mốc chuẩn FSRS 5.0
+  const currentDifficulty =
+    efPrev > 3.0 ? efPrev : FSRS_CONFIG.DEFAULT_DIFFICULTY;
 
-  if (!dung) {
-    // Làm sai -> Độ bền trí nhớ sụt giảm, cần củng cố lại trong 1 ngày
-    stabilityNew = Number(Math.max(1.0, stabilityPrev * 0.45).toFixed(2));
-  } else {
-    if (soChuoiDungNew === 1) {
-      stabilityNew = Number(Math.max(1.5, stabilityPrev * 1.4).toFixed(2));
-    } else if (soChuoiDungNew === 2) {
-      stabilityNew = Number(Math.max(3.5, stabilityPrev * 1.9).toFixed(2));
-    } else {
-      const masteryBonus = 1 + 0.2 * pLNew;
-      const recallBonus = retention < 0.85 ? 1.25 : 1.0; // Hiệu ứng Spacing Effect: Ôn đúng lúc sắp quên giúp tăng vọt độ bền trí nhớ!
-      stabilityNew = Number(
-        Math.min(180, stabilityPrev * efNew * 0.85 * masteryBonus * recallBonus).toFixed(2)
-      );
-    }
-  }
+  const fsrsDang = tinhToanFSRS({
+    currentStability: stabilityPrev,
+    currentDifficulty,
+    elapsedDays: elapsedDaysDang,
+    grade: fsrsGrade,
+    reps: soLanLuyenPrev,
+    desiredRetention: FSRS_CONFIG.TARGET_RETENTION,
+    now,
+  });
 
-  // Ngày ôn kế tiếp: Khi R(t) giảm về 0.80 -> tức sau đúng `round(stabilityNew)` ngày!
-  // Nếu làm sai hoặc chưa thành thạo (< 0.55), hẹn ôn lại sau 1 ngày.
-  const intervalDays = !dung
-    ? 1
-    : pLNew < 0.55
-    ? Math.max(1, Math.min(2, Math.round(stabilityNew)))
-    : Math.max(1, Math.round(stabilityNew));
-
-  const ngayOnKeTiep = new Date(now);
-  ngayOnKeTiep.setDate(ngayOnKeTiep.getDate() + intervalDays);
-  ngayOnKeTiep.setHours(4, 0, 0, 0);
+  const stabilityNew = fsrsDang.stability;
+  const dNew = fsrsDang.difficulty;
+  const intervalDays = fsrsDang.intervalDays;
+  const ngayOnKeTiep = fsrsDang.ngayOnKeTiep;
+  const soChuoiDungNew = dung ? soChuoiDungPrev + 1 : 0;
 
   // 1. Lưu cập nhật vào bảng NangLucDangBai
   const banGhiNangLuc = await db.nangLucDangBai.upsert({
@@ -583,7 +593,7 @@ export async function capNhatMoHinhNguoiHoc(params: {
       xacSuatThanhThao: pLNew,
       nangLucIRT: thetaNew,
       doBenTriNho: stabilityNew,
-      heSoDe: efNew,
+      heSoDe: dNew,
       soLanLuyen: { increment: 1 },
       soLanDung: dung ? { increment: 1 } : undefined,
       soChuoiDung: soChuoiDungNew,
@@ -597,7 +607,7 @@ export async function capNhatMoHinhNguoiHoc(params: {
       xacSuatThanhThao: pLNew,
       nangLucIRT: thetaNew,
       doBenTriNho: stabilityNew,
-      heSoDe: efNew,
+      heSoDe: dNew,
       soLanLuyen: 1,
       soLanDung: dung ? 1 : 0,
       soChuoiDung: soChuoiDungNew,
@@ -616,8 +626,8 @@ export async function capNhatMoHinhNguoiHoc(params: {
     },
   });
 
-  // 3. Đồng bộ thẻ ôn tập cấp câu hỏi (TheOnTap) cho những câu làm sai hoặc làm chậm
-  await capNhatTheOnTapSM2(nguoiDungId, baiTapId, chatLuongNho);
+  // 3. Đồng bộ thẻ ôn tập cấp câu hỏi (TheOnTap) theo chuẩn FSRS
+  await capNhatTheOnTapFSRS(nguoiDungId, baiTapId, fsrsGrade, now);
 
   const soLanLuyenMoi = soLanLuyenPrev + 1;
   const soLanDungMoi = soLanDungPrev + (dung ? 1 : 0);
@@ -727,6 +737,12 @@ export async function layNangLucTheoChuDe(
         soChuoiDung: 0,
         lanLuyenCuoi: null,
         ngayOnKeTiep: null,
+        thongTinLich: {
+          trangThaiLich: "CHUA_CO",
+          vanBanLich: "Chưa luyện tập",
+          soNgayConLai: 0,
+          mauSacBadge: "text-slate-400 bg-slate-100 border-slate-200",
+        },
         trangThai: "CHUA_HOC",
         nhanTrangThai: "Chưa luyện tập",
         mucDoGoiY: "NHAN_BIET",
@@ -768,6 +784,7 @@ export async function layNangLucTheoChuDe(
       soChuoiDung: rec.soChuoiDung,
       lanLuyenCuoi: rec.lanLuyenCuoi,
       ngayOnKeTiep: rec.ngayOnKeTiep,
+      thongTinLich: dinhDangLichOnTapFSRS(rec.ngayOnKeTiep, rec.lanLuyenCuoi, now),
       trangThai,
       nhanTrangThai,
       mucDoGoiY: quyDoiThetaSangMucDo(rec.nangLucIRT),
@@ -945,7 +962,7 @@ export async function chonCauHoiThichUngZPD(params: {
 
     let historyPenalty = 0;
     if (dueCardIds.has(item.id) && answeredWrongIds.has(item.id)) {
-      // Câu từng làm sai và đã đến hạn ôn tập SM-2 -> Ưu tiên cao!
+      // Câu từng làm sai và đã đến hạn ôn tập FSRS -> Ưu tiên cao!
       historyPenalty = -0.12;
     } else if (!answeredCorrectIds.has(item.id) && !answeredWrongIds.has(item.id)) {
       // Câu mới chưa làm bao giờ -> Ưu tiên chuẩn ZPD

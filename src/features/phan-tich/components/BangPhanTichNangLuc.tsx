@@ -106,7 +106,7 @@ export function BangPhanTichNangLuc({ data }: Props) {
               {data.soDangCanOn ?? dangBaiCanOnList.length}
             </span>
             <span className="text-xs text-slate-400">
-              dạng cần củng cố
+              dạng đến hạn ôn (FSRS)
             </span>
           </div>
         </div>
@@ -190,13 +190,26 @@ export function BangPhanTichNangLuc({ data }: Props) {
                         <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">
                           {item.nhanTrangThai}
                         </span>
+                        {item.thongTinLich && (
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded-md border ${item.thongTinLich.mauSacBadge}`}
+                          >
+                            {item.thongTinLich.vanBanLich}
+                          </span>
+                        )}
                       </div>
                       <h4 className="text-xs font-bold text-slate-900">
                         {item.dangBai}
                       </h4>
                       <p className="text-[11px] text-slate-600">
                         Độ thành thạo: <strong>{pct}%</strong> • Ghi nhớ:{" "}
-                        <strong>{retentionPct}%</strong> • Đã luyện:{" "}
+                        <strong>{retentionPct}%</strong> (Mục tiêu 90%)
+                        {item.doBenTriNho && (
+                          <>
+                            {" "}• Độ bền:{" "}
+                            <strong>{item.doBenTriNho} ngày</strong>
+                          </>
+                        )} • Đã luyện:{" "}
                         <strong>
                           {item.soLanDung}/{item.soLanLuyen} câu đúng
                         </strong>
@@ -257,21 +270,30 @@ export function BangPhanTichNangLuc({ data }: Props) {
                   className="p-4 rounded-2xl border border-slate-200 hover:border-blue-300 transition-all flex flex-col justify-between gap-3 bg-slate-50/40"
                 >
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
                       <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-md">
                         {d.tenChuDe}
                       </span>
-                      <span
-                        className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
-                          d.trangThai === "THANH_THAO"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : d.trangThai === "CAN_ON_LAI"
-                            ? "bg-amber-100 text-amber-800"
-                            : "bg-blue-100 text-blue-800"
-                        }`}
-                      >
-                        {d.nhanTrangThai} ({pEffPct}%)
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {d.thongTinLich && (
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded-md border ${d.thongTinLich.mauSacBadge}`}
+                          >
+                            {d.thongTinLich.vanBanLich}
+                          </span>
+                        )}
+                        <span
+                          className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
+                            d.trangThai === "THANH_THAO"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : d.trangThai === "CAN_ON_LAI"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-blue-100 text-blue-800"
+                          }`}
+                        >
+                          {d.nhanTrangThai} ({pEffPct}%)
+                        </span>
+                      </div>
                     </div>
 
                     <h4 className="font-bold text-slate-900 text-xs sm:text-sm">
@@ -306,6 +328,12 @@ export function BangPhanTichNangLuc({ data }: Props) {
                       </strong>{" "}
                       • Ghi nhớ:{" "}
                       <strong className="text-slate-700">{rPct}%</strong>
+                      {d.doBenTriNho && (
+                        <>
+                          {" "}• Độ bền:{" "}
+                          <strong className="text-slate-700">{d.doBenTriNho} ngày</strong>
+                        </>
+                      )}
                     </span>
 
                     <Link

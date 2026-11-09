@@ -9,6 +9,7 @@ import {
   tinhXacSuatIRT3PL,
   chonCauHoiThichUngZPD,
 } from "@/lib/adaptive-engine";
+import { dinhDangLichOnTapFSRS } from "@/lib/spaced-repetition";
 
 export interface ThongKeChuDe {
   chuDeId: string;
@@ -37,6 +38,12 @@ export interface ThongKeDangBaiChiTiet {
   soLanDung: number;
   lanLuyenCuoi: Date;
   ngayOnKeTiep: Date;
+  thongTinLich: {
+    trangThaiLich: "CHUA_CO" | "QUA_HAN" | "DEN_HAN" | "SAP_TOI";
+    vanBanLich: string;
+    soNgayConLai: number;
+    mauSacBadge: string;
+  };
   trangThai: "CHUA_HOC" | "DANG_REN_LUYEN" | "CAN_ON_LAI" | "THANH_THAO";
   nhanTrangThai: string;
   mucDoGoiY: "NHAN_BIET" | "THONG_HIEU" | "VAN_DUNG" | "VAN_DUNG_CAO";
@@ -125,6 +132,7 @@ export async function phanTichDiemYeuHocSinh(nguoiDungId: string) {
         soLanDung: rec.soLanDung,
         lanLuyenCuoi: rec.lanLuyenCuoi,
         ngayOnKeTiep: rec.ngayOnKeTiep,
+        thongTinLich: dinhDangLichOnTapFSRS(rec.ngayOnKeTiep, rec.lanLuyenCuoi, now),
         trangThai,
         nhanTrangThai,
         mucDoGoiY: quyDoiThetaSangMucDo(rec.nangLucIRT),
@@ -197,10 +205,14 @@ export async function phanTichDiemYeuHocSinh(nguoiDungId: string) {
     if (laDiemYeu) diemYeuList.push(item);
   }
 
-  // Các dạng bài cần ưu tiên (Đang suy giảm trí nhớ hoặc Độ thành thạo hiệu dụng < 65%)
-  const dangBaiCanOnList = danhSachDangBai.filter(
-    (d) => d.trangThai === "CAN_ON_LAI" || d.xacSuatHieuDung < 0.65
-  );
+  // 5. Chỉ lọc các dạng bài THỰC SỰ ĐẾN HẠN ÔN TẬP THEO LỊCH RIÊNG FSRS
+  // (trangThai === "CAN_ON_LAI": khi xác suất nhớ R < 90% hoặc đã tới ngày hẹn ngayOnKeTiep)
+  // Các dạng bài đang rèn luyện bình thường (chưa tới lịch hẹn) có tiến trình học tập riêng,
+  // tuyệt đối không bị gom nhầm vào mục "Cần ôn tập lại".
+  const dangBaiCanOnList = danhSachDangBai
+    .filter((d) => d.trangThai === "CAN_ON_LAI")
+    .sort((a, b) => a.doNhoHienTai - b.doNhoHienTai);
+
   const soDangThanhThao = danhSachDangBai.filter(
     (d) => d.trangThai === "THANH_THAO"
   ).length;

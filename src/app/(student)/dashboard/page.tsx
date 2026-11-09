@@ -68,7 +68,7 @@ export default async function DashboardPage() {
               className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5"
             >
               <Repeat className="w-4 h-4" /> Ôn ngay{" "}
-              {analysisData.soDangCanOn} dạng bài cần củng cố!
+              {analysisData.soDangCanOn} dạng bài đến hạn ôn!
             </Link>
           ) : (
             <Link
