@@ -313,6 +313,7 @@ model BaiViet {
   baiTap     BaiTap?    @relation(fields: [baiTapId], references: [id])
   binhLuans  BinhLuan[]
   baoCaos    BaoCao[]
+  hinhAnhs   HinhAnh[]
 
   @@index([trangThai, taoLuc(sort: Desc)])
   @@map("bai_viet")
@@ -333,8 +334,26 @@ model BinhLuan {
   binhLuanCha BinhLuan?  @relation("BinhLuanCha", fields: [binhLuanChaId], references: [id])
   binhLuanCon BinhLuan[] @relation("BinhLuanCha")
   baoCaos     BaoCao[]
+  hinhAnhs    HinhAnh[]
 
   @@map("binh_luan")
+}
+
+model HinhAnh {
+  id           String    @id @default(cuid())
+  baiVietId    String?
+  binhLuanId   String?
+  duLieuBase64 String    @db.LongText
+  mimeType     String    @default("image/jpeg")
+  dungLuong    Int       @default(0)
+  taoLuc       DateTime  @default(now())
+
+  baiViet      BaiViet?  @relation(fields: [baiVietId], references: [id], onDelete: Cascade)
+  binhLuan     BinhLuan? @relation(fields: [binhLuanId], references: [id], onDelete: Cascade)
+
+  @@index([baiVietId])
+  @@index([binhLuanId])
+  @@map("hinh_anh")
 }
 
 model BaoCao {

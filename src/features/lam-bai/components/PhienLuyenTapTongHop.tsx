@@ -16,6 +16,7 @@ import {
   Brain,
   Target,
   Play,
+  MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -420,9 +421,19 @@ export function PhienLuyenTapTongHop({
 
                 {/* Lời giải chi tiết */}
                 <div className="bg-slate-50 rounded-xl p-4 sm:p-5 border border-slate-200/80 space-y-2 text-sm">
-                  <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                    <BookOpen className="w-4 h-4 text-blue-600" /> Lời giải chi
-                    tiết:
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                      <BookOpen className="w-4 h-4 text-blue-600" /> Lời giải chi
+                      tiết:
+                    </div>
+                    <Link
+                      href={`/dien-dan/tao-moi?baiTapId=${q.id}&chuDeId=${chuDeId}`}
+                      target="_blank"
+                      className="px-3 py-1 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-2xs"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>Hỏi câu này trên diễn đàn</span>
+                    </Link>
                   </div>
                   <div className="bg-white p-4 rounded-lg border border-slate-200/60 leading-relaxed text-slate-800">
                     <MathRenderer content={q.loiGiaiChiTiet} />

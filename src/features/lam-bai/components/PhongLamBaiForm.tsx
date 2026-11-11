@@ -16,6 +16,7 @@ import {
   Target,
   TrendingUp,
   Award,
+  MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
 import { MathRenderer } from "@/components/shared/MathRenderer";
@@ -461,9 +462,19 @@ export function PhongLamBaiForm({
 
             {/* Explanation box */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-3">
-              <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-blue-600" /> Lời giải chi tiết:
-              </h4>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-blue-600" /> Lời giải chi tiết:
+                </h4>
+                <Link
+                  href={`/dien-dan/tao-moi?baiTapId=${baiTap.id}&chuDeId=${baiTap.chuDe.id}`}
+                  target="_blank"
+                  className="px-3 py-1.5 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer hover:border-emerald-300"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Chưa hiểu? Hỏi trên diễn đàn</span>
+                </Link>
+              </div>
               <div className="bg-white p-5 rounded-xl border border-slate-200/80 leading-relaxed text-sm">
                 <MathRenderer content={ketQua.loiGiaiChiTiet} />
               </div>
