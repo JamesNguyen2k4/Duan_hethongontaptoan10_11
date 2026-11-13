@@ -53,10 +53,15 @@ export interface ThongKeDangBaiChiTiet {
  * Phân tích năng lực học sinh hợp nhất:
  * BKT (Bayesian Knowledge Tracing) + IRT 3PL + Đường cong lãng quên Ebbinghaus (FSRS/SM-2)
  */
-export async function phanTichDiemYeuHocSinh(nguoiDungId: string) {
-  // 1. Lấy lịch sử làm bài của học sinh
+export async function phanTichDiemYeuHocSinh(
+  nguoiDungId: string,
+  lopId?: string
+) {
+  const locLop = lopId ? { lopId } : {};
+
+  // 1. Lấy lịch sử làm bài của học sinh (chỉ trong lớp đang học)
   const lanLamBais = await db.lanLamBai.findMany({
-    where: { nguoiDungId },
+    where: { nguoiDungId, ...locLop },
     include: {
       baiTap: {
         include: {
@@ -69,7 +74,7 @@ export async function phanTichDiemYeuHocSinh(nguoiDungId: string) {
 
   // 2. Lấy hồ sơ NangLucDangBai hiện tại
   let nangLucRecords = await db.nangLucDangBai.findMany({
-    where: { nguoiDungId },
+    where: { nguoiDungId, ...locLop },
     include: { chuDe: true },
   });
 
@@ -86,10 +91,11 @@ export async function phanTichDiemYeuHocSinh(nguoiDungId: string) {
         thoiGianGiay: item.thoiGianGiay || 40,
         doKhoIRT: item.baiTap.doKhoIRT,
         doPhanBiet: item.baiTap.doPhanBiet,
+        lopId: item.lopId,
       });
     }
     nangLucRecords = await db.nangLucDangBai.findMany({
-      where: { nguoiDungId },
+      where: { nguoiDungId, ...locLop },
       include: { chuDe: true },
     });
   }

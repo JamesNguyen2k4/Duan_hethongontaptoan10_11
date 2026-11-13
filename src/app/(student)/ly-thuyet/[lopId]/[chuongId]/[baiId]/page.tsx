@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MathRenderer } from "@/components/shared/MathRenderer";
 import { ArrowLeft, ArrowRight, CheckCircle2, BookOpen, Layers } from "lucide-react";
+import { thongTinLop } from "@/lib/lop-context";
 
 interface Props {
   params: {
@@ -54,7 +55,7 @@ export default async function BaiLyThuyetDetailPage({ params }: Props) {
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-slate-500 mb-6 flex-wrap">
         <Link href="/ly-thuyet" className="hover:text-blue-600 transition-colors">
-          Lý thuyết Toán 11
+          Lý thuyết {thongTinLop(lopId).ten}
         </Link>
         <span>/</span>
         <span className="text-slate-700 font-medium">{bai.chuong.ten}</span>

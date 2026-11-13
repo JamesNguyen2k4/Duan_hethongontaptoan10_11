@@ -1,20 +1,8 @@
 // Danh mục các Dạng bài toán chuẩn hóa cho 33 Bài học Toán 11 (KNTT)
 
-export interface DangBaiInfo {
-  id: string; // VD: "lop11-b1-d1"
-  ten: string; // VD: "Dạng 1. Đơn vị đo góc & độ dài cung tròn"
-  moTa: string;
-}
+import type { BaiHocDangBaiConfig } from "./types";
 
-export interface BaiHocDangBaiConfig {
-  baiNum: number;
-  chuDeId: string;
-  chuongId: string;
-  tenBai: string;
-  dangs: DangBaiInfo[];
-}
-
-export const DANH_MUC_DANG_BAI: Record<string, BaiHocDangBaiConfig> = {
+export const DANH_MUC_DANG_BAI_LOP11: Record<string, BaiHocDangBaiConfig> = {
   "lop11-c1-cd1": {
     baiNum: 1,
     chuDeId: "lop11-c1-cd1",

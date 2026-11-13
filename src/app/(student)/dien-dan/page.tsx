@@ -16,6 +16,7 @@ import {
   layDanhSachChuDeDienDan,
 } from "@/features/dien-dan/services/bai-viet";
 import { TheBaiViet } from "@/features/dien-dan/components/TheBaiViet";
+import { layLopHienTai, thongTinLop } from "@/lib/lop-context";
 
 export const dynamic = "force-dynamic";
 
@@ -25,11 +26,16 @@ interface Props {
     tuKhoa?: string;
     trang?: string;
     chiBaiTap?: string;
+    lop?: string;
   };
 }
 
 export default async function DienDanPage({ searchParams }: Props) {
   const session = await auth();
+  const lopMacDinh = await layLopHienTai();
+  const lopFilter = searchParams.lop === "all" ? "all" : lopMacDinh;
+  const lopInfo = thongTinLop(lopMacDinh);
+
   const trang = parseInt(searchParams.trang || "1", 10);
   const chuDeId = searchParams.chuDeId || undefined;
   const tuKhoa = searchParams.tuKhoa || undefined;
@@ -37,13 +43,14 @@ export default async function DienDanPage({ searchParams }: Props) {
 
   const [danhSachRes, danhSachChuDe] = await Promise.all([
     layDanhSachBaiViet({
+      lopId: lopFilter,
       chuDeId,
       tuKhoa,
       chiBaiTap,
       trang,
       soLuongMoiTrang: 10,
     }),
-    layDanhSachChuDeDienDan(),
+    layDanhSachChuDeDienDan(lopFilter),
   ]);
 
   const { danhSach, tongSo, tongSoTrang, trangHienTai } = danhSachRes;
@@ -132,12 +139,21 @@ export default async function DienDanPage({ searchParams }: Props) {
           <span className="font-semibold text-slate-400">Xem nhanh:</span>
           <Link
             href="/dien-dan"
-            className={`px-3 py-1 rounded-full border transition-all ${!chuDeId && !chiBaiTap
+            className={`px-3 py-1 rounded-full border transition-all ${!chuDeId && !chiBaiTap && lopFilter !== "all"
                 ? "bg-emerald-50 text-emerald-800 border-emerald-300 font-bold"
                 : "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200"
               }`}
           >
-            Tất cả ({tongSo})
+            {lopInfo.ten} ({lopFilter !== "all" ? tongSo : "lọc theo lớp"})
+          </Link>
+          <Link
+            href="/dien-dan?lop=all"
+            className={`px-3 py-1 rounded-full border transition-all ${lopFilter === "all" && !chuDeId && !chiBaiTap
+                ? "bg-blue-50 text-blue-800 border-blue-300 font-bold"
+                : "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200"
+              }`}
+          >
+            Tất cả các lớp
           </Link>
           <Link
             href="/dien-dan?chiBaiTap=true"

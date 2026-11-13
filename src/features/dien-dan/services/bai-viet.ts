@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 
 export interface BoLocBaiViet {
+  lopId?: string;
   chuDeId?: string;
   tuKhoa?: string;
   baiTapId?: string;
@@ -12,6 +13,7 @@ export interface BoLocBaiViet {
 
 export async function layDanhSachBaiViet(boLoc: BoLocBaiViet = {}) {
   const {
+    lopId,
     chuDeId,
     tuKhoa,
     baiTapId,
@@ -24,6 +26,10 @@ export async function layDanhSachBaiViet(boLoc: BoLocBaiViet = {}) {
   const whereClause: any = {
     trangThai: "HIEN_THI",
   };
+
+  if (lopId && lopId !== "all") {
+    whereClause.lopId = lopId;
+  }
 
   if (chuDeId) {
     whereClause.chuDeId = chuDeId;
@@ -203,8 +209,9 @@ export async function layChiTietBaiViet(baiVietId: string) {
   return baiViet;
 }
 
-export async function layDanhSachChuDeDienDan() {
+export async function layDanhSachChuDeDienDan(lopId?: string) {
   return await db.chuDe.findMany({
+    where: lopId && lopId !== "all" ? { chuong: { lopId } } : undefined,
     orderBy: { thuTu: "asc" },
     select: {
       id: true,

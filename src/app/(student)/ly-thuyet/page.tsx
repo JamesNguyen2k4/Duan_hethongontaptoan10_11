@@ -1,12 +1,16 @@
 import { db } from "@/lib/db";
 import Link from "next/link";
-import { BookOpen, CheckCircle, ArrowRight } from "lucide-react";
+import { BookOpen, ArrowRight } from "lucide-react";
+import { layLopHienTai, thongTinLop } from "@/lib/lop-context";
 
 export const dynamic = "force-dynamic";
 
 export default async function LyThuyetIndexPage() {
-  const lop11 = await db.lop.findFirst({
-    where: { id: "lop-11" },
+  const lopId = await layLopHienTai();
+  const lopInfo = thongTinLop(lopId);
+
+  const lopData = await db.lop.findFirst({
+    where: { id: lopId },
     include: {
       chuongs: {
         orderBy: { thuTu: "asc" },
@@ -22,6 +26,8 @@ export default async function LyThuyetIndexPage() {
     },
   });
 
+  const soChuong = lopData?.chuongs.length ?? 0;
+
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
       {/* Header Banner */}
@@ -30,19 +36,21 @@ export default async function LyThuyetIndexPage() {
           <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-semibold uppercase tracking-wider backdrop-blur-sm">
             Kết Nối Tri Thức
           </span>
-          <span className="text-blue-100 text-sm">Chương trình chuẩn Toán 11</span>
+          <span className="text-blue-100 text-sm">
+            Chương trình chuẩn {lopInfo.ten}
+          </span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-          Học Lý Thuyết & Dạng Toán Lớp 11
+          Học Lý Thuyết & Dạng Toán {lopInfo.nhan}
         </h1>
         <p className="mt-2 text-blue-100 max-w-2xl text-sm sm:text-base leading-relaxed">
-          Tổng hợp toàn bộ 9 chương lý thuyết cốt lõi, ví dụ giải mẫu và các phương pháp giải dạng toán bám sát định dạng thi mới.
+          Tổng hợp toàn bộ {soChuong} chương lý thuyết cốt lõi, ví dụ giải mẫu và các phương pháp giải dạng toán bám sát định dạng thi mới.
         </p>
       </div>
 
       {/* Chapters list */}
       <div className="grid grid-cols-1 gap-6">
-        {lop11?.chuongs.map((chuong, index) => (
+        {lopData?.chuongs.map((chuong, index) => (
           <div key={chuong.id} className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div className="bg-slate-50 border-b border-slate-100 px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -62,7 +70,7 @@ export default async function LyThuyetIndexPage() {
               {chuong.bais.map((bai) => (
                 <Link
                   key={bai.id}
-                  href={`/ly-thuyet/lop-11/${chuong.id}/${bai.id}`}
+                  href={`/ly-thuyet/${lopId}/${chuong.id}/${bai.id}`}
                   prefetch={true}
                   className="flex items-center justify-between px-6 py-4 hover:bg-blue-50/60 active:bg-blue-100/60 active:scale-[0.995] transition-all group cursor-pointer select-none"
                 >

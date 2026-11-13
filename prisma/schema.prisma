@@ -30,6 +30,7 @@ model NguoiDung {
   taoLuc        DateTime  @default(now())
   capNhatLuc    DateTime  @updatedAt
   dangHoatDong  Boolean   @default(true)
+  lopDangHocId  String?   @default("lop-11") // Ngữ cảnh lớp đang học (lop-10 | lop-11)
 
   // Auth.js relations
   accounts      TaiKhoanOAuth[]
@@ -208,11 +209,13 @@ model LanLamBai {
   ketQua      KetQuaLamBai
   thoiGianGiay Int?                   // thời gian làm bài tính bằng giây
   thoiDiem    DateTime      @default(now())
+  lopId       String?       // Tách dữ liệu theo lớp (phi chuẩn hóa từ chuDe.chuong.lopId)
 
   nguoiDung NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
   baiTap    BaiTap    @relation(fields: [baiTapId], references: [id])
 
   @@index([nguoiDungId, thoiDiem])
+  @@index([nguoiDungId, lopId, thoiDiem])
   @@map("lan_lam_bai")
 }
 
@@ -229,12 +232,14 @@ model TheOnTap {
   khoangCachNgay  Int      @default(1)
   ngayOnKeTiep    DateTime @default(now())
   capNhatLuc      DateTime @updatedAt
+  lopId           String?
 
   nguoiDung NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
   baiTap    BaiTap    @relation(fields: [baiTapId], references: [id], onDelete: Cascade)
 
   @@unique([nguoiDungId, baiTapId])
   @@index([nguoiDungId, ngayOnKeTiep])
+  @@index([nguoiDungId, lopId, ngayOnKeTiep])
   @@map("the_on_tap")
 }
 
@@ -257,12 +262,14 @@ model NangLucDangBai {
   lanLuyenCuoi     DateTime @default(now())
   ngayOnKeTiep     DateTime @default(now())
   capNhatLuc       DateTime @updatedAt
+  lopId            String?
 
   nguoiDung NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
   chuDe     ChuDe     @relation(fields: [chuDeId], references: [id], onDelete: Cascade)
 
   @@unique([nguoiDungId, chuDeId, dangBai])
   @@index([nguoiDungId, ngayOnKeTiep])
+  @@index([nguoiDungId, lopId, ngayOnKeTiep])
   @@index([nguoiDungId, chuDeId])
   @@map("nang_luc_dang_bai")
 }
@@ -277,11 +284,13 @@ model TienDo {
   baiId       String
   daDanhDau   Boolean  @default(false)
   thoiDiem    DateTime @default(now())
+  lopId       String?
 
   nguoiDung NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
   bai       Bai       @relation(fields: [baiId], references: [id])
 
   @@unique([nguoiDungId, baiId])
+  @@index([nguoiDungId, lopId])
   @@map("tien_do")
 }
 
@@ -307,6 +316,7 @@ model BaiViet {
   capNhatLuc  DateTime         @updatedAt
 
   noiDungSearch String?        @db.Text
+  lopId         String?        // Bài hỏi thuộc lớp nào (lọc diễn đàn theo lớp)
 
   nguoiDung  NguoiDung  @relation(fields: [nguoiDungId], references: [id])
   chuDe      ChuDe?     @relation(fields: [chuDeId], references: [id])
@@ -316,6 +326,7 @@ model BaiViet {
   hinhAnhs   HinhAnh[]
 
   @@index([trangThai, taoLuc(sort: Desc)])
+  @@index([lopId, trangThai, taoLuc(sort: Desc)])
   @@map("bai_viet")
 }
 

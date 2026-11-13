@@ -23,6 +23,7 @@ import {
   tinhDoThanhThaoThucTe,
   phanLoaiTrangThaiDangBai,
 } from "@/lib/adaptive-engine";
+import { layLopHienTai, thongTinLop } from "@/lib/lop-context";
 
 export const dynamic = "force-dynamic";
 
@@ -114,7 +115,7 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
             prefetch={true}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98] text-xs font-semibold text-slate-700 transition-all shadow-2xs cursor-pointer"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Quay lại danh mục 9 chương
+            <ArrowLeft className="w-3.5 h-3.5" /> Quay lại danh mục chương
           </Link>
         </div>
 
@@ -245,7 +246,7 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
 
               {baiId && (
                 <Link
-                  href={`/ly-thuyet/lop-11/${currentChuDe.chuongId}/${baiId}`}
+                  href={`/ly-thuyet/${currentChuDe.chuong.lopId}/${currentChuDe.chuongId}/${baiId}`}
                   prefetch={true}
                   className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-[0.98] border border-white/20 text-white font-semibold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
                 >
@@ -441,11 +442,14 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
   }
 
   // =========================================================================
-  // CHẾ ĐỘ 2: DANH MỤC 9 CHƯƠNG TOÁN 11 (TRANG CHỦ BÀI TẬP & ÔN TẬP HỢP NHẤT)
+  // CHẾ ĐỘ 2: DANH MỤC CHƯƠNG THEO LỚP ĐANG HỌC
   // =========================================================================
+  const lopId = await layLopHienTai();
+  const lopInfo = thongTinLop(lopId);
+
   const [chuongs, allUserMastery] = await Promise.all([
     db.chuong.findMany({
-      where: { lopId: "lop-11" },
+      where: { lopId },
       orderBy: { thuTu: "asc" },
       include: {
         chuDes: {
@@ -460,11 +464,13 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
     }),
     userId
       ? db.nangLucDangBai.findMany({
-          where: { nguoiDungId: userId },
+          where: { nguoiDungId: userId, lopId },
           include: { chuDe: true },
         })
       : Promise.resolve([]),
   ]);
+
+  const tongSoBaiHoc = chuongs.reduce((s, c) => s + c.chuDes.length, 0);
 
   const now = new Date();
   const processedMastery = allUserMastery
@@ -521,9 +527,11 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-            <Layers className="w-4 h-4 text-blue-600" /> Chọn nhanh Chương:
+            <Layers className="w-4 h-4 text-blue-600" /> Chọn nhanh Chương ({lopInfo.ten}):
           </span>
-          <span className="text-xs text-slate-400">9 Chương • 33 Bài học</span>
+          <span className="text-xs text-slate-400">
+            {chuongs.length} Chương • {tongSoBaiHoc} Bài học
+          </span>
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
@@ -631,7 +639,7 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                       <div className="flex items-center gap-2 shrink-0 flex-wrap">
                         {/* Link đọc lý thuyết */}
                         <Link
-                          href={`/ly-thuyet/lop-11/${chuong.id}/${baiId}`}
+                          href={`/ly-thuyet/${lopId}/${chuong.id}/${baiId}`}
                           prefetch={true}
                           className="px-3 py-2 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 active:scale-[0.98] text-xs font-semibold text-slate-600 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
                         >

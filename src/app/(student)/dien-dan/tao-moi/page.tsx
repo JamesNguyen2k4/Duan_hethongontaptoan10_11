@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { layDanhSachChuDeDienDan } from "@/features/dien-dan/services/bai-viet";
 import { FormTaoBaiViet } from "@/features/dien-dan/components/FormTaoBaiViet";
+import { layLopHienTai } from "@/lib/lop-context";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +22,10 @@ export default async function TaoBaiVietPage({ searchParams }: Props) {
   }
 
   const { baiTapId, chuDeId } = searchParams;
+  const lopId = await layLopHienTai();
 
   const [danhSachChuDe, baiTapMacDinh] = await Promise.all([
-    layDanhSachChuDeDienDan(),
+    layDanhSachChuDeDienDan(lopId),
     baiTapId
       ? db.baiTap.findUnique({
           where: { id: baiTapId },

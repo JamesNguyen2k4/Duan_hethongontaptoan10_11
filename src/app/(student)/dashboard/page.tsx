@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { phanTichDiemYeuHocSinh } from "@/features/phan-tich/services/adaptive";
 import { BangPhanTichNangLuc } from "@/features/phan-tich/components/BangPhanTichNangLuc";
+import { layLopHienTai, thongTinLop } from "@/lib/lop-context";
+import { layThongKeNoiDungLop } from "@/features/ly-thuyet/services/thong-ke-lop";
 
 export const dynamic = "force-dynamic";
 
@@ -19,9 +21,12 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/dang-nhap");
 
-  const [lanLams, analysisData] = await Promise.all([
+  const lopId = await layLopHienTai();
+  const lop = thongTinLop(lopId);
+
+  const [lanLams, analysisData, thongKeLop] = await Promise.all([
     db.lanLamBai.findMany({
-      where: { nguoiDungId: session.user.id },
+      where: { nguoiDungId: session.user.id, lopId },
       take: 5,
       orderBy: { thoiDiem: "desc" },
       include: {
@@ -30,7 +35,8 @@ export default async function DashboardPage() {
         },
       },
     }),
-    phanTichDiemYeuHocSinh(session.user.id),
+    phanTichDiemYeuHocSinh(session.user.id, lopId),
+    layThongKeNoiDungLop(lopId),
   ]);
 
   const dangCanOnDauTien = analysisData.dangBaiCanOnList?.[0];
@@ -48,6 +54,9 @@ export default async function DashboardPage() {
             </span>
             <span className="text-xs bg-amber-400/20 text-amber-200 border border-amber-300/30 px-3 py-1 rounded-full font-bold">
               Học Tập Cá Nhân Hóa
+            </span>
+            <span className="text-xs bg-white text-indigo-700 px-3 py-1 rounded-full font-black">
+              {lop.ten}
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
@@ -105,8 +114,8 @@ export default async function DashboardPage() {
             1. Học Lý Thuyết & Phương Pháp
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Toàn bộ 9 chương sách KNTT kèm công thức KaTeX và phương pháp giải
-            từng dạng toán.
+            Toàn bộ {thongKeLop.soChuong} chương {lop.ten} sách KNTT kèm công
+            thức KaTeX và phương pháp giải từng dạng toán.
           </p>
         </Link>
 
@@ -122,8 +131,9 @@ export default async function DashboardPage() {
             2. Luyện Tập Thích Ứng & Ôn Ngắt Quãng
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Hơn 3.500 câu hỏi phân theo 107 dạng toán, tự động điều chỉnh độ khó
-            phù hợp và nhắc nhở ôn tập thông minh.
+            {thongKeLop.soCauHoi.toLocaleString("vi-VN")} câu hỏi phân theo{" "}
+            {thongKeLop.soDangBai} dạng toán, tự động điều chỉnh độ khó phù hợp
+            và nhắc nhở ôn tập thông minh.
           </p>
         </Link>
 

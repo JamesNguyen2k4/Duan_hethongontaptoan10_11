@@ -293,7 +293,8 @@ export async function capNhatTheOnTapFSRS(
   nguoiDungId: string,
   baiTapId: string,
   grade: FSRSGrade,
-  now: Date = new Date()
+  now: Date = new Date(),
+  lopId: string | null = null
 ) {
   const theHienTai = await db.theOnTap.findUnique({
     where: {
@@ -343,10 +344,12 @@ export async function capNhatTheOnTapFSRS(
       heSoDe: fsrsMoi.difficulty,
       khoangCachNgay: fsrsMoi.intervalDays,
       ngayOnKeTiep: fsrsMoi.ngayOnKeTiep,
+      ...(lopId ? { lopId } : {}),
     },
     create: {
       nguoiDungId,
       baiTapId,
+      lopId,
       soLanOnLienTiep: repsMoi,
       heSoDe: fsrsMoi.difficulty,
       khoangCachNgay: fsrsMoi.intervalDays,
@@ -371,7 +374,10 @@ export async function capNhatTheOnTapSM2(
 /**
  * 6. Lấy số liệu thống kê ôn tập ngắt quãng FSRS của học sinh
  */
-export async function layThongKeTheOnTap(nguoiDungId: string) {
+export async function layThongKeTheOnTap(
+  nguoiDungId: string,
+  lopId?: string
+) {
   const now = new Date();
   const cuoiHomNay = new Date(now);
   cuoiHomNay.setHours(23, 59, 59, 999);
@@ -380,7 +386,7 @@ export async function layThongKeTheOnTap(nguoiDungId: string) {
   cuoiNgayMai.setDate(cuoiNgayMai.getDate() + 1);
 
   const allThe = await db.theOnTap.findMany({
-    where: { nguoiDungId },
+    where: { nguoiDungId, ...(lopId ? { lopId } : {}) },
     select: {
       id: true,
       soLanOnLienTiep: true,

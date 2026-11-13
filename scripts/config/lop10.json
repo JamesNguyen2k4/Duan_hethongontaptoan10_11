@@ -1,0 +1,45 @@
+{
+  "lopId": "lop-10",
+  "prefix": "lop10",
+  "chapters": [
+    { "id": "lop10-c1", "ten": "Chương 1: Mệnh đề và tập hợp", "thuTu": 1, "baiRange": [1, 2] },
+    { "id": "lop10-c2", "ten": "Chương 2: Bất phương trình và hệ bất phương trình bậc nhất hai ẩn", "thuTu": 2, "baiRange": [3, 4] },
+    { "id": "lop10-c3", "ten": "Chương 3: Hệ thức lượng trong tam giác", "thuTu": 3, "baiRange": [5, 6] },
+    { "id": "lop10-c4", "ten": "Chương 4: Vectơ", "thuTu": 4, "baiRange": [7, 11] },
+    { "id": "lop10-c5", "ten": "Chương 5: Các số đặc trưng của mẫu số liệu không ghép nhóm", "thuTu": 5, "baiRange": [12, 14] },
+    { "id": "lop10-c6", "ten": "Chương 6: Hàm số, đồ thị và ứng dụng", "thuTu": 6, "baiRange": [15, 18] },
+    { "id": "lop10-c7", "ten": "Chương 7: Phương pháp tọa độ trong mặt phẳng", "thuTu": 7, "baiRange": [19, 22] },
+    { "id": "lop10-c8", "ten": "Chương 8: Đại số tổ hợp", "thuTu": 8, "baiRange": [23, 25] },
+    { "id": "lop10-c9", "ten": "Chương 9: Tính xác suất theo định nghĩa cổ điển", "thuTu": 9, "baiRange": [26, 27] }
+  ],
+  "baiNames": {
+    "1": "Bài 1. Mệnh đề",
+    "2": "Bài 2. Tập hợp và các phép toán trên tập hợp",
+    "3": "Bài 3. Bất phương trình bậc nhất hai ẩn",
+    "4": "Bài 4. Hệ bất phương trình bậc nhất hai ẩn",
+    "5": "Bài 5. Giá trị lượng giác của một góc từ 0° đến 180°",
+    "6": "Bài 6. Hệ thức lượng trong tam giác",
+    "7": "Bài 7. Các khái niệm mở đầu",
+    "8": "Bài 8. Tổng và hiệu của hai vectơ",
+    "9": "Bài 9. Tích của một vectơ với một số",
+    "10": "Bài 10. Vectơ trong mặt phẳng tọa độ",
+    "11": "Bài 11. Tích vô hướng của hai vectơ",
+    "12": "Bài 12. Số gần đúng và sai số",
+    "13": "Bài 13. Các số đặc trưng đo xu thế trung tâm",
+    "14": "Bài 14. Các số đặc trưng đo độ phân tán",
+    "15": "Bài 15. Hàm số",
+    "16": "Bài 16. Hàm số bậc hai",
+    "17": "Bài 17. Dấu của tam thức bậc hai",
+    "18": "Bài 18. Phương trình quy về phương trình bậc hai",
+    "19": "Bài 19. Phương trình đường thẳng",
+    "20": "Bài 20. Vị trí tương đối giữa hai đường thẳng. Góc và khoảng cách",
+    "21": "Bài 21. Đường tròn trong mặt phẳng tọa độ",
+    "22": "Bài 22. Ba đường conic",
+    "23": "Bài 23. Quy tắc đếm",
+    "24": "Bài 24. Hoán vị, chỉnh hợp và tổ hợp",
+    "25": "Bài 25. Nhị thức Newton",
+    "26": "Bài 26. Biến cố và định nghĩa cổ điển của xác suất",
+    "27": "Bài 27. Thực hành tính xác suất theo định nghĩa cổ điển"
+  }
+}
+

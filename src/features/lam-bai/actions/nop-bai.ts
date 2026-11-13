@@ -20,11 +20,13 @@ export async function nopBaiTapAction(
 
   const baiTap = await db.baiTap.findUnique({
     where: { id: baiTapId },
+    include: { chuDe: { select: { chuong: { select: { lopId: true } } } } },
   });
 
   if (!baiTap) {
     return { ok: false, message: "Không tìm thấy bài tập" };
   }
+  const lopId = baiTap.chuDe.chuong.lopId;
 
   let dapAnDung = "";
   try {
@@ -45,6 +47,7 @@ export async function nopBaiTapAction(
       baiLam: luaChonHocSinh,
       ketQua: dung ? "DUNG" : "SAI",
       thoiGianGiay: thoiGianGiay,
+      lopId,
     },
   });
 
@@ -59,6 +62,7 @@ export async function nopBaiTapAction(
     thoiGianGiay,
     doKhoIRT: baiTap.doKhoIRT,
     doPhanBiet: baiTap.doPhanBiet,
+    lopId,
   });
 
   // 3. Tự động chọn câu hỏi tiếp theo trong Vùng phát triển gần (ZPD: P(correct) ~ 70%)

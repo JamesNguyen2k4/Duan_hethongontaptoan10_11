@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { layLopHienTai } from "@/lib/lop-context";
+import { BoChuyenLop } from "@/components/shared/BoChuyenLop";
 
 export default async function StudentLayout({
   children,
@@ -9,9 +11,18 @@ export default async function StudentLayout({
 }) {
   const session = await auth();
   if (!session) redirect("/dang-nhap");
+  const lopHienTai = await layLopHienTai();
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Thanh điều hướng trên mobile */}
+      <header className="flex md:hidden sticky top-0 z-50 h-13 items-center justify-between border-b bg-white px-4 shadow-xs">
+        <Link href="/dashboard" className="font-bold text-primary text-base">
+          Σ Ôn Tập Toán
+        </Link>
+        <BoChuyenLop lopHienTai={lopHienTai} />
+      </header>
+
       {/* Thanh điều hướng trên desktop */}
       <header className="hidden md:flex sticky top-0 z-50 h-14 items-center border-b bg-white px-6 gap-6 shadow-sm">
         <Link href="/dashboard" className="font-bold text-primary text-lg">
@@ -48,6 +59,7 @@ export default async function StudentLayout({
           </Link>
         </nav>
         <div className="ml-auto flex items-center gap-3">
+          <BoChuyenLop lopHienTai={lopHienTai} />
           <span className="text-sm text-muted-foreground">
             {session.user?.name}
           </span>

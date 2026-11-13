@@ -395,6 +395,7 @@ export async function capNhatMoHinhNguoiHoc(params: {
   thoiGianGiay: number;
   doKhoIRT?: number;
   doPhanBiet?: number;
+  lopId?: string | null;
 }) {
   const {
     nguoiDungId,
@@ -406,6 +407,17 @@ export async function capNhatMoHinhNguoiHoc(params: {
     doKhoIRT: rawDoKhoIRT,
     doPhanBiet: rawDoPhanBiet,
   } = params;
+
+  // Lớp của chủ đề – dùng để tách dữ liệu học tập theo lớp
+  const lopId =
+    params.lopId ??
+    (
+      await db.chuDe.findUnique({
+        where: { id: chuDeId },
+        select: { chuong: { select: { lopId: true } } },
+      })
+    )?.chuong.lopId ??
+    null;
 
   // Chuẩn hóa độ khó IRT b_i, độ phân biệt a_i và trọng số bước nhảy theo Mức độ nhận thức (Bloom's Taxonomy)
   const itemParams = chuanHoaThamSoCauHoi(mucDo, rawDoKhoIRT, rawDoPhanBiet);
@@ -599,11 +611,13 @@ export async function capNhatMoHinhNguoiHoc(params: {
       soChuoiDung: soChuoiDungNew,
       lanLuyenCuoi: now,
       ngayOnKeTiep,
+      lopId,
     },
     create: {
       nguoiDungId,
       chuDeId,
       dangBai,
+      lopId,
       xacSuatThanhThao: pLNew,
       nangLucIRT: thetaNew,
       doBenTriNho: stabilityNew,
@@ -627,7 +641,7 @@ export async function capNhatMoHinhNguoiHoc(params: {
   });
 
   // 3. Đồng bộ thẻ ôn tập cấp câu hỏi (TheOnTap) theo chuẩn FSRS
-  await capNhatTheOnTapFSRS(nguoiDungId, baiTapId, fsrsGrade, now);
+  await capNhatTheOnTapFSRS(nguoiDungId, baiTapId, fsrsGrade, now, lopId);
 
   const soLanLuyenMoi = soLanLuyenPrev + 1;
   const soLanDungMoi = soLanDungPrev + (dung ? 1 : 0);

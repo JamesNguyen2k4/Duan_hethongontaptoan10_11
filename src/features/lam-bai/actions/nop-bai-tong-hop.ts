@@ -47,6 +47,7 @@ export async function nopBaiTapTongHopAction(
     where: {
       id: { in: danhSachCauHoiIds },
     },
+    include: { chuDe: { select: { chuong: { select: { lopId: true } } } } },
   });
 
   const baiTapMap = new Map(baiTaps.map((b) => [b.id, b]));
@@ -97,6 +98,7 @@ export async function nopBaiTapTongHopAction(
           baiLam: luaChon || "CHUA_LAM",
           ketQua: dung ? "DUNG" : "SAI",
           thoiGianGiay: avgTimePerQ,
+          lopId: bt.chuDe.chuong.lopId,
         },
       });
 
@@ -110,6 +112,7 @@ export async function nopBaiTapTongHopAction(
         thoiGianGiay: avgTimePerQ,
         doKhoIRT: bt.doKhoIRT,
         doPhanBiet: bt.doPhanBiet,
+        lopId: bt.chuDe.chuong.lopId,
       });
     }
 

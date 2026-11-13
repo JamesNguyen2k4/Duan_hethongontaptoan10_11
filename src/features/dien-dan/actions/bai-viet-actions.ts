@@ -3,6 +3,11 @@
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import {
+  layLopHienTai,
+  layLopIdTuBaiTap,
+  layLopIdTuChuDe,
+} from "@/lib/lop-context";
 
 export interface DuLieuAnhUpload {
   base64: string;
@@ -36,6 +41,11 @@ export async function taoBaiVietAction(params: {
   }
 
   try {
+    const lopId =
+      (chuDeId ? await layLopIdTuChuDe(chuDeId) : null) ??
+      (baiTapId ? await layLopIdTuBaiTap(baiTapId) : null) ??
+      (await layLopHienTai());
+
     const baiVietMoi = await db.$transaction(async (tx) => {
       const baiViet = await tx.baiViet.create({
         data: {
@@ -44,6 +54,7 @@ export async function taoBaiVietAction(params: {
           noiDung: noiDung.trim() || "Em có đính kèm ảnh bài làm chi tiết bên dưới, nhờ thầy cô và các bạn xem giúp em.",
           chuDeId: chuDeId || null,
           baiTapId: baiTapId || null,
+          lopId,
           noiDungSearch: `${tieuDe} ${noiDung}`.slice(0, 1000),
         },
       });
