@@ -224,6 +224,9 @@ export function tinhDoThanhThaoThucTe(
   // Đảm bảo cần rèn luyện đủ số lượng câu hỏi chuẩn (tối thiểu ~10-12 câu của dạng bài,
   // hoặc 60% ngân hàng nếu dạng bài có ít câu) mới hội tụ 100% độ tin cậy.
   // Khi làm 1 câu đầu tiên: volumeFactor ~ 0.14 -> Độ thành thạo chỉ tăng +4% đến +7%!
+  // LƯU Ý: Quy mô chỉ tính theo SỐ CÂU LÀM ĐÚNG (bằng chứng thành thạo).
+  // Nếu tính theo tổng số lần luyện, mỗi câu SAI vẫn làm tăng volumeFactor và bù trừ
+  // phần giảm của BKT/IRT/PFA -> làm sai mà độ thành thạo không giảm (lỗi logic).
   const targetN = Math.max(
     6,
     Math.min(
@@ -233,7 +236,7 @@ export function tinhDoThanhThaoThucTe(
   );
   const volumeFactor = Math.min(
     1.0,
-    (soLanLuyen / targetN) * 0.65 + (1 - Math.exp(-0.22 * soLanLuyen)) * 0.35
+    (soLanDung / targetN) * 0.65 + (1 - Math.exp(-0.22 * soLanDung)) * 0.35
   );
 
   const rawEff = skillQuality * volumeFactor * doNhoHienTai;
