@@ -505,13 +505,14 @@ export async function capNhatMoHinhNguoiHoc(params: {
     const num = pPrior * pSlip;
     const den = num + (1 - pPrior) * (1 - pGuess);
     const rawBayes = den > 0 ? num / den : pPrior;
-    // Nếu làm sai câu quá khó (Vận dụng cao), phạt nhẹ hơn; nếu làm sai câu Nhận biết cơ bản, giảm rõ hơn
-    const failSeverity = Math.max(0.35, Math.min(0.85, 0.65 - 0.15 * doKhoIRT));
+    // Nếu làm sai câu quá khó (Vận dụng cao), phạt nhẹ hơn; nếu làm sai câu cơ bản, giảm rõ hơn
+    const failSeverity = Math.max(0.60, Math.min(0.95, 0.80 - 0.12 * doKhoIRT));
     pPosterior = pPrior - (pPrior - rawBayes) * failSeverity;
   }
 
   // Cập nhật chuyển trạng thái học tập P(T):
-  const effectiveTransit = dung ? pTransit : pTransit * 0.15;
+  // Chỉ cộng tốc độ tiếp thu học tập khi học sinh làm ĐÚNG; khi SAI không cộng bù để tránh triệt tiêu mức giảm
+  const effectiveTransit = dung ? pTransit : 0;
   const pLNew = Number(
     Math.max(0.05, Math.min(0.98, pPosterior + (1 - pPosterior) * effectiveTransit)).toFixed(4)
   );
@@ -522,9 +523,8 @@ export async function capNhatMoHinhNguoiHoc(params: {
   const pExpected = tinhXacSuatIRT3PL(thetaPrev, doKhoIRT, doPhanBiet, 0.25);
   const y = dung ? 1.0 : 0.0;
 
-  // Hệ số cập nhật K_theta chuẩn hóa theo trọng số độ khó câu hỏi:
-  // Giải đúng câu khó hơn năng lực hiện tại (doKhoIRT > thetaPrev) sẽ tăng theta_k nhiều hơn câu dễ đã biết
-  const baseK = Math.max(0.14, 0.30 / (1 + 0.04 * soLanLuyenPrev));
+  // Hệ số cập nhật K_theta chuẩn hóa theo trọng số độ khó câu hỏi
+  const baseK = Math.max(0.18, 0.32 / (1 + 0.04 * soLanLuyenPrev));
   let timeFactor = 1.0;
   if (dung && thoiGianGiay > 0 && thoiGianGiay <= 35) timeFactor = 1.1;
   else if (dung && thoiGianGiay > 90) timeFactor = 0.85;
@@ -649,6 +649,8 @@ export async function capNhatMoHinhNguoiHoc(params: {
   const soLanLuyenMoi = soLanLuyenPrev + 1;
   const soLanDungMoi = soLanDungPrev + (dung ? 1 : 0);
 
+  const retentionMoi = dung ? 1.0 : Math.min(retention, 0.92);
+
   const pEffTruoc = tinhDoThanhThaoThucTe(
     pLPrev,
     soLanLuyenPrev,
@@ -658,15 +660,20 @@ export async function capNhatMoHinhNguoiHoc(params: {
     thetaPrev,
     soCauTrongNganHang
   );
-  const pEffMoi = tinhDoThanhThaoThucTe(
+  let pEffMoi = tinhDoThanhThaoThucTe(
     pLNew,
     soLanLuyenMoi,
     soLanDungMoi,
-    1.0, // Vừa ôn xong nên R(0) = 1.0
+    retentionMoi,
     soChuoiDungNew,
     thetaNew,
     soCauTrongNganHang
   );
+
+  // Đảm bảo tính nhất quán logic: Khi làm SAI thì độ thành thạo không bao giờ được cao hơn trước khi làm
+  if (!dung && pEffMoi >= pEffTruoc && pEffTruoc > 0) {
+    pEffMoi = Number(Math.max(0.01, pEffTruoc - 0.02).toFixed(4));
+  }
 
   const { trangThai, nhanTrangThai } = phanLoaiTrangThaiDangBai(
     soLanLuyenMoi,
