@@ -10,36 +10,44 @@ type KetQua =
   | { ok: false; message: string };
 
 /**
- * Server Action: Đăng ký tài khoản mới
+ * Server Action: Đăng ký tài khoản học sinh
  */
 export async function dangKyAction(
   values: z.infer<typeof dangKySchema>
 ): Promise<KetQua> {
   const validated = dangKySchema.safeParse(values);
   if (!validated.success) {
-    return { ok: false, message: "Dữ liệu không hợp lệ" };
+    const errorMsg = validated.error.errors[0]?.message || "Dữ liệu không hợp lệ";
+    return { ok: false, message: errorMsg };
   }
 
   const { tenHienThi, email, matKhau } = validated.data;
+  const normalizedEmail = email.toLowerCase().trim();
 
   // Kiểm tra email đã tồn tại chưa
-  const daCoEmail = await db.nguoiDung.findUnique({ where: { email } });
+  const daCoEmail = await db.nguoiDung.findUnique({
+    where: { email: normalizedEmail },
+  });
+
   if (daCoEmail) {
-    return { ok: false, message: "Email này đã được sử dụng" };
+    return {
+      ok: false,
+      message: "Gmail này đã được đăng ký trên hệ thống. Vui lòng đăng nhập.",
+    };
   }
 
-  // Băm mật khẩu và tạo tài khoản
+  // Băm mật khẩu và tạo tài khoản Học sinh
   const matKhauBam = await bamMatKhau(matKhau);
 
   await db.nguoiDung.create({
     data: {
-      email,
-      tenHienThi,
+      email: normalizedEmail,
+      tenHienThi: tenHienThi.trim(),
       matKhauBam,
       vaiTro: "HOC_SINH",
+      lopDangHocId: "lop-11",
     },
   });
 
-  return { ok: true, message: "Đăng ký thành công! Vui lòng đăng nhập." };
+  return { ok: true, message: "Tạo tài khoản học sinh thành công!" };
 }
-

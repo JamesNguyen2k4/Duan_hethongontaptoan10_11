@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -28,12 +29,27 @@ export function DangKyForm() {
     setLoi("");
     setThanhCong("");
     startTransition(async () => {
+      // 1. Tạo tài khoản học sinh
       const result = await dangKyAction(data);
-      if (result.ok) {
-        setThanhCong(result.message);
-        setTimeout(() => router.push("/dang-nhap"), 1500);
-      } else {
+      if (!result.ok) {
         setLoi(result.message);
+        return;
+      }
+
+      setThanhCong("Tạo tài khoản thành công! Đang tự động chuyển vào trang học tập...");
+
+      // 2. Tự động đăng nhập luôn
+      const loginRes = await signIn("credentials", {
+        email: data.email,
+        matKhau: data.matKhau,
+        redirect: false,
+      });
+
+      if (loginRes?.error) {
+        router.push("/dang-nhap");
+      } else {
+        router.push("/dashboard");
+        router.refresh();
       }
     });
   };
@@ -42,39 +58,39 @@ export function DangKyForm() {
     <div className="w-full max-w-md mx-auto">
       {/* Header */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground text-xl font-bold mb-4">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground text-xl font-bold mb-4 shadow-sm">
           Σ
         </div>
-        <h1 className="text-2xl font-bold tracking-tight">Tạo tài khoản</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Đăng ký Học sinh</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Hệ thống ôn tập Toán 10–11
+          Hệ thống ôn tập Toán 10–11 Cá nhân hóa
         </p>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Thông báo lỗi / thành công */}
         {loi && (
-          <div className="rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+          <div className="rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive font-medium">
             {loi}
           </div>
         )}
         {thanhCong && (
-          <div className="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+          <div className="rounded-md bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700 font-medium">
             {thanhCong}
           </div>
         )}
 
-        {/* Tên hiển thị */}
+        {/* Họ và tên */}
         <div className="space-y-1.5">
           <label htmlFor="tenHienThi" className="text-sm font-medium leading-none">
-            Tên hiển thị
+            Họ và tên học sinh
           </label>
           <input
             id="tenHienThi"
             type="text"
             autoComplete="name"
-            placeholder="Nguyễn Văn A"
+            placeholder="Ví dụ: Nguyễn Văn A"
             disabled={isPending}
             {...register("tenHienThi")}
             className={cn(
@@ -90,16 +106,16 @@ export function DangKyForm() {
           )}
         </div>
 
-        {/* Email */}
+        {/* Gmail */}
         <div className="space-y-1.5">
           <label htmlFor="email" className="text-sm font-medium leading-none">
-            Email
+            Địa chỉ Gmail
           </label>
           <input
             id="email"
             type="email"
             autoComplete="email"
-            placeholder="example@email.com"
+            placeholder="example@gmail.com"
             disabled={isPending}
             {...register("email")}
             className={cn(
@@ -118,13 +134,13 @@ export function DangKyForm() {
         {/* Mật khẩu */}
         <div className="space-y-1.5">
           <label htmlFor="matKhau" className="text-sm font-medium leading-none">
-            Mật khẩu
+            Mật khẩu (ít nhất 6 ký tự)
           </label>
           <input
             id="matKhau"
             type="password"
             autoComplete="new-password"
-            placeholder="Ít nhất 6 ký tự"
+            placeholder="••••••••"
             disabled={isPending}
             {...register("matKhau")}
             className={cn(
@@ -140,41 +156,16 @@ export function DangKyForm() {
           )}
         </div>
 
-        {/* Xác nhận mật khẩu */}
-        <div className="space-y-1.5">
-          <label htmlFor="xacNhanMatKhau" className="text-sm font-medium leading-none">
-            Xác nhận mật khẩu
-          </label>
-          <input
-            id="xacNhanMatKhau"
-            type="password"
-            autoComplete="new-password"
-            placeholder="Nhập lại mật khẩu"
-            disabled={isPending}
-            {...register("xacNhanMatKhau")}
-            className={cn(
-              "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm",
-              "ring-offset-background placeholder:text-muted-foreground",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              "disabled:cursor-not-allowed disabled:opacity-50",
-              errors.xacNhanMatKhau && "border-destructive focus-visible:ring-destructive"
-            )}
-          />
-          {errors.xacNhanMatKhau && (
-            <p className="text-xs text-destructive">{errors.xacNhanMatKhau.message}</p>
-          )}
-        </div>
-
         {/* Nút đăng ký */}
         <button
           type="submit"
           disabled={isPending}
           className={cn(
             "inline-flex w-full items-center justify-center rounded-md text-sm font-medium",
-            "h-10 px-4 py-2 bg-primary text-primary-foreground",
+            "h-10 px-4 py-2 bg-primary text-primary-foreground font-semibold shadow",
             "hover:bg-primary/90 transition-colors",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-            "disabled:pointer-events-none disabled:opacity-50"
+            "disabled:pointer-events-none disabled:opacity-50 mt-2"
           )}
         >
           {isPending ? (
@@ -199,10 +190,10 @@ export function DangKyForm() {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              Đang xử lý...
+              Đang tạo tài khoản...
             </>
           ) : (
-            "Tạo tài khoản"
+            "Đăng ký & Vào học ngay"
           )}
         </button>
       </form>
@@ -210,11 +201,10 @@ export function DangKyForm() {
       {/* Link đăng nhập */}
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Đã có tài khoản?{" "}
-        <Link href="/dang-nhap" className="font-medium text-primary hover:underline">
+        <Link href="/dang-nhap" className="font-semibold text-primary hover:underline">
           Đăng nhập
         </Link>
       </p>
     </div>
   );
 }
-
