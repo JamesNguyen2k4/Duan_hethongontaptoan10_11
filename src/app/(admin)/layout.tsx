@@ -38,6 +38,13 @@ export default async function AdminLayout({
             </Link>
 
             <Link
+              href="/admin/hoc-sinh"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition-colors"
+            >
+              <Users className="w-4 h-4 text-indigo-400" /> Báo cáo Học sinh
+            </Link>
+
+            <Link
               href="/ly-thuyet"
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition-colors"
             >

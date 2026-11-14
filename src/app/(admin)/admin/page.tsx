@@ -149,7 +149,15 @@ export default async function AdminDashboardPage() {
 
         {/* Recent Registered Users */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">
-          <h2 className="text-base font-bold text-slate-800">Người dùng mới</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-slate-800">Người dùng mới</h2>
+            <Link
+              href="/admin/hoc-sinh"
+              className="text-xs text-blue-600 font-bold hover:underline"
+            >
+              Xem tất cả →
+            </Link>
+          </div>
           <div className="space-y-3">
             {recentUsers.map((u) => (
               <div key={u.id} className="p-3 bg-slate-50 rounded-xl flex items-center justify-between gap-2 border border-slate-100">
@@ -178,9 +186,17 @@ export default async function AdminDashboardPage() {
               Ghi nhận mỗi khi học sinh kết thúc một phiên luyện tập dạng bài kèm mức độ thành thạo đạt được
             </p>
           </div>
-          <span className="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-xl">
-            Tổng cộng: {totalPhienLuyen} lần luyện
-          </span>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/admin/hoc-sinh"
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline"
+            >
+              Báo cáo theo học sinh →
+            </Link>
+            <span className="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-xl">
+              Tổng cộng: {totalPhienLuyen} lần luyện
+            </span>
+          </div>
         </div>
 
         {recentPhienLuyen.length === 0 ? (
@@ -206,7 +222,12 @@ export default async function AdminDashboardPage() {
                   return (
                     <tr key={phien.id} className="hover:bg-slate-50/60 transition-colors">
                       <td className="py-3 px-3">
-                        <div className="font-bold text-slate-800">{phien.nguoiDung.tenHienThi}</div>
+                        <Link
+                          href={`/admin/hoc-sinh/${phien.nguoiDungId}?lopId=${phien.lopId || "lop-10"}`}
+                          className="font-bold text-slate-800 hover:text-blue-600 transition-colors block"
+                        >
+                          {phien.nguoiDung.tenHienThi}
+                        </Link>
                         <div className="text-[11px] text-slate-400">{phien.nguoiDung.email}</div>
                       </td>
                       <td className="py-3 px-3">
