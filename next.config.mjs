@@ -3,7 +3,11 @@ const nextConfig = {
   output: "standalone",
   experimental: {
     serverActions: {
-      allowedOrigins: ["localhost:3000"],
+      allowedOrigins: [
+        "localhost:3000",
+        "duan-hethongontaptoan10-11.onrender.com",
+        "*.onrender.com",
+      ],
     },
   },
   images: {

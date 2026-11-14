@@ -6,6 +6,7 @@ import { dangNhapSchema } from "@/features/auth/schemas";
 import { xacThucMatKhau } from "@/features/auth/actions/mat-khau";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   adapter: PrismaAdapter(db),
   session: {
     strategy: "jwt",
