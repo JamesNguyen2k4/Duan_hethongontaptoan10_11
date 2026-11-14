@@ -4,6 +4,10 @@ import Link from "next/link";
 import { layLopHienTai } from "@/lib/lop-context";
 import { BoChuyenLop } from "@/components/shared/BoChuyenLop";
 import { NutDangXuat } from "@/components/shared/NutDangXuat";
+import {
+  ThanhDieuHuongNav,
+  MobileBottomNav,
+} from "@/components/shared/ThanhDieuHuongNav";
 
 export default async function StudentLayout({
   children,
@@ -15,53 +19,30 @@ export default async function StudentLayout({
   const lopHienTai = await layLopHienTai();
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Thanh điều hướng trên mobile */}
-      <header className="flex md:hidden sticky top-0 z-50 h-13 items-center justify-between border-b bg-white px-4 shadow-xs">
-        <Link href="/dashboard" className="font-bold text-primary text-base">
+      <header className="flex md:hidden sticky top-0 z-50 h-14 items-center justify-between border-b bg-white px-4 shadow-xs">
+        <Link href="/dashboard" className="font-black text-blue-600 text-base">
           Σ Ôn Tập Toán
         </Link>
-        <BoChuyenLop lopHienTai={lopHienTai} />
+        <div className="flex items-center gap-2">
+          <BoChuyenLop lopHienTai={lopHienTai} />
+          <NutDangXuat />
+        </div>
       </header>
 
       {/* Thanh điều hướng trên desktop */}
-      <header className="hidden md:flex sticky top-0 z-50 h-14 items-center border-b bg-white px-6 gap-6 shadow-sm">
-        <Link href="/dashboard" className="font-bold text-primary text-lg">
+      <header className="hidden md:flex sticky top-0 z-50 h-16 items-center border-b bg-white px-6 gap-6 shadow-xs">
+        <Link
+          href="/dashboard"
+          className="font-black text-blue-600 text-lg tracking-tight hover:opacity-90 transition-opacity"
+        >
           Σ Ôn Tập Toán
         </Link>
-        <nav className="flex items-center gap-5 text-sm font-medium">
-          <Link
-            href="/dashboard"
-            prefetch={true}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Tổng quan & Năng lực
-          </Link>
-          <Link
-            href="/ly-thuyet"
-            prefetch={true}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Lý thuyết
-          </Link>
-          <Link
-            href="/bai-tap"
-            prefetch={true}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Luyện tập thích ứng
-          </Link>
-          <Link
-            href="/dien-dan"
-            prefetch={true}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Diễn đàn
-          </Link>
-        </nav>
+        <ThanhDieuHuongNav />
         <div className="ml-auto flex items-center gap-3">
           <BoChuyenLop lopHienTai={lopHienTai} />
-          <span className="text-sm text-muted-foreground">
+          <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
             {session.user?.name}
           </span>
           <NutDangXuat />
@@ -69,35 +50,10 @@ export default async function StudentLayout({
       </header>
 
       {/* Nội dung */}
-      <main className="pb-20 md:pb-0">{children}</main>
+      <main className="flex-1 pb-20 md:pb-8">{children}</main>
 
       {/* Thanh điều hướng dưới đáy trên mobile */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden h-16 items-center justify-around border-t bg-white px-2">
-        <Link
-          href="/dashboard"
-          className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground"
-        >
-          <span className="text-lg">🏠</span>Tổng quan
-        </Link>
-        <Link
-          href="/ly-thuyet"
-          className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground"
-        >
-          <span className="text-lg">📚</span>Lý thuyết
-        </Link>
-        <Link
-          href="/bai-tap"
-          className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground"
-        >
-          <span className="text-lg">🎯</span>Luyện tập
-        </Link>
-        <Link
-          href="/dien-dan"
-          className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground"
-        >
-          <span className="text-lg">💬</span>Diễn đàn
-        </Link>
-      </nav>
+      <MobileBottomNav />
     </div>
   );
 }

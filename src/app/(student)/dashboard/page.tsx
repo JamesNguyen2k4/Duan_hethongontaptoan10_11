@@ -156,7 +156,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Hồ sơ Năng lực & Học thích ứng hợp nhất (Radar + Đường cong quên + ZPD) */}
-      <BangPhanTichNangLuc data={analysisData} />
+      <BangPhanTichNangLuc data={{ ...analysisData, lopId }} />
 
       {/* Recent History */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">

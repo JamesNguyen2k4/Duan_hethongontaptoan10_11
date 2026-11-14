@@ -24,14 +24,14 @@ export default function RootLayout({
       <body className={inter.className}>
         <NextTopLoader
           color="#2563eb"
-          initialPosition={0.08}
-          crawlSpeed={200}
-          height={3}
+          initialPosition={0.12}
+          crawlSpeed={150}
+          height={4}
           crawl={true}
-          showSpinner={false}
+          showSpinner={true}
           easing="ease"
           speed={200}
-          shadow="0 0 10px #2563eb,0 0 5px #3b82f6"
+          shadow="0 0 14px #2563eb,0 0 8px #3b82f6"
         />
         {children}
       </body>

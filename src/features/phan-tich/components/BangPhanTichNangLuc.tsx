@@ -27,6 +27,7 @@ import { MathRenderer } from "@/components/shared/MathRenderer";
 
 interface Props {
   data: {
+    lopId?: string;
     tongBaiDaLam: number;
     soBaiDung: number;
     soDangDaLuyen?: number;
@@ -48,15 +49,24 @@ export function BangPhanTichNangLuc({ data }: Props) {
     doNho: Math.round((cd.doNhoTrungBinh ?? 1) * 100),
   }));
 
-  // Đảm bảo biểu đồ Mạng nhện (RadarChart) luôn có ít nhất 3 trục để hình thành mạng lưới đa giác tròn
-  if (chartData.length > 0 && chartData.length < 3) {
-    const defaultAxes = [
-      { subject: "Mệnh đề & Tập hợp", fullSubject: "Chương 1. Mệnh đề và tập hợp" },
-      { subject: "Hệ thức lượng tam giác", fullSubject: "Chương 3. Hệ thức lượng trong tam giác" },
-      { subject: "Vectơ & Tọa độ", fullSubject: "Chương 4. Vectơ" },
-    ];
+  // Đảm bảo biểu đồ Mạng nhện (RadarChart) luôn có ít nhất 4 trục tương ứng từng lớp học
+  if (chartData.length < 4) {
+    const isLop10 = data.lopId === "lop-10";
+    const defaultAxes = isLop10
+      ? [
+          { subject: "Mệnh đề & Tập hợp", fullSubject: "Chương 1. Mệnh đề và tập hợp" },
+          { subject: "Hệ thức lượng tam giác", fullSubject: "Chương 3. Hệ thức lượng trong tam giác" },
+          { subject: "Vectơ & Tọa độ", fullSubject: "Chương 4. Vectơ" },
+          { subject: "Hàm số & Bậc hai", fullSubject: "Chương 6. Hàm số và đồ thị" },
+        ]
+      : [
+          { subject: "Hàm số lượng giác", fullSubject: "Chương 1. Hàm số lượng giác & PT lượng giác" },
+          { subject: "Dãy số & Cấp số", fullSubject: "Chương 2. Dãy số, cấp số cộng & cấp số nhân" },
+          { subject: "Giới hạn & Liên tục", fullSubject: "Chương 3. Giới hạn & Hàm số liên tục" },
+          { subject: "Đạo hàm & Tiếp tuyến", fullSubject: "Chương 9. Đạo hàm" },
+        ];
     for (const axis of defaultAxes) {
-      if (chartData.length >= 3) break;
+      if (chartData.length >= 4) break;
       if (!chartData.some((c) => c.subject.includes(axis.subject) || axis.subject.includes(c.subject))) {
         chartData.push({
           subject: axis.subject,
