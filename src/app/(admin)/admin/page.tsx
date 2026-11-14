@@ -73,23 +73,35 @@ export default async function AdminDashboardPage() {
           <p className="text-xs text-slate-400">Tài khoản học sinh</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-2">
+        <Link
+          href="/admin/ly-thuyet"
+          className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-2 hover:border-emerald-300 hover:shadow-md transition-all group block"
+        >
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-bold uppercase tracking-wider">Bài lý thuyết</span>
+            <span className="text-xs font-bold uppercase tracking-wider group-hover:text-emerald-700 transition-colors">Bài lý thuyết</span>
             <BookOpen className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-2xl sm:text-3xl font-black text-slate-900">{totalBais}</div>
-          <p className="text-xs text-slate-400">Bài học Toán 10 & 11</p>
-        </div>
+          <p className="text-xs text-slate-400 flex items-center justify-between">
+            <span>Bài học Toán 10 & 11</span>
+            <span className="text-[11px] font-bold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">Xem tree →</span>
+          </p>
+        </Link>
 
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-2">
+        <Link
+          href="/admin/cau-hoi"
+          className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-2 hover:border-purple-300 hover:shadow-md transition-all group block"
+        >
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-bold uppercase tracking-wider">Ngân hàng câu hỏi</span>
+            <span className="text-xs font-bold uppercase tracking-wider group-hover:text-purple-700 transition-colors">Ngân hàng câu hỏi</span>
             <Layers className="w-4 h-4 text-purple-600" />
           </div>
           <div className="text-2xl sm:text-3xl font-black text-slate-900">{totalBaiTaps}</div>
-          <p className="text-xs text-slate-400">Câu hỏi trắc nghiệm chuẩn</p>
-        </div>
+          <p className="text-xs text-slate-400 flex items-center justify-between">
+            <span>Câu hỏi trắc nghiệm chuẩn</span>
+            <span className="text-[11px] font-bold text-purple-600 opacity-0 group-hover:opacity-100 transition-opacity">Xem tree →</span>
+          </p>
+        </Link>
 
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-slate-500">

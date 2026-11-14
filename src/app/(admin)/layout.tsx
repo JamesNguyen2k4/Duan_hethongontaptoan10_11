@@ -45,17 +45,17 @@ export default async function AdminLayout({
             </Link>
 
             <Link
-              href="/ly-thuyet"
+              href="/admin/ly-thuyet"
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition-colors"
             >
-              <BookOpen className="w-4 h-4 text-emerald-400" /> Xem Lý thuyết (33 bài)
+              <BookOpen className="w-4 h-4 text-emerald-400" /> Xem Lý thuyết (60 bài)
             </Link>
 
             <Link
-              href="/bai-tap"
+              href="/admin/cau-hoi"
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition-colors"
             >
-              <Layers className="w-4 h-4 text-purple-400" /> Ngân hàng bài tập (812 câu)
+              <Layers className="w-4 h-4 text-purple-400" /> Ngân hàng câu hỏi (3.980 câu)
             </Link>
 
             <Link
