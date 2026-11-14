@@ -63,6 +63,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith("/")) return url;
+      try {
+        const u = new URL(url);
+        if (u.hostname.includes("onrender.com") || u.hostname === "localhost") {
+          return url;
+        }
+      } catch {}
+      return "/dang-nhap";
+    },
   },
 });
 

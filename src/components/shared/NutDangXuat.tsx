@@ -15,7 +15,14 @@ export function NutDangXuat({
 }: NutDangXuatProps) {
   const handleDangXuat = async (e: React.MouseEvent) => {
     e.preventDefault();
-    await signOut({ callbackUrl: "/dang-nhap" });
+    try {
+      // Đăng xuất và không để NextAuth can thiệp điều hướng
+      await signOut({ redirect: false });
+    } catch (err) {
+      console.error("Lỗi đăng xuất:", err);
+    }
+    // Trình duyệt tự chuyển trang trực tiếp bằng URL tương đối
+    window.location.href = "/dang-nhap";
   };
 
   return (
