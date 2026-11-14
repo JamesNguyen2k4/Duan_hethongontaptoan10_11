@@ -483,7 +483,7 @@ export function preprocessMathContent(content: string): string {
   s = s.replace(/\$([a-zA-Z0-9+\-*/= ]+)"\$/g, '$$$1$$"');
 
   // b) Tách đường phân cách --- ra khỏi dòng trước/sau (loại trừ alignment bảng :---:)
-  s = s.replace(/([^\n|])\s*---\s*([^\n|])/g, "$1\n\n---\n\n$2");
+  s = s.replace(/([^\n|:])\s*---\s*([^\n|:])/g, "$1\n\n---\n\n$2");
 
   // c) Tách các Blockquote (> 📌, > 💡, > ✏️, > Ví dụ, > **Ví dụ)
   s = s.replace(/([^\n])\s*(>\s*(?:📌|💡|✏️|\*\*Ví dụ|Ví dụ|\*Lời giải|Lời giải|Quy tắc|\*\*Quy tắc))/g, "$1\n\n$2");
@@ -496,10 +496,24 @@ export function preprocessMathContent(content: string): string {
   // e) Tách Lời giải
   s = s.replace(/([^\n])\s*(\*Lời giải:\*|Lời giải:)\s*/g, "$1\n\n*Lời giải:*\n\n");
 
-  // f) Phục hồi Bảng Markdown (tách các hàng dính nhau |...| |...|)
-  s = s.replace(/([^\n|])\s*(\|(?:\s*Độ\s*|\s*GTLG\s*|[^|\n]+\|[^|\n]+\|))/g, "$1\n\n$2");
-  s = s.replace(/\|\s*\|\s*/g, "|\n| ");
-  s = s.replace(/(\|\s*(?:\n|$))\s*(####|[a-zA-ZÀ-Ỹà-ỹ>#])/g, "$1\n\n$2");
+  // f) Sửa lỗi OCR font tiếng Việt (thay ký tự scan hỏng bằng chữ có dấu)
+  s = s.replace(/\bH\)y\b/g, "Hãy");
+  s = s.replace(/\bh\)y\b/g, "hãy");
+  s = s.replace(/\bD\)y\b/g, "Dãy");
+  s = s.replace(/\bd\)y\b/g, "dãy");
+  s = s.replace(/\bL\)i\b/g, "Lãi");
+  s = s.replace(/\bl\)i\b/g, "lãi");
+  s = s.replace(/\b([Tt]ho[aả])\s*m\)n\b/g, "$1 mãn");
+  s = s.replace(/\bhoảm\)n\b/g, "thoả mãn");
+  s = s.replace(/\bđ\)\b/g, "đã");
+  s = s.replace(/\bĐ\)\b/g, "Đã");
+  s = s.replace(/\bqu\)ng\b/g, "quãng");
+  s = s.replace(/\bQu\)ng\b/g, "Quãng");
+  s = s.replace(/\bh\)ng\b/g, "hãng");
+  s = s.replace(/\bH\)ng\b/g, "Hãng");
+  s = s.replace(/\bg\)y\b/g, "gãy");
+  s = s.replace(/\bKhái nhiệm\b/g, "Khái niệm");
+  s = s.replace(/\s*\(\s*giả thiết các biểu thức(?: ở trên)? đều có nghĩa\s*\)/gi, "\n\n*(Giả thiết các biểu thức đều có nghĩa)*\n\n");
 
   // g) Chuẩn hóa đơn vị trong công thức KaTeX không bị in nghiêng như biến toán
   s = s.replace(/(\d+)\s*km\b/g, "$1~\\text{km}");
