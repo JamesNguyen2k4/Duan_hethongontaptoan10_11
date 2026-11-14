@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, BookOpen, Layers, CheckCircle2, TrendingUp, ShieldAlert } from "lucide-react";
+import { Users, BookOpen, Layers, CheckCircle2, TrendingUp, ShieldAlert, Brain } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -12,11 +12,12 @@ export default async function AdminDashboardPage() {
     redirect("/dashboard");
   }
 
-  const [totalUsers, totalBais, totalBaiTaps, totalLanLam, recentUsers, recentAttempts] = await Promise.all([
+  const [totalUsers, totalBais, totalBaiTaps, totalLanLam, totalPhienLuyen, recentUsers, recentAttempts, recentPhienLuyen] = await Promise.all([
     db.nguoiDung.count(),
     db.bai.count(),
     db.baiTap.count(),
     db.lanLamBai.count(),
+    db.lichSuLuyenTap.count(),
     db.nguoiDung.findMany({
       take: 5,
       orderBy: { taoLuc: "desc" },
@@ -29,6 +30,14 @@ export default async function AdminDashboardPage() {
         baiTap: {
           include: { chuDe: true },
         },
+      },
+    }),
+    db.lichSuLuyenTap.findMany({
+      take: 6,
+      orderBy: { thoiDiemKetThuc: "desc" },
+      include: {
+        nguoiDung: true,
+        chuDe: true,
       },
     }),
   ]);
@@ -53,15 +62,15 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* 4 Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* 5 Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-bold uppercase tracking-wider">Người dùng</span>
             <Users className="w-4 h-4 text-blue-600" />
           </div>
           <div className="text-2xl sm:text-3xl font-black text-slate-900">{totalUsers}</div>
-          <p className="text-xs text-slate-400">Tài khoản trong hệ thống</p>
+          <p className="text-xs text-slate-400">Tài khoản học sinh</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-2">
@@ -79,16 +88,25 @@ export default async function AdminDashboardPage() {
             <Layers className="w-4 h-4 text-purple-600" />
           </div>
           <div className="text-2xl sm:text-3xl font-black text-slate-900">{totalBaiTaps}</div>
-          <p className="text-xs text-slate-400">Câu hỏi trắc nghiệm có lời giải</p>
+          <p className="text-xs text-slate-400">Câu hỏi trắc nghiệm chuẩn</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-bold uppercase tracking-wider">Lượt làm bài</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Lượt nộp câu</span>
             <TrendingUp className="w-4 h-4 text-amber-600" />
           </div>
           <div className="text-2xl sm:text-3xl font-black text-slate-900">{totalLanLam}</div>
-          <p className="text-xs text-slate-400">Lượt nộp bài từ học sinh</p>
+          <p className="text-xs text-slate-400">Tổng số câu hỏi đã nộp</p>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-indigo-200/80 bg-indigo-50/20 p-5 shadow-sm space-y-2">
+          <div className="flex items-center justify-between text-indigo-700">
+            <span className="text-xs font-bold uppercase tracking-wider">Lần luyện tập</span>
+            <Brain className="w-4 h-4 text-indigo-600" />
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-indigo-900">{totalPhienLuyen}</div>
+          <p className="text-xs text-indigo-500">Lần luyện tập theo dạng bài</p>
         </div>
       </div>
 
@@ -146,6 +164,94 @@ export default async function AdminDashboardPage() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Lịch sử các lần luyện tập theo dạng bài (Dữ liệu báo cáo Quản trị viên) */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+              <Brain className="w-4 h-4 text-indigo-600" />
+              <span>Báo cáo các lần luyện tập dạng bài (Độ thành thạo)</span>
+            </h2>
+            <p className="text-xs text-slate-500">
+              Ghi nhận mỗi khi học sinh kết thúc một phiên luyện tập dạng bài kèm mức độ thành thạo đạt được
+            </p>
+          </div>
+          <span className="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-xl">
+            Tổng cộng: {totalPhienLuyen} lần luyện
+          </span>
+        </div>
+
+        {recentPhienLuyen.length === 0 ? (
+          <div className="text-center py-8 text-slate-400 text-xs">
+            Chưa có lần luyện tập hoàn chỉnh nào được ghi nhận. Dữ liệu sẽ tự động lưu khi học sinh bấm "Dừng luyện tập / Đổi dạng".
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                <tr>
+                  <th className="py-3 px-3">Học sinh</th>
+                  <th className="py-3 px-3">Chủ đề & Dạng bài</th>
+                  <th className="py-3 px-3">Lớp</th>
+                  <th className="py-3 px-3 text-center">Kết quả phiên</th>
+                  <th className="py-3 px-3 text-center">Độ thành thạo đạt được</th>
+                  <th className="py-3 px-3 text-right">Thời điểm hoàn thành</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {recentPhienLuyen.map((phien) => {
+                  const masteryPercent = Math.round(phien.doThanhThao * 100);
+                  return (
+                    <tr key={phien.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="py-3 px-3">
+                        <div className="font-bold text-slate-800">{phien.nguoiDung.tenHienThi}</div>
+                        <div className="text-[11px] text-slate-400">{phien.nguoiDung.email}</div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-medium text-slate-800">{phien.chuDe.ten}</div>
+                        <div className="text-[11px] text-indigo-600 font-semibold">{phien.dangBai}</div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className="text-[11px] font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md">
+                          {phien.lopId === "lop-10" ? "Toán 10" : "Toán 11"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span className="font-bold text-slate-700">
+                          {phien.soCauDung} / {phien.soCauDaLam} câu đúng
+                        </span>
+                        <div className="text-[10px] text-slate-400">
+                          {Math.floor(phien.thoiGianGiay / 60)}p {phien.thoiGianGiay % 60}s
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span
+                          className={`inline-block px-2.5 py-1 rounded-full font-black text-xs ${
+                            masteryPercent >= 85
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                              : masteryPercent >= 60
+                              ? "bg-blue-100 text-blue-800 border border-blue-200"
+                              : "bg-amber-100 text-amber-800 border border-amber-200"
+                          }`}
+                        >
+                          {masteryPercent}%
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-right text-slate-500">
+                        <div>{new Date(phien.thoiDiemKetThuc).toLocaleTimeString("vi-VN")}</div>
+                        <div className="text-[10px] text-slate-400">
+                          {new Date(phien.thoiDiemKetThuc).toLocaleDateString("vi-VN")}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

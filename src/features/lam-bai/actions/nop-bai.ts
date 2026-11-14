@@ -105,3 +105,45 @@ export async function nopBaiTapAction(
       : null,
   };
 }
+
+export async function ketThucPhienLuyenTapAction(params: {
+  chuDeId: string;
+  dangBai: string;
+  lopId?: string | null;
+  doThanhThao: number; // 0..1
+  soCauDaLam: number;
+  soCauDung: number;
+  thoiGianGiay: number;
+  thoiDiemBatDau?: string | Date;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { ok: false, message: "Vui lòng đăng nhập" };
+  }
+
+  try {
+    if (params.soCauDaLam > 0) {
+      await db.lichSuLuyenTap.create({
+        data: {
+          nguoiDungId: session.user.id,
+          chuDeId: params.chuDeId,
+          dangBai: params.dangBai,
+          lopId: params.lopId || null,
+          doThanhThao: Math.min(1.0, Math.max(0.0, params.doThanhThao)),
+          soCauDaLam: params.soCauDaLam,
+          soCauDung: params.soCauDung,
+          thoiGianGiay: Math.max(0, params.thoiGianGiay),
+          thoiDiemBatDau: params.thoiDiemBatDau
+            ? new Date(params.thoiDiemBatDau)
+            : new Date(),
+          thoiDiemKetThuc: new Date(),
+        },
+      });
+    }
+
+    return { ok: true };
+  } catch (err: any) {
+    console.error("Lỗi khi lưu phiên luyện tập:", err);
+    return { ok: false, message: err?.message || "Lỗi lưu phiên luyện tập" };
+  }
+}

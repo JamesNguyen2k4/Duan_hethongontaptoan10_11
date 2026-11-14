@@ -257,7 +257,8 @@ export function tinhDoThanhThaoThucTe(
   nangLucIRT: number = -1.0,
   soCauTrongNganHang: number = 25
 ): number {
-  if (soLanLuyen <= 0 || soLanDung <= 0) return 0;
+  if (soLanLuyen <= 0) return 0;
+  if (soLanDung <= 0) return 0.01;
 
   const soLanSai = Math.max(0, soLanLuyen - soLanDung);
 
@@ -782,9 +783,16 @@ export async function capNhatMoHinhNguoiHoc(params: {
     soCauTrongNganHang
   );
 
-  // Đảm bảo tính nhất quán trực quan: Khi làm SAI thì Chỉ số làm chủ hiển thị không tăng
-  if (!dung && pEffMoi >= pEffTruoc && pEffTruoc > 0) {
-    pEffMoi = Number(Math.max(0.01, pEffTruoc - 0.015).toFixed(4));
+  // Đảm bảo tính nhất quán trực quan: Khi làm SAI thì Chỉ số làm chủ hiển thị phải giảm rõ rệt
+  if (!dung) {
+    const minGiam = 0.02; // Tối thiểu giảm 2% điểm phần trăm để khi làm tròn hiển thị luôn thấy sự sụt giảm
+    if (pEffTruoc > 0.01) {
+      if (pEffMoi >= pEffTruoc || pEffTruoc - pEffMoi < minGiam) {
+        pEffMoi = Number(Math.max(0.01, pEffTruoc - minGiam).toFixed(4));
+      }
+    } else {
+      pEffMoi = 0.01;
+    }
   }
 
   const { trangThai, nhanTrangThai } = phanLoaiTrangThaiDangBai(

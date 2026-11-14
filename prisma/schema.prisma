@@ -42,6 +42,7 @@ model NguoiDung {
   lanLamBais      LanLamBai[]
   theOnTaps       TheOnTap[]
   nangLucDangBais NangLucDangBai[]
+  lichSuLuyenTaps LichSuLuyenTap[]
   tienDos         TienDo[]
   baiViets        BaiViet[]
   binhLuans       BinhLuan[]
@@ -161,6 +162,7 @@ model ChuDe {
   chuong          Chuong           @relation(fields: [chuongId], references: [id], onDelete: Cascade)
   baiTaps         BaiTap[]
   nangLucDangBais NangLucDangBai[]
+  lichSuLuyenTaps LichSuLuyenTap[]
   baiViets        BaiViet[]
 
   @@map("chu_de")
@@ -274,6 +276,33 @@ model NangLucDangBai {
   @@index([nguoiDungId, lopId, ngayOnKeTiep])
   @@index([nguoiDungId, chuDeId])
   @@map("nang_luc_dang_bai")
+}
+
+// ─────────────────────────────────────────────
+// LỊCH SỬ CÁC LẦN / PHIÊN LUYỆN TẬP THEO DẠNG BÀI
+// (Dữ liệu báo cáo quản trị viên & theo dõi tiến độ)
+// ─────────────────────────────────────────────
+
+model LichSuLuyenTap {
+  id              String   @id @default(cuid())
+  nguoiDungId     String
+  chuDeId         String
+  dangBai         String   // Dạng bài luyện tập (Knowledge Component)
+  lopId           String?  // lop-10 | lop-11
+  doThanhThao     Float    // Tỷ lệ thành thạo đạt được sau lần luyện này (0.00 -> 1.00)
+  soCauDaLam      Int      @default(0) // Số câu học sinh đã nộp trong lần luyện này
+  soCauDung       Int      @default(0) // Số câu đúng trong lần luyện này
+  thoiGianGiay    Int      @default(0) // Tổng thời gian luyện (giây)
+  thoiDiemBatDau  DateTime @default(now())
+  thoiDiemKetThuc DateTime @default(now())
+
+  nguoiDung NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+  chuDe     ChuDe     @relation(fields: [chuDeId], references: [id], onDelete: Cascade)
+
+  @@index([nguoiDungId, chuDeId, dangBai])
+  @@index([nguoiDungId, thoiDiemKetThuc])
+  @@index([lopId, thoiDiemKetThuc])
+  @@map("lich_su_luyen_tap")
 }
 
 // ─────────────────────────────────────────────

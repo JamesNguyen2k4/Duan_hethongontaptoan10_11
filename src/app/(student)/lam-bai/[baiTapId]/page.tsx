@@ -106,6 +106,7 @@ export default async function LamBaiDetailPage({
             id: baiTap.chuDe.id,
             ten: baiTap.chuDe.ten,
             chuongTen: baiTap.chuDe.chuong.ten,
+            lopId: baiTap.chuDe.chuong.lopId,
           },
           cacLuaChon,
         }}

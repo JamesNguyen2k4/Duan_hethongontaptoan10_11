@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { nopBaiTapAction } from "../actions/nop-bai";
+import { useRouter } from "next/navigation";
+import { nopBaiTapAction, ketThucPhienLuyenTapAction } from "../actions/nop-bai";
 import {
   CheckCircle,
   XCircle,
@@ -17,6 +18,7 @@ import {
   TrendingUp,
   Award,
   MessageSquare,
+  PauseCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { MathRenderer } from "@/components/shared/MathRenderer";
@@ -50,6 +52,7 @@ interface Props {
       id: string;
       ten: string;
       chuongTen?: string;
+      lopId?: string | null;
     };
     cacLuaChon: Record<string, string>;
   };
@@ -62,10 +65,49 @@ export function PhongLamBaiForm({
   adaptiveContext,
   navigation,
 }: Props) {
+  const router = useRouter();
   const [selectedOption, setSelectedOption] = useState<string>("");
   const [thoiGian, setThoiGian] = useState<number>(0);
   const [dangNop, setDangNop] = useState<boolean>(false);
+  const [dangLuuPhien, setDangLuuPhien] = useState<boolean>(false);
   const [ketQua, setKetQua] = useState<any>(null);
+
+  // Key lưu trữ phiên luyện tập thích ứng theo từng dạng bài
+  const sessionKey = `active_session_${baiTap.chuDe.id}_${encodeURIComponent(baiTap.dangBai || "default")}`;
+
+  const getSessionData = () => {
+    if (typeof window === "undefined") {
+      return { soCauDaLam: 0, soCauDung: 0, thoiGianGiay: 0, thoiDiemBatDau: new Date().toISOString() };
+    }
+    try {
+      const raw = sessionStorage.getItem(sessionKey);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return {
+      soCauDaLam: 0,
+      soCauDung: 0,
+      thoiGianGiay: 0,
+      thoiDiemBatDau: new Date().toISOString(),
+    };
+  };
+
+  const updateSessionOnSubmit = (dung: boolean, timeSec: number) => {
+    if (typeof window === "undefined") return;
+    try {
+      const cur = getSessionData();
+      cur.soCauDaLam = (cur.soCauDaLam || 0) + 1;
+      if (dung) cur.soCauDung = (cur.soCauDung || 0) + 1;
+      cur.thoiGianGiay = (cur.thoiGianGiay || 0) + timeSec;
+      sessionStorage.setItem(sessionKey, JSON.stringify(cur));
+    } catch {}
+  };
+
+  const clearSessionData = () => {
+    if (typeof window === "undefined") return;
+    try {
+      sessionStorage.removeItem(sessionKey);
+    } catch {}
+  };
 
   // Bộ đếm thời gian làm bài
   useEffect(() => {
@@ -94,6 +136,7 @@ export function PhongLamBaiForm({
       );
       if (res.ok) {
         setKetQua(res);
+        updateSessionOnSubmit(res.ketQua === "DUNG", thoiGian);
       } else {
         alert(res.message);
       }
@@ -103,17 +146,63 @@ export function PhongLamBaiForm({
   };
 
   // Tính % độ thành thạo hiển thị trực tiếp (cập nhật ngay khi học sinh vừa bấm Nộp bài)
-  const masteryBefore = Math.round(
-    (ketQua?.adaptiveUpdate?.xacSuatThanhThaoTruoc ??
-      adaptiveContext?.xacSuatThanhThao ??
-      0) * 100
-  );
-  const masteryCurrent = Math.round(
-    (ketQua?.adaptiveUpdate?.xacSuatThanhThaoMoi ??
-      adaptiveContext?.xacSuatThanhThao ??
-      0) * 100
-  );
+  const rawBefore =
+    ketQua?.adaptiveUpdate?.xacSuatThanhThaoTruoc ??
+    adaptiveContext?.xacSuatThanhThao ??
+    0;
+  const rawCurrent =
+    ketQua?.adaptiveUpdate?.xacSuatThanhThaoMoi ??
+    adaptiveContext?.xacSuatThanhThao ??
+    0;
+
+  let masteryBefore = Math.round(rawBefore * 100);
+  let masteryCurrent = Math.round(rawCurrent * 100);
+
+  // Bảo đảm tính nhất quán trực quan:
+  // Nếu làm SAI và trước đó có điểm, độ thành thạo hiển thị PHẢI giảm ít nhất 1-2%
+  if (ketQua) {
+    if (ketQua.ketQua !== "DUNG" && masteryBefore > 0 && masteryCurrent >= masteryBefore) {
+      masteryCurrent = Math.max(1, masteryBefore - 2);
+    } else if (ketQua.ketQua === "DUNG" && masteryCurrent <= masteryBefore && masteryBefore < 98) {
+      masteryCurrent = masteryBefore + 1;
+    }
+  }
   const masteryDelta = masteryCurrent - masteryBefore;
+
+  // Xử lý Dừng luyện tập: Lưu phiên làm 1 lần luyện tập kèm % thành thạo vào CSDL
+  const handleDungLuyenTap = async (destinationUrl?: string) => {
+    if (dangLuuPhien) return;
+    setDangLuuPhien(true);
+    try {
+      const sessionData = getSessionData();
+      const soCauDaLam = Math.max(sessionData.soCauDaLam, ketQua ? 1 : 0);
+      const soCauDung = Math.max(
+        sessionData.soCauDung,
+        ketQua?.ketQua === "DUNG" ? 1 : 0
+      );
+      const tongThoiGian = Math.max(sessionData.thoiGianGiay, thoiGian);
+
+      if (soCauDaLam > 0) {
+        await ketThucPhienLuyenTapAction({
+          chuDeId: baiTap.chuDe.id,
+          dangBai: baiTap.dangBai || "Kiến thức trọng tâm",
+          lopId: baiTap.chuDe.lopId || null,
+          doThanhThao: (masteryCurrent ?? 0) / 100,
+          soCauDaLam,
+          soCauDung,
+          thoiGianGiay: tongThoiGian,
+          thoiDiemBatDau: sessionData.thoiDiemBatDau,
+        });
+        clearSessionData();
+      }
+      router.push(destinationUrl || `/bai-tap?chuDeId=${baiTap.chuDe.id}`);
+    } catch (err) {
+      console.error("Lỗi khi kết thúc phiên luyện tập:", err);
+      router.push(destinationUrl || `/bai-tap?chuDeId=${baiTap.chuDe.id}`);
+    } finally {
+      setDangLuuPhien(false);
+    }
+  };
 
   const thetaCurrent =
     ketQua?.adaptiveUpdate?.nangLucIRTMoi ??
@@ -164,13 +253,14 @@ export function PhongLamBaiForm({
           </span>
         </div>
 
-        <Link
-          href={`/bai-tap?chuDeId=${baiTap.chuDe.id}`}
-          prefetch={true}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98] text-xs font-semibold text-slate-700 transition-all shadow-2xs"
+        <button
+          type="button"
+          onClick={() => handleDungLuyenTap(`/bai-tap?chuDeId=${baiTap.chuDe.id}`)}
+          disabled={dangLuuPhien}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98] text-xs font-semibold text-slate-700 transition-all shadow-2xs cursor-pointer disabled:opacity-60"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Danh mục dạng bài
-        </Link>
+        </button>
       </div>
 
       {/* Top Status, BKT Mastery Progress & ZPD Telemetry */}
@@ -274,14 +364,6 @@ export function PhongLamBaiForm({
               <span>
                 Độ phù hợp: <strong className="text-indigo-700">{zpdProbPercent}%</strong>
               </span>
-              {adaptiveContext && adaptiveContext.soLanLuyen > 0 && (
-                <>
-                  <span>•</span>
-                  <span>
-                    Đã luyện: <strong className="text-slate-700">{adaptiveContext.soLanLuyen} câu</strong>
-                  </span>
-                </>
-              )}
             </div>
           </div>
 
@@ -424,6 +506,15 @@ export function PhongLamBaiForm({
                     <span>
                       Thành thạo: {masteryBefore}% →{" "}
                       <strong className="text-blue-700">{masteryCurrent}%</strong>
+                      {masteryDelta !== 0 && (
+                        <span
+                          className={`ml-1 font-bold ${
+                            masteryDelta > 0 ? "text-emerald-600" : "text-rose-600"
+                          }`}
+                        >
+                          ({masteryDelta > 0 ? `+${masteryDelta}%` : `${masteryDelta}%`})
+                        </span>
+                      )}
                     </span>
                   </div>
                   <div className="text-[11px] text-slate-500 font-medium">
@@ -505,14 +596,15 @@ export function PhongLamBaiForm({
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   )}
-                  <Link
-                    href={`/bai-tap?chuDeId=${baiTap.chuDe.id}`}
-                    prefetch={true}
-                    className="px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 cursor-pointer"
+                  <button
+                    type="button"
+                    onClick={() => handleDungLuyenTap()}
+                    disabled={dangLuuPhien}
+                    className="px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 cursor-pointer disabled:opacity-60"
                   >
                     <CheckCircle className="w-4 h-4" />
-                    <span>Hoàn thành dạng bài! Chuyển dạng mới</span>
-                  </Link>
+                    <span>{dangLuuPhien ? "Đang lưu kết quả..." : "Hoàn thành dạng bài! Chuyển dạng mới"}</span>
+                  </button>
                 </div>
               </div>
             ) : (
@@ -531,13 +623,24 @@ export function PhongLamBaiForm({
                 </div>
 
                 <div className="flex items-center gap-2.5 flex-wrap shrink-0">
-                  <Link
-                    href={`/bai-tap?chuDeId=${baiTap.chuDe.id}`}
-                    prefetch={true}
-                    className="px-4 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-all cursor-pointer"
+                  <button
+                    type="button"
+                    onClick={() => handleDungLuyenTap()}
+                    disabled={dangLuuPhien}
+                    className="px-4 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 active:scale-[0.98] text-slate-700 font-semibold text-xs transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-60"
                   >
-                    Tạm dừng / Đổi dạng
-                  </Link>
+                    {dangLuuPhien ? (
+                      <>
+                        <span className="w-3.5 h-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                        <span>Đang lưu...</span>
+                      </>
+                    ) : (
+                      <>
+                        <PauseCircle className="w-4 h-4 text-slate-500" />
+                        <span>Dừng luyện tập / Đổi dạng</span>
+                      </>
+                    )}
+                  </button>
 
                   {adaptiveNextId ? (
                     <Link
@@ -550,14 +653,15 @@ export function PhongLamBaiForm({
                       <ArrowRight className="w-4 h-4" />
                     </Link>
                   ) : (
-                    <Link
-                      href={`/bai-tap?chuDeId=${baiTap.chuDe.id}`}
-                      prefetch={true}
-                      className="px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 cursor-pointer shrink-0"
+                    <button
+                      type="button"
+                      onClick={() => handleDungLuyenTap()}
+                      disabled={dangLuuPhien}
+                      className="px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 cursor-pointer shrink-0 disabled:opacity-60"
                     >
                       <Sparkles className="w-4 h-4" />
-                      <span>Hoàn thành dạng bài! Quay lại danh mục</span>
-                    </Link>
+                      <span>{dangLuuPhien ? "Đang lưu..." : "Hoàn thành dạng bài! Quay lại danh mục"}</span>
+                    </button>
                   )}
                 </div>
               </div>
