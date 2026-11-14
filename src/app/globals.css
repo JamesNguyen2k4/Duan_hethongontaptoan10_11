@@ -104,13 +104,28 @@
 
 .prose li {
   list-style-position: outside !important;
-  margin-top: 0.35em !important;
-  margin-bottom: 0.35em !important;
+  margin-top: 0.4em !important;
+  margin-bottom: 0.4em !important;
+  line-height: 1.85 !important;
 }
 
 .prose li > p {
-  display: inline !important;
-  margin: 0 !important;
+  margin-top: 0.2em !important;
+  margin-bottom: 0.2em !important;
+}
+
+/* Khoảng dãn dòng và đệm cho các đoạn văn lý thuyết */
+.prose p {
+  line-height: 1.95 !important;
+  margin-bottom: 1.25rem !important;
+}
+
+/* Khoảng cách thoáng cho các trích dẫn và ví dụ */
+.prose blockquote {
+  line-height: 1.85 !important;
+  padding: 1rem 1.25rem !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 1.5rem !important;
 }
 
 /* Đảm bảo tương thích hoàn hảo cho các ký hiệu phủ định chồng hình như \ne (\neq) không bị tách thành / = */

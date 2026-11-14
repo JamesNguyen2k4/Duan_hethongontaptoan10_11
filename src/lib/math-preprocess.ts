@@ -472,6 +472,45 @@ export function preprocessMathContent(content: string): string {
   // Hồi phục lại tất cả các khối toán học
   s = s.replace(/__MATH_BLOCK_(\d+)__/g, (_, idx) => mathBlocks[parseInt(idx, 10)]);
 
-  s = s.replace(/\s{2,}/g, " ");
+  // 12. Phục hồi cấu trúc Markdown & chuẩn hóa căn lề dãn dòng cho văn bản dài
+  // a) Chuẩn hóa dấu ngoặc kép scan bị ngược hoặc dính liền
+  s = s.replace(/[“”]/g, '"');
+  s = s.replace(/:\s*"/g, ': "');
+  s = s.replace(/([à-ỹa-zA-Z0-9])"/g, '$1 "');
+  s = s.replace(/"([à-ỹa-zA-Z0-9])/g, '" $1');
+  s = s.replace(/\$"\s*([a-zA-Z0-9+\-*/= ]+)\s*"\$/g, '"$$$1$$"');
+  s = s.replace(/\$"\s*([a-zA-Z0-9+\-*/= ]+)\$/g, '"$$$1$$');
+  s = s.replace(/\$([a-zA-Z0-9+\-*/= ]+)"\$/g, '$$$1$$"');
+
+  // b) Tách đường phân cách --- ra khỏi dòng trước/sau (loại trừ alignment bảng :---:)
+  s = s.replace(/([^\n|])\s*---\s*([^\n|])/g, "$1\n\n---\n\n$2");
+
+  // c) Tách các Blockquote (> 📌, > 💡, > ✏️, > Ví dụ, > **Ví dụ)
+  s = s.replace(/([^\n])\s*(>\s*(?:📌|💡|✏️|\*\*Ví dụ|Ví dụ|\*Lời giải|Lời giải|Quy tắc|\*\*Quy tắc))/g, "$1\n\n$2");
+  s = s.replace(/([^\n])\s*(>\s*-\s+)/g, "$1\n$2");
+  s = s.replace(/([^\n])\s*(>\s*[a-d]\)\s+)/g, "$1\n$2");
+
+  // d) Tách Heading (#, ##, ###, ####)
+  s = s.replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2\n\n");
+
+  // e) Tách Lời giải
+  s = s.replace(/([^\n])\s*(\*Lời giải:\*|Lời giải:)\s*/g, "$1\n\n*Lời giải:*\n\n");
+
+  // f) Phục hồi Bảng Markdown (tách các hàng dính nhau |...| |...|)
+  s = s.replace(/([^\n|])\s*(\|(?:\s*Độ\s*|\s*GTLG\s*|[^|\n]+\|[^|\n]+\|))/g, "$1\n\n$2");
+  s = s.replace(/\|\s*\|\s*/g, "|\n| ");
+  s = s.replace(/(\|\s*(?:\n|$))\s*(####|[a-zA-ZÀ-Ỹà-ỹ>#])/g, "$1\n\n$2");
+
+  // g) Chuẩn hóa đơn vị trong công thức KaTeX không bị in nghiêng như biến toán
+  s = s.replace(/(\d+)\s*km\b/g, "$1~\\text{km}");
+  s = s.replace(/(\d+)\s*cm\b/g, "$1~\\text{cm}");
+  s = s.replace(/(\d+)\s*m\b(?![a-zA-Z])/g, "$1~\\text{m}");
+  s = s.replace(/\brad\b/g, "\\text{rad}");
+
+  // h) Chỉ thu gọn khoảng trắng ngang (spaces và tabs), bảo toàn nguyên vẹn các dòng mới \n
+  s = s.replace(/[ \t]{2,}/g, " ");
+  s = s.replace(/\n[ \t]+/g, "\n");
+  s = s.replace(/\n{3,}/g, "\n\n");
+
   return s.trim();
 }
