@@ -22,14 +22,21 @@ export default auth(function middleware(req: NextRequest & { auth: { user?: { ro
     nextUrl.pathname.startsWith(r)
   );
 
+  // Xác định base URL chuẩn kể cả khi chạy sau reverse proxy (Render, Docker, Nginx)
+  const forwardedHost = req.headers.get("x-forwarded-host");
+  const forwardedProto = req.headers.get("x-forwarded-proto") || "https";
+  const baseUrl = forwardedHost
+    ? `${forwardedProto}://${forwardedHost}`
+    : req.nextUrl.origin;
+
   // Đã đăng nhập mà vào trang auth → chuyển về dashboard
   if (isLoggedIn && isPublicRoute) {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
+    return NextResponse.redirect(new URL("/dashboard", baseUrl));
   }
 
   // Chưa đăng nhập mà vào route cần auth
   if (!isLoggedIn && !isPublicRoute) {
-    const loginUrl = new URL("/dang-nhap", req.nextUrl);
+    const loginUrl = new URL("/dang-nhap", baseUrl);
     loginUrl.searchParams.set("callbackUrl", nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
@@ -40,7 +47,7 @@ export default auth(function middleware(req: NextRequest & { auth: { user?: { ro
     role !== "QUAN_TRI" &&
     role !== "GIAO_VIEN"
   ) {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
+    return NextResponse.redirect(new URL("/dashboard", baseUrl));
   }
 
   return NextResponse.next();
