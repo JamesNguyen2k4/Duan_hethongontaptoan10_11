@@ -212,6 +212,8 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                 <span>
                   {soDangCanOn > 0
                     ? "Ôn tập ngay"
+                    : soDangDaLuyen > 0
+                    ? "Tiếp tục ôn tập"
                     : "Luyện thích ứng"}
                 </span>
               </Link>
@@ -288,7 +290,7 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
               let cardBorder = "border-slate-200/90 hover:border-blue-300";
               let btnStyle =
                 "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20";
-              let btnLabel = "Luyện thích ứng";
+              let btnLabel = "Bắt đầu luyện";
 
               if (dang.trangThai === "THANH_THAO") {
                 badgeStyle =
@@ -304,8 +306,13 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                 btnStyle =
                   "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20";
                 btnLabel = "Ôn tập lại";
-              } else if (dang.trangThai === "DANG_REN_LUYEN") {
+              } else if (dang.soLanLuyen > 0) {
+                // Đã làm bài / Đang rèn luyện: Chuyển nút thành "Ôn tập"
                 badgeStyle = "bg-blue-50 text-blue-700 border-blue-200";
+                cardBorder = "border-blue-200/80 hover:border-blue-400";
+                btnStyle =
+                  "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/20";
+                btnLabel = "Ôn tập";
               }
 
               return (
