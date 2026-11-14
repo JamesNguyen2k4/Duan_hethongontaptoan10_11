@@ -24,12 +24,12 @@ export default auth(function middleware(req: NextRequest & { auth: { user?: { ro
 
   // Đã đăng nhập mà vào trang auth → chuyển về dashboard
   if (isLoggedIn && isPublicRoute) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
   }
 
   // Chưa đăng nhập mà vào route cần auth
   if (!isLoggedIn && !isPublicRoute) {
-    const loginUrl = new URL("/dang-nhap", req.url);
+    const loginUrl = new URL("/dang-nhap", req.nextUrl);
     loginUrl.searchParams.set("callbackUrl", nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
@@ -40,7 +40,7 @@ export default auth(function middleware(req: NextRequest & { auth: { user?: { ro
     role !== "QUAN_TRI" &&
     role !== "GIAO_VIEN"
   ) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
   }
 
   return NextResponse.next();
