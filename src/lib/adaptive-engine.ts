@@ -12,49 +12,49 @@ import {
 
 /**
  * ============================================================================
- * LÕI HỌC THÍCH ỨNG LAI (BKT + IRT + PFA) & ÔN TẬP NGẮT QUÃNG FSRS
- * (Hybrid KT-IRT-PFA Adaptive Learning & FSRS Memory Scheduler)
+ * HỆ THỐNG HỌC THÍCH ỨNG LAI (BKT + IRT + PFA) & ÔN TẬP NGẮT QUÃNG FSRS
+ * (Hybrid Heuristic Architecture Inspired by KT, IRT, PFA & FSRS)
  * ============================================================================
- * Tích hợp và chuẩn hóa 4 mô hình đo lường giáo dục & khoa học nhận thức:
+ * Hệ thống heuristic kết hợp lấy cảm hứng từ 4 mô hình đo lường giáo dục & nhận thức:
  *
- * 1. Contextual BKT (Bayesian Knowledge Tracing - Corbett & Anderson, CMU;
- *    mở rộng KT-IDEM / Contextual Guess & Slip - Pardos & Heffernan):
+ * 1. Contextual BKT (Bayesian Knowledge Tracing - Corbett & Anderson, CMU 1994;
+ *    mở rộng Contextual Guess & Slip - Pardos & Heffernan / Baker):
  *    - Theo dõi trạng thái kiến thức ẩn P(L_t) qua chuỗi Markov ẩn (HMM).
- *    - Khắc phục điểm yếu "4 tham số cố định" của BKT cổ điển bằng cách tính động
- *      P(Guess), P(Slip) và P(Transit) dựa trên độ khó IRT (b_i), độ phân biệt (a_i)
- *      của từng câu hỏi và thời gian phản hồi thực tế của học sinh.
+ *    - Tham số đoán mò P(G) neo trực tiếp theo cấu trúc câu hỏi (c = 1/k với trắc nghiệm,
+ *      c ~ 0.02 với điền đáp án/tự luận) và điều chỉnh nhẹ theo độ khó câu hỏi b_i.
+ *    - Áp dụng bước chuyển tiếp học tập P(T) cả khi làm đúng lẫn một phần khi làm sai
+ *      (học sinh học được qua việc đọc lời giải chi tiết).
  *
- * 2. IRT 3PL (Item Response Theory 3-Parameter Logistic - Lord, 1980):
- *    - Ước lượng năng lực liên tục theta_k [-3, +3] của học sinh và độ khó chuẩn hóa
- *      b_i [-3, +3] của từng câu hỏi.
- *    - Khắc phục điểm yếu "chỉ 2 trạng thái rời rạc" của BKT bằng cách quy đổi
- *      năng lực liên tục sang xác suất làm chủ kỳ vọng P_IRT(theta_k).
- *    - Điều phối câu hỏi rơi vào Vùng phát triển gần (ZPD) với P(correct) ~ 0.70.
+ * 2. IRT 3PL & Online Elo Calibration (Lord, 1980; Pelánek, 2016):
+ *    - Ước lượng năng lực liên tục theta_k [-2.5, +2.5] của học sinh và hiệu chỉnh
+ *      độ khó thực nghiệm b_i [-2.5, +2.5] của câu hỏi theo cơ chế Elo từ dữ liệu làm bài.
+ *    - Điều phối câu hỏi theo Vùng phát triển gần (ZPD: P(correct) ~ 0.70) dựa trên
+ *      năng lực hiệu dụng có tính đến suy giảm trí nhớ theta_eff(t).
  *
  * 3. PFA (Performance Factor Analysis - Pavlik, Cen & Koedinger, 2009):
- *    - Mô hình hồi quy logistic theo dõi tích lũy số lần thành công (s) và thất bại (f)
- *      kèm chuỗi phong độ hiện tại (streak):
- *      m_PFA = beta_0 + gamma * s + rho * f + delta * streak
- *    - Dễ giải thích, phản ánh trực diện kết quả rèn luyện thực tế của học sinh.
+ *    - Hồi quy logistic theo dõi tích lũy số lần đúng (s), sai (f) và chuỗi đúng (streak)
+ *      kết hợp làm mịn Laplace để tổng hợp thành Chỉ số làm chủ kỹ năng (Mastery Index).
  *
- * 4. Mô hình Trí nhớ Khoa học Hiện đại FSRS (Free Spaced Repetition Scheduler):
- *    - Theo dõi 3 trụ cột nhận thức: Retrievability (R), Stability (S), Difficulty (D).
- *    - Suy giảm trí nhớ theo định luật hàm mũ công suất:
- *      R(t, S) = (1 + 19/81 * (t / S))^(-0.5)
- *      với mức ghi nhớ mục tiêu R_target = 0.90 (tại t = S, R = 90%).
- *    - Tự động lập lịch khoảng cách ôn tập I = S ngày và kích hoạt ôn tập khi R(t) < 0.90.
+ * 4. FSRS điều chỉnh theo mức "Bất ngờ" (Surprise-Modulated FSRS Scheduler):
+ *    - Theo dõi Retrievability R(t, S) = (1 + 19/81 * (t / S))^(-0.5) và Stability S.
+ *    - Phân biệt rõ "quên kiến thức" (sai câu dễ/vừa sức có P_expected >= 0.65) với
+ *      "chưa đủ năng lực giải câu khó" (sai câu Vận dụng cao có P_expected < 0.65),
+ *      không dùng ngưỡng thời gian cứng (35s/75s) để tránh học sinh đoán nhanh lấy điểm.
  */
 
 export const BKT_DEFAULTS = {
-  P_L0: 0.12, // Xác suất biết trước ban đầu cho mô hình Bayes ẩn (Prior thấp khi bắt đầu câu 1)
-  P_T_BASE: 0.08, // Tốc độ học cơ sở mỗi câu trung bình (được nhân hệ số độ khó của câu hỏi)
-  P_G_BASE: 0.25, // Xác suất đoán mò cơ sở (trắc nghiệm 4 lựa chọn = 1/4)
+  P_L0: 0.12, // Xác suất biết trước ban đầu (Prior khi bắt đầu câu 1)
+  P_T_BASE: 0.08, // Tốc độ học cơ sở mỗi câu khi làm đúng
+  P_T_WRONG_FACTOR: 0.30, // Hệ số học từ lời giải chi tiết khi làm sai (30% của P_T)
+  P_G_BASE: 0.25, // Xác suất đoán mò cơ sở cho trắc nghiệm 4 lựa chọn (1/4)
   P_S_BASE: 0.08, // Xác suất sơ suất (Slip) cơ sở dù đã nắm kiến thức
-  MASTERY_THRESHOLD: 0.85, // Ngưỡng công nhận Đã Thành Thạo (Mastered: 85%)
-  MIN_PRACTICE_FOR_MASTERY: 10, // Số câu luyện tối thiểu để công nhận Thành thạo thực sự
-  TARGET_SAMPLE_SIZE: 12, // Quy mô mẫu chuẩn cho 1 dạng bài để độ tin cậy mẫu đạt 100%
+  THETA_BASE: -1.0, // Năng lực IRT khởi điểm cơ sở
+  SURPRISE_LAPSE_THRESHOLD: 0.65, // Ngưỡng P_expected để phân biệt "quên" vs "câu quá khó"
+  MASTERY_THRESHOLD: 0.85, // Ngưỡng Chỉ số làm chủ để công nhận Đã Thành Thạo (85%)
+  MIN_PRACTICE_FOR_MASTERY: 10, // Số câu luyện tối thiểu để công nhận Thành thạo
+  TARGET_SAMPLE_SIZE: 12, // Quy mô mẫu chuẩn cho 1 dạng bài để hội tụ 100% VolumeFactor
   REVIEW_DECAY_THRESHOLD: 0.90, // Ngưỡng suy giảm trí nhớ FSRS cần ôn lại (< 90%)
-  ZPD_TARGET_PROB: 0.70, // Xác suất trả lời đúng tối ưu trong vùng ZPD (70%)
+  ZPD_TARGET_PROB: 0.70, // Xác suất trả lời đúng mục tiêu trong vùng ZPD (70%)
 };
 
 export type MucDoCauHoi =
@@ -64,71 +64,124 @@ export type MucDoCauHoi =
   | "VAN_DUNG_CAO";
 
 /**
- * Chuẩn hóa Tham số Độ khó IRT (b_i), Độ phân biệt (a_i), Trọng số khó (w_i)
- * và Trần thành thạo tối đa theo Mức độ nhận thức (Bloom's Taxonomy):
- * - Nếu chỉ làm câu NHAN_BIET: Độ thành thạo tối đa của kỹ năng không thể vượt quá 40%.
- * - Nếu làm tới THONG_HIEU: Tối đa ~68%.
- * - Phải giải đúng các câu VAN_DUNG / VAN_DUNG_CAO mới vượt qua mốc 85% (Thành thạo).
+ * Tính tham số đoán mò cơ sở (c) nhất quán cho cả IRT 3PL và BKT:
+ * - Câu Điền đáp án / Tự luận: c = 0.02 (hầu như không thể đoán mò)
+ * - Câu Trắc nghiệm k lựa chọn: c = 1 / k (mặc định 4 lựa chọn => c = 0.25)
+ */
+export function tinhXacSuatDoanMoC(
+  loai?: string | null,
+  dapAnJson?: string | null
+): number {
+  if (loai === "DIEN_DAP_AN" || loai === "TU_LUAN") {
+    return 0.02;
+  }
+  if (dapAnJson) {
+    try {
+      const parsed = JSON.parse(dapAnJson);
+      const numOptions = parsed?.cacLuaChon
+        ? Object.keys(parsed.cacLuaChon).length
+        : 4;
+      if (numOptions >= 2) {
+        return Number((1 / numOptions).toFixed(4));
+      }
+    } catch {
+      // Fallback về 4 lựa chọn nếu chuỗi không phải JSON
+    }
+  }
+  return BKT_DEFAULTS.P_G_BASE;
+}
+
+/**
+ * Chuẩn hóa Tham số Độ khó IRT (b_i), Độ phân biệt (a_i), Tham số đoán mò (c_i),
+ * Trọng số khó (w_i) và Trần năng lực theo mức Bloom + Hiệu chỉnh thực nghiệm (Elo/Pass-rate):
+ * - Mức độ Bloom đóng vai trò Prior khởi tạo b_0 khi câu hỏi chưa có dữ liệu thực nghiệm.
+ * - Khi câu hỏi đã có dữ liệu làm bài (doKhoIRTGoc đã hiệu chỉnh Elo hoặc có soLanLam),
+ *   hệ thống ưu tiên dùng độ khó thực tế từ dữ liệu.
  */
 export function chuanHoaThamSoCauHoi(
   mucDo?: string | null,
   doKhoIRTGoc?: number | null,
-  doPhanBietGoc?: number | null
+  doPhanBietGoc?: number | null,
+  options?: {
+    loai?: string | null;
+    dapAnJson?: string | null;
+    soLanLam?: number | null;
+    soLanDung?: number | null;
+  }
 ): {
   b: number; // Độ khó IRT chuẩn [-2.5, +2.5]
   a: number; // Độ phân biệt IRT [0.8, 2.0]
+  c: number; // Tham số đoán mò nhất quán [0.02, 0.5]
   weight: number; // Hệ số bước nhảy theo độ khó (Difficulty Weight)
   thetaCeiling: number; // Trần năng lực IRT nếu chỉ giải mức độ này
 } {
   let defaultB = -0.9;
   let defaultA = 1.0;
   let weight = 0.55;
-  let thetaCeiling = -0.35; // Tương đương ~40% Mastery
+  let thetaCeiling = -0.35; // Tương đương ~40% Mastery Index
 
   switch (mucDo) {
     case "NHAN_BIET":
       defaultB = -1.0;
       defaultA = 1.0;
-      weight = 0.50; // Câu Nhận biết chỉ cộng bước nhảy nhỏ (~3% - 4%/câu)
+      weight = 0.50;
       thetaCeiling = -0.35;
       break;
     case "THONG_HIEU":
       defaultB = -0.15;
       defaultA = 1.15;
-      weight = 0.90; // Câu Thông hiểu cộng bước nhảy vừa (~5% - 6%/câu)
+      weight = 0.90;
       thetaCeiling = 0.45;
       break;
     case "VAN_DUNG":
       defaultB = 0.75;
       defaultA = 1.3;
-      weight = 1.35; // Câu Vận dụng chứng minh năng lực cao (~7% - 9%/câu)
+      weight = 1.35;
       thetaCeiling = 1.45;
       break;
     case "VAN_DUNG_CAO":
       defaultB = 1.55;
       defaultA = 1.45;
-      weight = 1.75; // Câu Vận dụng cao
+      weight = 1.75;
       thetaCeiling = 2.5;
       break;
   }
 
-  // Nếu doKhoIRT trong DB đang ở giá trị mặc định 0.0 chưa hiệu chỉnh thì dùng mốc chuẩn theo mucDo
+  const c = tinhXacSuatDoanMoC(options?.loai, options?.dapAnJson);
+
+  // Kiểm tra xem doKhoIRT trong DB đã được hiệu chỉnh Elo khác 0 chưa
   const hasCalibratedB =
     typeof doKhoIRTGoc === "number" && Math.abs(doKhoIRTGoc) > 0.001;
-  const b = hasCalibratedB ? doKhoIRTGoc! : defaultB;
+
+  let b = defaultB;
+  if (hasCalibratedB) {
+    b = doKhoIRTGoc!;
+  } else if (options?.soLanLam && options.soLanLam > 0) {
+    // Nếu chưa có doKhoIRT nhưng đã có thống kê lượt làm: nội suy Empirical Log-Odds với Prior Bloom
+    const n = options.soLanLam;
+    const k = options.soLanDung ?? 0;
+    const empPassRate = (k + 1.5) / (n + 3.0);
+    const empB = Number(
+      Math.max(-2.2, Math.min(2.2, -Math.log(empPassRate / (1 - empPassRate)))).toFixed(3)
+    );
+    const credibility = Math.min(0.8, n / (n + 8));
+    b = Number(((1 - credibility) * defaultB + credibility * empB).toFixed(3));
+  }
+
   const a =
     typeof doPhanBietGoc === "number" && doPhanBietGoc !== 1.0
       ? doPhanBietGoc
       : defaultA;
 
-  // Điều chỉnh tinh trọng số theo b thực tế nếu câu hỏi đã được calibrate
-  if (hasCalibratedB) {
+  // Điều chỉnh trọng số và trần năng lực theo độ khó b thực tế sau khi hiệu chỉnh
+  if (hasCalibratedB || (options?.soLanLam && options.soLanLam >= 3)) {
     weight = Number(
       Math.max(0.4, Math.min(1.85, 0.95 + 0.45 * b)).toFixed(2)
     );
+    thetaCeiling = Number(Math.max(thetaCeiling, Math.min(2.5, b + 0.65)).toFixed(2));
   }
 
-  return { b, a, weight, thetaCeiling };
+  return { b, a, c, weight, thetaCeiling };
 }
 
 /**
@@ -374,7 +427,21 @@ export function phanLoaiTrangThaiDangBai(
 }
 
 /**
- * 5. Chuyển đổi năng lực IRT theta_k sang mức độ câu hỏi gợi ý
+ * 5. Tính năng lực IRT hiệu dụng (Effective Ability theta_eff) có điều chỉnh theo hệ số nhớ R(t):
+ * Khi học sinh nghỉ lâu không ôn tập (R(t) giảm), năng lực phản xạ thực tế tại thời điểm làm bài
+ * hồi quy một phần về mức cơ sở theta_base, giúp bộ chọn ZPD tự động hạ nhẹ độ khó câu mở đầu.
+ */
+export function tinhThetaHieuDung(
+  theta: number,
+  doNho: number = 1.0
+): number {
+  const safeR = Math.max(0.1, Math.min(1.0, doNho));
+  const thetaEff = theta * safeR + BKT_DEFAULTS.THETA_BASE * (1 - safeR);
+  return Number(Math.max(-2.5, Math.min(2.5, thetaEff)).toFixed(3));
+}
+
+/**
+ * 6. Chuyển đổi năng lực IRT theta_k sang mức độ câu hỏi gợi ý
  */
 export function quyDoiThetaSangMucDo(
   theta: number
@@ -386,7 +453,7 @@ export function quyDoiThetaSangMucDo(
 }
 
 /**
- * 6. Cập nhật hợp nhất BKT + IRT 3PL + FSRS Memory sau mỗi lần học sinh nộp 1 câu hỏi
+ * 7. Cập nhật hợp nhất BKT + IRT 3PL + Elo Item Calibration + Surprise-Modulated FSRS
  */
 export async function capNhatMoHinhNguoiHoc(params: {
   nguoiDungId: string;
@@ -394,11 +461,16 @@ export async function capNhatMoHinhNguoiHoc(params: {
   chuDeId: string;
   dangBai: string | null;
   mucDo?: string | null;
+  loai?: string | null;
+  dapAnJson?: string | null;
   dung: boolean;
   thoiGianGiay: number;
   doKhoIRT?: number;
   doPhanBiet?: number;
+  soLanLam?: number;
+  soLanDung?: number;
   lopId?: string | null;
+  thoiDiem?: Date;
 }) {
   const {
     nguoiDungId,
@@ -406,34 +478,52 @@ export async function capNhatMoHinhNguoiHoc(params: {
     chuDeId,
     mucDo,
     dung,
-    thoiGianGiay,
     doKhoIRT: rawDoKhoIRT,
     doPhanBiet: rawDoPhanBiet,
   } = params;
 
-  // Lớp của chủ đề – dùng để tách dữ liệu học tập theo lớp
-  const lopId =
-    params.lopId ??
-    (
-      await db.chuDe.findUnique({
-        where: { id: chuDeId },
-        select: { chuong: { select: { lopId: true } } },
-      })
-    )?.chuong.lopId ??
-    null;
+  const now = params.thoiDiem ?? new Date();
 
-  // Chuẩn hóa độ khó IRT b_i, độ phân biệt a_i và trọng số bước nhảy theo Mức độ nhận thức (Bloom's Taxonomy)
-  const itemParams = chuanHoaThamSoCauHoi(mucDo, rawDoKhoIRT, rawDoPhanBiet);
+  // Truy vấn thông tin bổ sung của bài tập và chủ đề nếu caller chưa truyền đầy đủ
+  const [baiTapMeta, chuDeMeta] = await Promise.all([
+    params.loai !== undefined && params.soLanLam !== undefined
+      ? Promise.resolve({
+          loai: params.loai,
+          dapAn: params.dapAnJson ?? null,
+          soLanLam: params.soLanLam,
+          soLanDung: params.soLanDung ?? 0,
+        })
+      : db.baiTap.findUnique({
+          where: { id: baiTapId },
+          select: { loai: true, dapAn: true, soLanLam: true, soLanDung: true },
+        }),
+    params.lopId
+      ? Promise.resolve(null)
+      : db.chuDe.findUnique({
+          where: { id: chuDeId },
+          select: { chuong: { select: { lopId: true } } },
+        }),
+  ]);
+
+  const lopId = params.lopId ?? chuDeMeta?.chuong.lopId ?? null;
+  const soLanLamPrev = baiTapMeta?.soLanLam ?? 0;
+
+  // Chuẩn hóa tham số câu hỏi (b_i, a_i, c_i, weight) kết hợp mức Bloom và dữ liệu thực nghiệm
+  const itemParams = chuanHoaThamSoCauHoi(mucDo, rawDoKhoIRT, rawDoPhanBiet, {
+    loai: baiTapMeta?.loai,
+    dapAnJson: baiTapMeta?.dapAn,
+    soLanLam: soLanLamPrev,
+    soLanDung: baiTapMeta?.soLanDung ?? 0,
+  });
   const doKhoIRT = itemParams.b;
   const doPhanBiet = itemParams.a;
+  const cGuess = itemParams.c;
   const itemWeight = itemParams.weight;
 
-  // Nếu câu hỏi chưa gán dangBai, lấy dạng 1 của chủ đề hoặc "Dạng chuẩn"
+  // Nếu câu hỏi chưa gán dangBai, lấy dạng 1 của chủ đề
   const fallbackDang =
     DANH_MUC_DANG_BAI[chuDeId]?.dangs[0]?.ten || "Dạng 1. Kiến thức trọng tâm";
   const dangBai = params.dangBai || fallbackDang;
-
-  const now = new Date();
 
   // Lấy hồ sơ năng lực hiện tại và số câu trong ngân hàng của dạng bài này
   const [hienTai, soCauTrongNganHang] = await Promise.all([
@@ -452,87 +542,81 @@ export async function capNhatMoHinhNguoiHoc(params: {
   ]);
 
   const pLPrev = hienTai ? hienTai.xacSuatThanhThao : BKT_DEFAULTS.P_L0;
-  const thetaPrev = hienTai ? hienTai.nangLucIRT : -1.0; // Khởi tạo từ mức cơ bản (Nhận biết) để tiến trình leo bậc chuẩn xác
+  const thetaPrev = hienTai ? hienTai.nangLucIRT : BKT_DEFAULTS.THETA_BASE;
   const stabilityPrev = hienTai ? hienTai.doBenTriNho : 1.0;
-  const efPrev = hienTai ? hienTai.heSoDe : 2.5;
+  const efPrev = hienTai ? hienTai.heSoDe : FSRS_CONFIG.DEFAULT_DIFFICULTY;
   const soLanLuyenPrev = hienTai ? hienTai.soLanLuyen : 0;
   const soLanDungPrev = hienTai ? hienTai.soLanDung : 0;
   const soChuoiDungPrev = hienTai ? hienTai.soChuoiDung : 0;
   const lanLuyenCuoiPrev = hienTai ? hienTai.lanLuyenCuoi : null;
 
   // -------------------------------------------------------------------------
-  // BƯỚC A: Tính suy giảm trí nhớ Ebbinghaus trước khi cập nhật BKT
+  // BƯỚC A: Tính suy giảm trí nhớ R(t) và Năng lực hiệu dụng theta_eff trước cập nhật
   // -------------------------------------------------------------------------
   const retention = tinhDoDuyTriTriNho(lanLuyenCuoiPrev, stabilityPrev, now);
-  // Kiến thức nền chỉ phai một phần theo đường cong quên
+  const thetaEffPrev = tinhThetaHieuDung(thetaPrev, retention);
   const pPrior = Math.max(
     0.08,
     Math.min(0.98, pLPrev * (0.4 + 0.6 * retention))
   );
 
+  // Xác suất dự đoán trả lời đúng câu hỏi theo IRT 3PL (dùng chung cGuess và thetaEffPrev)
+  const pExpected = tinhXacSuatIRT3PL(thetaEffPrev, doKhoIRT, doPhanBiet, cGuess);
+  const y = dung ? 1.0 : 0.0;
+
   // -------------------------------------------------------------------------
-  // BƯỚC B: Cập nhật Contextual BKT phụ thuộc Độ khó câu hỏi (Difficulty-Weighted BKT)
+  // BƯỚC B: Cập nhật Contextual BKT nhất quán với tham số đoán mò cGuess
   // -------------------------------------------------------------------------
-  // Câu dễ (Nhận biết, b = -1.0): Xác suất đoán mò cao hơn (~29%), tốc độ học P(T) nhỏ (~0.04)
-  // Câu khó (Vận dụng/VDC, b >= 0.75): Xác suất đoán mò thấp (~18%), tốc độ học P(T) lớn (~0.11 - 0.14)
-  let pGuess = Math.max(
-    0.12,
-    Math.min(0.32, BKT_DEFAULTS.P_G_BASE - 0.045 * doKhoIRT)
-  );
-  let pSlip = Math.max(
+  // Neo P(G) trực tiếp quanh cGuess (nếu tự luận/điền đáp án c=0.02 thì pGuess ~ 0.02;
+  // nếu trắc nghiệm 4 lựa chọn c=0.25 thì pGuess dao động nhẹ theo độ khó quanh 0.25)
+  const pGuess =
+    cGuess <= 0.05
+      ? cGuess
+      : Math.max(
+          cGuess * 0.68,
+          Math.min(cGuess * 1.18, cGuess - 0.03 * doKhoIRT)
+        );
+  const pSlip = Math.max(
     0.05,
     Math.min(0.20, BKT_DEFAULTS.P_S_BASE + 0.03 * doKhoIRT)
   );
-  let pTransit = BKT_DEFAULTS.P_T_BASE * itemWeight;
-
-  if (thoiGianGiay > 90) {
-    pGuess = Math.min(0.35, pGuess + 0.05);
-  } else if (thoiGianGiay > 0 && thoiGianGiay <= 30 && dung) {
-    pGuess = Math.max(0.12, pGuess - 0.04);
-    pSlip = Math.max(0.04, pSlip - 0.02);
-  }
+  const pTransit = BKT_DEFAULTS.P_T_BASE * itemWeight;
 
   let pPosterior = pPrior;
   if (dung) {
     const num = pPrior * (1 - pSlip);
     const den = num + (1 - pPrior) * pGuess;
     const rawBayes = den > 0 ? num / den : pPrior;
-    // Điều tiết bước nhảy Bayes theo trọng số độ khó câu hỏi (damping factor):
-    // Câu Nhận biết không làm P(L) nhảy vọt quá mức trong 1 lần thử đơn lẻ
-    const bayesDamping = Math.min(0.85, 0.32 * itemWeight);
+    const bayesDamping = Math.min(0.85, 0.35 * itemWeight);
     pPosterior = pPrior + (rawBayes - pPrior) * bayesDamping;
   } else {
     const num = pPrior * pSlip;
     const den = num + (1 - pPrior) * (1 - pGuess);
     const rawBayes = den > 0 ? num / den : pPrior;
-    // Nếu làm sai câu quá khó (Vận dụng cao), phạt nhẹ hơn; nếu làm sai câu cơ bản, giảm rõ hơn
-    const failSeverity = Math.max(0.60, Math.min(0.95, 0.80 - 0.12 * doKhoIRT));
+    const failSeverity = Math.max(0.55, Math.min(0.92, 0.78 - 0.12 * doKhoIRT));
     pPosterior = pPrior - (pPrior - rawBayes) * failSeverity;
   }
 
-  // Cập nhật chuyển trạng thái học tập P(T):
-  // Chỉ cộng tốc độ tiếp thu học tập khi học sinh làm ĐÚNG; khi SAI không cộng bù để tránh triệt tiêu mức giảm
-  const effectiveTransit = dung ? pTransit : 0;
+  // Chuẩn BKT: Học sinh vẫn tiếp thu kiến thức sau khi làm sai nhờ đọc lời giải chi tiết,
+  // với tốc độ bằng 30% so với khi tự giải đúng (P_T_WRONG_FACTOR = 0.30).
+  const effectiveTransit = dung
+    ? pTransit
+    : pTransit * BKT_DEFAULTS.P_T_WRONG_FACTOR;
   const pLNew = Number(
-    Math.max(0.05, Math.min(0.98, pPosterior + (1 - pPosterior) * effectiveTransit)).toFixed(4)
+    Math.max(
+      0.05,
+      Math.min(0.98, pPosterior + (1 - pPosterior) * effectiveTransit)
+    ).toFixed(4)
   );
 
   // -------------------------------------------------------------------------
-  // BƯỚC C: Cập nhật Năng lực IRT (theta_k) theo Độ khó chuẩn & Hiệu chỉnh b_i
+  // BƯỚC C: Cập nhật Năng lực IRT (theta_k) & Hiệu chỉnh Độ khó Elo (b_i)
   // -------------------------------------------------------------------------
-  const pExpected = tinhXacSuatIRT3PL(thetaPrev, doKhoIRT, doPhanBiet, 0.25);
-  const y = dung ? 1.0 : 0.0;
+  // Đã loại bỏ hệ số nhân thời gian (timeFactor) để tránh nhiễu từ bài toán tính dài hoặc đoán nhanh
+  const baseKTheta = Math.max(0.16, 0.32 / (1 + 0.04 * soLanLuyenPrev));
+  let deltaTheta = baseKTheta * doPhanBiet * itemWeight * (y - pExpected);
 
-  // Hệ số cập nhật K_theta chuẩn hóa theo trọng số độ khó câu hỏi
-  const baseK = Math.max(0.18, 0.32 / (1 + 0.04 * soLanLuyenPrev));
-  let timeFactor = 1.0;
-  if (dung && thoiGianGiay > 0 && thoiGianGiay <= 35) timeFactor = 1.1;
-  else if (dung && thoiGianGiay > 90) timeFactor = 0.85;
-
-  let deltaTheta = baseK * doPhanBiet * itemWeight * timeFactor * (y - pExpected);
-
-  // Nếu chỉ làm câu dễ (ví dụ NHAN_BIET có thetaCeiling = -0.35), khi năng lực đã vượt trần của mức độ đó
-  // thì làm thêm câu dễ chỉ tăng rất nhỏ (diminishing returns), buộc phải làm câu khó hơn để tăng độ thành thạo!
+  // Chặn trần diminishing returns nếu chỉ làm câu dễ đã vượt ngưỡng mức độ đó
   if (dung && thetaPrev >= itemParams.thetaCeiling) {
     deltaTheta *= 0.25;
   }
@@ -541,31 +625,25 @@ export async function capNhatMoHinhNguoiHoc(params: {
     Math.max(-2.5, Math.min(2.5, thetaPrev + deltaTheta)).toFixed(3)
   );
 
-  // Hiệu chỉnh nhẹ độ khó câu hỏi b_i từ phản hồi thực tế (Online Item Calibration)
-  const deltaB = 0.02 * (pExpected - y);
+  // Hiệu chỉnh độ khó câu hỏi b_i từ dữ liệu thực tế theo mô hình Elo (K_b giảm dần khi mẫu lớn):
+  // Nếu học sinh làm sai câu có pExpected cao -> (pExpected - y) > 0 -> độ khó b_i tăng lên.
+  const kItemElo = Math.max(0.025, 0.16 / (1 + 0.06 * soLanLamPrev));
+  const deltaB = kItemElo * (pExpected - y);
   const bNew = Number(
     Math.max(-2.5, Math.min(2.5, doKhoIRT + deltaB)).toFixed(3)
   );
 
   // -------------------------------------------------------------------------
-  // BƯỚC D: Cập nhật Mô hình Trí nhớ FSRS (Retrievability R, Stability S, Difficulty D)
+  // BƯỚC D: Cập nhật FSRS theo mức "Bất ngờ" (Surprise-Modulated FSRS)
   // -------------------------------------------------------------------------
-  // Phân cấp mức đánh giá FSRS Grade:
-  // 1: Again (Sai / Quên kiến thức)
-  // 2: Hard (Đúng nhưng vất vả > 75s)
-  // 3: Good (Đúng tốc độ tiêu chuẩn)
-  // 4: Easy (Đúng nhanh <= 35s hoặc chinh phục thành công câu Vận dụng/VDC khó)
-  let fsrsGrade: FSRSGrade = 3;
-  if (!dung) {
-    fsrsGrade = 1;
-  } else if (thoiGianGiay > 75) {
-    fsrsGrade = 2;
-  } else if ((thoiGianGiay > 0 && thoiGianGiay <= 35) || doKhoIRT >= 0.75) {
-    fsrsGrade = 4;
-  } else {
-    fsrsGrade = 3;
-  }
-
+  // Không dùng thời gian làm bài (35s/75s) để chấm Grade vì dễ bị lợi dụng và không hợp giải toán.
+  // Chấm Grade dựa trên chênh lệch giữa Kết quả thực tế (y) và Kỳ vọng (pExpected):
+  // - Làm ĐÚNG câu vượt tầm (pExpected < 0.55): Củng cố sâu sắc -> Grade 4 (Easy)
+  // - Làm ĐÚNG câu vừa sức trong vùng ZPD (0.55 <= pExpected <= 0.85): Chuẩn -> Grade 3 (Good)
+  // - Làm ĐÚNG câu quá dễ so với trình độ (pExpected > 0.85): Ít nỗ lực truy xuất -> Grade 2 (Hard / tăng S ít)
+  // - Làm SAI: Phân biệt rõ:
+  //   + Sai câu lẽ ra phải làm được (pExpected >= 0.65): Quên kiến thức thực sự -> Grade 1 (Again / Lapse)
+  //   + Sai câu khó vượt tầm (pExpected < 0.65): Thiếu năng lực giải bài khó chứ KHÔNG phải quên kiến thức!
   const elapsedDaysDang = lanLuyenCuoiPrev
     ? Math.max(
         0,
@@ -574,25 +652,55 @@ export async function capNhatMoHinhNguoiHoc(params: {
       )
     : 0;
 
-  // Difficulty D trong FSRS có miền [1.0 .. 10.0] (mặc định 5.0)
-  // Nếu dữ liệu cũ đang lưu EF từ SM-2 (<= 3.0), tự động quy đổi về mốc chuẩn FSRS 5.0
   const currentDifficulty =
     efPrev > 3.0 ? efPrev : FSRS_CONFIG.DEFAULT_DIFFICULTY;
 
-  const fsrsDang = tinhToanFSRS({
-    currentStability: stabilityPrev,
-    currentDifficulty,
-    elapsedDays: elapsedDaysDang,
-    grade: fsrsGrade,
-    reps: soLanLuyenPrev,
-    desiredRetention: FSRS_CONFIG.TARGET_RETENTION,
-    now,
-  });
+  let fsrsGrade: FSRSGrade = 3;
+  let stabilityNew = stabilityPrev;
+  let dNew = currentDifficulty;
+  let intervalDays = Math.max(1, Math.round(stabilityPrev));
+  let ngayOnKeTiep = hienTai?.ngayOnKeTiep ?? new Date(now.getTime() + 86400000);
 
-  const stabilityNew = fsrsDang.stability;
-  const dNew = fsrsDang.difficulty;
-  const intervalDays = fsrsDang.intervalDays;
-  const ngayOnKeTiep = fsrsDang.ngayOnKeTiep;
+  const isStretchFailure = !dung && pExpected < BKT_DEFAULTS.SURPRISE_LAPSE_THRESHOLD;
+
+  if (dung) {
+    if (pExpected < 0.55) {
+      fsrsGrade = 4;
+    } else if (pExpected <= 0.85) {
+      fsrsGrade = 3;
+    } else {
+      fsrsGrade = 2;
+    }
+  } else {
+    fsrsGrade = 1;
+  }
+
+  if (isStretchFailure && soLanLuyenPrev > 0) {
+    // Sai một câu hỏi khó (Vận dụng / VDC) vượt tầm năng lực hiện tại:
+    // KHÔNG đánh sập độ bền trí nhớ S của dạng bài và không ép ôn lại sau 1 ngày như quên thẻ.
+    stabilityNew = Number(
+      Math.max(FSRS_CONFIG.MIN_STABILITY, stabilityPrev * 0.94).toFixed(2)
+    );
+    dNew = Number(Math.min(10.0, currentDifficulty + 0.15).toFixed(2));
+    intervalDays = tinhKhoangCachFSRS(stabilityNew, FSRS_CONFIG.TARGET_RETENTION);
+    ngayOnKeTiep = new Date(now.getTime() + intervalDays * 24 * 60 * 60 * 1000);
+  } else {
+    // Cập nhật FSRS tiêu chuẩn cho trường hợp làm đúng hoặc thực sự quên câu cơ bản
+    const fsrsDang = tinhToanFSRS({
+      currentStability: stabilityPrev,
+      currentDifficulty,
+      elapsedDays: elapsedDaysDang,
+      grade: fsrsGrade,
+      reps: soLanLuyenPrev,
+      desiredRetention: FSRS_CONFIG.TARGET_RETENTION,
+      now,
+    });
+    stabilityNew = fsrsDang.stability;
+    dNew = fsrsDang.difficulty;
+    intervalDays = fsrsDang.intervalDays;
+    ngayOnKeTiep = fsrsDang.ngayOnKeTiep;
+  }
+
   const soChuoiDungNew = dung ? soChuoiDungPrev + 1 : 0;
 
   // 1. Lưu cập nhật vào bảng NangLucDangBai
@@ -633,7 +741,7 @@ export async function capNhatMoHinhNguoiHoc(params: {
     },
   });
 
-  // 2. Cập nhật tham số câu hỏi (soLanLam, soLanDung, doKhoIRT)
+  // 2. Cập nhật tham số câu hỏi (soLanLam, soLanDung, doKhoIRT hiệu chỉnh Elo)
   await db.baiTap.update({
     where: { id: baiTapId },
     data: {
@@ -643,13 +751,17 @@ export async function capNhatMoHinhNguoiHoc(params: {
     },
   });
 
-  // 3. Đồng bộ thẻ ôn tập cấp câu hỏi (TheOnTap) theo chuẩn FSRS
+  // 3. Đồng bộ thẻ ôn tập cấp câu hỏi cụ thể (TheOnTap)
   await capNhatTheOnTapFSRS(nguoiDungId, baiTapId, fsrsGrade, now, lopId);
 
   const soLanLuyenMoi = soLanLuyenPrev + 1;
   const soLanDungMoi = soLanDungPrev + (dung ? 1 : 0);
 
-  const retentionMoi = dung ? 1.0 : Math.min(retention, 0.92);
+  const retentionMoi = dung
+    ? 1.0
+    : isStretchFailure
+    ? retention
+    : Math.min(retention, 0.88);
 
   const pEffTruoc = tinhDoThanhThaoThucTe(
     pLPrev,
@@ -670,22 +782,23 @@ export async function capNhatMoHinhNguoiHoc(params: {
     soCauTrongNganHang
   );
 
-  // Đảm bảo tính nhất quán logic: Khi làm SAI thì độ thành thạo không bao giờ được cao hơn trước khi làm
+  // Đảm bảo tính nhất quán trực quan: Khi làm SAI thì Chỉ số làm chủ hiển thị không tăng
   if (!dung && pEffMoi >= pEffTruoc && pEffTruoc > 0) {
-    pEffMoi = Number(Math.max(0.01, pEffTruoc - 0.02).toFixed(4));
+    pEffMoi = Number(Math.max(0.01, pEffTruoc - 0.015).toFixed(4));
   }
 
   const { trangThai, nhanTrangThai } = phanLoaiTrangThaiDangBai(
     soLanLuyenMoi,
     pLNew,
     pEffMoi,
-    1.0,
+    retentionMoi,
     ngayOnKeTiep,
     now
   );
 
   return {
     dangBai,
+    xacSuatDuDoanTruoc: pExpected,
     xacSuatThanhThaoTruoc: pEffTruoc,
     xacSuatThanhThaoMoi: pEffMoi,
     nangLucIRTTruoc: thetaPrev,
@@ -706,7 +819,7 @@ export async function capNhatMoHinhNguoiHoc(params: {
 }
 
 /**
- * 7. Lấy danh sách trạng thái năng lực của toàn bộ các Dạng bài trong 1 Chủ đề (Bài học)
+ * 8. Lấy danh sách trạng thái năng lực của toàn bộ các Dạng bài trong 1 Chủ đề (Bài học)
  */
 export async function layNangLucTheoChuDe(
   nguoiDungId: string | undefined,
@@ -754,7 +867,7 @@ export async function layNangLucTheoChuDe(
         xacSuatThanhThao: 0,
         doNhoHienTai: 1.0,
         xacSuatHieuDung: 0,
-        nangLucIRT: -1.0,
+        nangLucIRT: BKT_DEFAULTS.THETA_BASE,
         doBenTriNho: 1.0,
         soLanLuyen: 0,
         soLanDung: 0,
@@ -770,11 +883,12 @@ export async function layNangLucTheoChuDe(
         trangThai: "CHUA_HOC",
         nhanTrangThai: "Chưa luyện tập",
         mucDoGoiY: "NHAN_BIET",
-        doKhoIRTMucTieu: tinhDoKhoMucTieuZPD(-1.0),
+        doKhoIRTMucTieu: tinhDoKhoMucTieuZPD(BKT_DEFAULTS.THETA_BASE),
       };
     }
 
     const doNho = tinhDoDuyTriTriNho(rec.lanLuyenCuoi, rec.doBenTriNho, now);
+    const thetaEff = tinhThetaHieuDung(rec.nangLucIRT, doNho);
     const pEff = tinhDoThanhThaoThucTe(
       rec.xacSuatThanhThao,
       rec.soLanLuyen,
@@ -811,17 +925,17 @@ export async function layNangLucTheoChuDe(
       thongTinLich: dinhDangLichOnTapFSRS(rec.ngayOnKeTiep, rec.lanLuyenCuoi, now),
       trangThai,
       nhanTrangThai,
-      mucDoGoiY: quyDoiThetaSangMucDo(rec.nangLucIRT),
-      doKhoIRTMucTieu: tinhDoKhoMucTieuZPD(rec.nangLucIRT),
+      mucDoGoiY: quyDoiThetaSangMucDo(thetaEff),
+      doKhoIRTMucTieu: tinhDoKhoMucTieuZPD(thetaEff),
     };
   });
 }
 
 /**
- * 8. Bộ chọn câu hỏi thích ứng theo Vùng phát triển gần (ZPD Selector: P(correct) ~ 0.70)
- * Kết hợp tự động giữa:
- * - Ôn tập ngắt quãng các dạng bài đang suy giảm trí nhớ (Spaced Repetition)
- * - Rèn luyện nâng cấp độ thành thạo BKT và năng lực IRT (Adaptive Progression)
+ * 9. Bộ chọn câu hỏi thích ứng theo Vùng phát triển gần (ZPD Selector: P(correct) ~ 0.70)
+ * Có tích hợp hệ số suy giảm trí nhớ R(t) thông qua năng lực hiệu dụng theta_eff:
+ * - Khi học sinh lâu ngày quay lại (R(t) thấp), theta_eff giảm nhẹ giúp chọn câu hỏi
+ *   khởi động vừa sức hơn thay vì ném ngay câu quá khó ở đỉnh phong độ cũ.
  */
 export async function chonCauHoiThichUngZPD(params: {
   nguoiDungId?: string;
@@ -844,9 +958,9 @@ export async function chonCauHoiThichUngZPD(params: {
 
     if (dangCanOn) {
       targetDangBai = dangCanOn.dangBai;
-      lyDoChon = `Ôn tập kịp thời: Dạng bài này bạn nên củng cố lại kiến thức (${Math.round(
-        dangCanOn.xacSuatHieuDung * 100
-      )}%)`;
+      lyDoChon = `Ôn tập kịp thời: Khởi động lại dạng bài đang suy giảm trí nhớ (${Math.round(
+        dangCanOn.doNhoHienTai * 100
+      )}% ghi nhớ)`;
     } else {
       // Ưu tiên 2: Dạng bài đang rèn luyện dở dang trong vùng ZPD (chưa đạt 85%)
       const dangDangHoc = nangLucList
@@ -855,7 +969,7 @@ export async function chonCauHoiThichUngZPD(params: {
 
       if (dangDangHoc) {
         targetDangBai = dangDangHoc.dangBai;
-        lyDoChon = `Luyện tập thích ứng: Củng cố dạng bài để đạt mức thành thạo (hiện đạt ${Math.round(
+        lyDoChon = `Luyện tập thích ứng: Củng cố dạng bài để đạt ngưỡng làm chủ (hiện đạt ${Math.round(
           dangDangHoc.xacSuatHieuDung * 100
         )}%)`;
       } else {
@@ -880,12 +994,14 @@ export async function chonCauHoiThichUngZPD(params: {
 
   const nangLucDang =
     nangLucList.find((d) => d.dangBai === targetDangBai) || nangLucList[0];
-  const theta = nangLucDang ? nangLucDang.nangLucIRT : -1.0;
-  const bTarget = tinhDoKhoMucTieuZPD(theta, BKT_DEFAULTS.ZPD_TARGET_PROB);
+  const rawTheta = nangLucDang ? nangLucDang.nangLucIRT : BKT_DEFAULTS.THETA_BASE;
+  const doNho = nangLucDang ? nangLucDang.doNhoHienTai : 1.0;
+  // Sử dụng năng lực hiệu dụng có điều chỉnh theo hệ số nhớ R(t)
+  const thetaEff = tinhThetaHieuDung(rawTheta, doNho);
 
   if (params.dangBai && nangLucDang) {
     if (nangLucDang.trangThai === "CAN_ON_LAI") {
-      lyDoChon = `Ôn tập củng cố kiến thức (${Math.round(
+      lyDoChon = `Ôn tập khôi phục trí nhớ (${Math.round(
         nangLucDang.doNhoHienTai * 100
       )}% mức độ ghi nhớ)`;
     } else if (nangLucDang.trangThai === "THANH_THAO") {
@@ -893,11 +1009,11 @@ export async function chonCauHoiThichUngZPD(params: {
         nangLucDang.xacSuatHieuDung * 100
       )}%) • Câu hỏi thử thách nâng cao`;
     } else {
-      lyDoChon = "Câu hỏi vừa sức, phù hợp với năng lực hiện tại của bạn";
+      lyDoChon = "Câu hỏi vừa sức trong vùng ZPD phù hợp với năng lực hiện tại";
     }
   }
 
-  // Truy vấn danh sách câu hỏi ứng viên
+  // Truy vấn danh sách câu hỏi ứng viên kèm loại câu hỏi, đáp án và thống kê thực nghiệm
   const candidates = await db.baiTap.findMany({
     where: {
       chuDeId,
@@ -906,10 +1022,14 @@ export async function chonCauHoiThichUngZPD(params: {
     },
     select: {
       id: true,
+      loai: true,
+      dapAn: true,
       mucDo: true,
       dangBai: true,
       doKhoIRT: true,
       doPhanBiet: true,
+      soLanLam: true,
+      soLanDung: true,
     },
   });
 
@@ -919,21 +1039,33 @@ export async function chonCauHoiThichUngZPD(params: {
         chuDeId,
         ...(excludeBaiTapId ? { id: { not: excludeBaiTapId } } : {}),
       },
-      select: { id: true, doKhoIRT: true, doPhanBiet: true, dangBai: true },
+      select: {
+        id: true,
+        loai: true,
+        dapAn: true,
+        doKhoIRT: true,
+        doPhanBiet: true,
+        dangBai: true,
+      },
     });
-    return fallback
-      ? {
-          baiTapId: fallback.id,
-          dangBai: fallback.dangBai,
-          xacSuatDuDoan: tinhXacSuatIRT3PL(theta, fallback.doKhoIRT, fallback.doPhanBiet),
-          doKhoIRT: fallback.doKhoIRT,
-          nangLucDang,
-          lyDoChon,
-        }
-      : null;
+    if (!fallback) return null;
+    const cFallback = tinhXacSuatDoanMoC(fallback.loai, fallback.dapAn);
+    return {
+      baiTapId: fallback.id,
+      dangBai: fallback.dangBai,
+      xacSuatDuDoan: tinhXacSuatIRT3PL(
+        thetaEff,
+        fallback.doKhoIRT,
+        fallback.doPhanBiet,
+        cFallback
+      ),
+      doKhoIRT: fallback.doKhoIRT,
+      nangLucDang,
+      lyDoChon,
+    };
   }
 
-  // Nếu đã đăng nhập: kiểm tra lịch sử làm bài của học sinh trên tập ứng viên
+  // Kiểm tra lịch sử làm bài của học sinh trên tập ứng viên
   let answeredCorrectIds = new Set<string>();
   let answeredWrongIds = new Set<string>();
   let dueCardIds = new Set<string>();
@@ -973,26 +1105,36 @@ export async function chonCauHoiThichUngZPD(params: {
     }
   }
 
-  // Chấm điểm từng câu hỏi theo khoảng cách ZPD |P(correct | theta, b_i) - 0.70|
-  // Sử dụng tham số độ khó chuẩn hóa theo Mức độ nhận thức (NHAN_BIET -> VAN_DUNG_CAO)
+  // Chấm điểm từng câu hỏi theo khoảng cách ZPD |P(correct | theta_eff, b_i, a_i, c_i) - 0.70|
   const scored = candidates.map((item) => {
     const calibrated = chuanHoaThamSoCauHoi(
       item.mucDo,
       item.doKhoIRT,
-      item.doPhanBiet
+      item.doPhanBiet,
+      {
+        loai: item.loai,
+        dapAnJson: item.dapAn,
+        soLanLam: item.soLanLam,
+        soLanDung: item.soLanDung,
+      }
     );
-    const pCorrect = tinhXacSuatIRT3PL(theta, calibrated.b, calibrated.a, 0.25);
+    const pCorrect = tinhXacSuatIRT3PL(
+      thetaEff,
+      calibrated.b,
+      calibrated.a,
+      calibrated.c
+    );
     const zpdDist = Math.abs(pCorrect - BKT_DEFAULTS.ZPD_TARGET_PROB);
 
     let historyPenalty = 0;
     if (dueCardIds.has(item.id) && answeredWrongIds.has(item.id)) {
-      // Câu từng làm sai và đã đến hạn ôn tập FSRS -> Ưu tiên cao!
+      // Câu từng làm sai và đã đến hạn ôn tập FSRS -> Ưu tiên cao
       historyPenalty = -0.12;
     } else if (!answeredCorrectIds.has(item.id) && !answeredWrongIds.has(item.id)) {
       // Câu mới chưa làm bao giờ -> Ưu tiên chuẩn ZPD
       historyPenalty = 0;
     } else if (answeredWrongIds.has(item.id)) {
-      // Câu từng làm sai gần đây -> Phạt nhẹ để không lặp lại ngay lập tức câu vừa làm
+      // Câu từng làm sai gần đây -> Phạt nhẹ để tránh lặp lại ngay lập tức câu vừa làm
       historyPenalty = 0.18;
     } else {
       // Câu đã làm đúng -> Chỉ chọn lại khi đã hết câu mới trong vùng ZPD

@@ -176,9 +176,22 @@ export function tinhToanFSRS(params: {
       const difficultyFactor = (11 - newD) / 6.0;
       // Diminishing returns khi Stability đã rất lớn
       const sPower = Math.pow(Math.max(1.0, currentStability), -0.2);
+      // Hệ số gộp theo buổi luyện (Intra-session Spacing Factor):
+      // Khi làm nhiều câu liên tiếp trong cùng một buổi (elapsedDays < 0.25 ngày ~ 6 giờ),
+      // không nhân cấp số nhân toàn phần như ôn ngắt quãng qua các ngày khác nhau.
+      const spacingMod = Math.min(
+        1.0,
+        0.12 + 0.88 * Math.min(1.0, elapsedDays / 0.5)
+      );
 
       const multiplier =
-        1 + 1.65 * difficultyFactor * sPower * retrievabilityFactor * gradeBonus;
+        1 +
+        1.65 *
+          difficultyFactor *
+          sPower *
+          retrievabilityFactor *
+          gradeBonus *
+          spacingMod;
       newS = Math.min(FSRS_CONFIG.MAX_STABILITY, currentStability * multiplier);
     }
   }

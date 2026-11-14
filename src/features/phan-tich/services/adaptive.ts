@@ -5,6 +5,7 @@ import {
   tinhDoDuyTriTriNho,
   tinhDoThanhThaoThucTe,
   phanLoaiTrangThaiDangBai,
+  tinhThetaHieuDung,
   quyDoiThetaSangMucDo,
   tinhXacSuatIRT3PL,
   chonCauHoiThichUngZPD,
@@ -87,11 +88,16 @@ export async function phanTichDiemYeuHocSinh(
         chuDeId: item.baiTap.chuDeId,
         dangBai: item.baiTap.dangBai,
         mucDo: item.baiTap.mucDo,
+        loai: item.baiTap.loai,
+        dapAnJson: item.baiTap.dapAn,
         dung: item.ketQua === "DUNG",
         thoiGianGiay: item.thoiGianGiay || 40,
         doKhoIRT: item.baiTap.doKhoIRT,
         doPhanBiet: item.baiTap.doPhanBiet,
+        soLanLam: item.baiTap.soLanLam,
+        soLanDung: item.baiTap.soLanDung,
         lopId: item.lopId,
+        thoiDiem: item.thoiDiem,
       });
     }
     nangLucRecords = await db.nangLucDangBai.findMany({
@@ -102,11 +108,12 @@ export async function phanTichDiemYeuHocSinh(
 
   const now = new Date();
 
-  // 3. Tính toán trạng thái thời gian thực (bao gồm suy giảm trí nhớ Ebbinghaus) cho từng Dạng bài đã luyện
+  // 3. Tính toán trạng thái thời gian thực (bao gồm suy giảm trí nhớ FSRS) cho từng Dạng bài đã luyện
   const danhSachDangBai: ThongKeDangBaiChiTiet[] = nangLucRecords
     .filter((rec) => rec.soLanLuyen > 0)
     .map((rec) => {
       const doNho = tinhDoDuyTriTriNho(rec.lanLuyenCuoi, rec.doBenTriNho, now);
+      const thetaEff = tinhThetaHieuDung(rec.nangLucIRT, doNho);
       const pEff = tinhDoThanhThaoThucTe(
         rec.xacSuatThanhThao,
         rec.soLanLuyen,
@@ -141,7 +148,7 @@ export async function phanTichDiemYeuHocSinh(
         thongTinLich: dinhDangLichOnTapFSRS(rec.ngayOnKeTiep, rec.lanLuyenCuoi, now),
         trangThai,
         nhanTrangThai,
-        mucDoGoiY: quyDoiThetaSangMucDo(rec.nangLucIRT),
+        mucDoGoiY: quyDoiThetaSangMucDo(thetaEff),
       };
     })
     .sort((a, b) => a.xacSuatHieuDung - b.xacSuatHieuDung);

@@ -108,10 +108,14 @@ export async function nopBaiTapTongHopAction(
         chuDeId: bt.chuDeId,
         dangBai: bt.dangBai,
         mucDo: bt.mucDo,
+        loai: bt.loai,
+        dapAnJson: bt.dapAn,
         dung,
         thoiGianGiay: avgTimePerQ,
         doKhoIRT: bt.doKhoIRT,
         doPhanBiet: bt.doPhanBiet,
+        soLanLam: bt.soLanLam,
+        soLanDung: bt.soLanDung,
         lopId: bt.chuDe.chuong.lopId,
       });
     }

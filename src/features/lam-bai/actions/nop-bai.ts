@@ -51,17 +51,21 @@ export async function nopBaiTapAction(
     },
   });
 
-  // 2. Cập nhật Mô hình người học hợp nhất: BKT + IRT 3PL + PFA + FSRS/SM-2
+  // 2. Cập nhật Mô hình người học hợp nhất: BKT + IRT 3PL + PFA + FSRS
   const adaptiveUpdate = await capNhatMoHinhNguoiHoc({
     nguoiDungId: session.user.id,
     baiTapId: baiTap.id,
     chuDeId: baiTap.chuDeId,
     dangBai: baiTap.dangBai,
     mucDo: baiTap.mucDo,
+    loai: baiTap.loai,
+    dapAnJson: baiTap.dapAn,
     dung,
     thoiGianGiay,
     doKhoIRT: baiTap.doKhoIRT,
     doPhanBiet: baiTap.doPhanBiet,
+    soLanLam: baiTap.soLanLam,
+    soLanDung: baiTap.soLanDung,
     lopId,
   });
 

@@ -137,10 +137,10 @@ export function BangPhanTichNangLuc({ data }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
           <div className="flex items-center gap-2 font-bold text-slate-800 text-sm">
-            <TrendingUp className="w-4 h-4 text-blue-600" /> Biểu đồ Năng lực: Mức độ thành thạo & Khả năng ghi nhớ
+            <TrendingUp className="w-4 h-4 text-blue-600" /> Biểu đồ Năng lực: Chỉ số làm chủ & Khả năng ghi nhớ
           </div>
           <p className="text-xs text-slate-500">
-            Đánh giá mức độ làm chủ kiến thức và khả năng ghi nhớ theo từng bài học (ngưỡng làm chủ 85%).
+            Đánh giá chỉ số làm chủ tích hợp và khả năng ghi nhớ theo từng bài học (ngưỡng thành thạo 85%).
           </p>
           {chartData.length > 0 ? (
             <div className="h-[290px] w-full">
@@ -158,7 +158,7 @@ export function BangPhanTichNangLuc({ data }: Props) {
                   />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   <Radar
-                    name="Độ thành thạo (%)"
+                    name="Chỉ số làm chủ (%)"
                     dataKey="doThanhThao"
                     stroke="#2563eb"
                     fill="#3b82f6"
@@ -237,7 +237,7 @@ export function BangPhanTichNangLuc({ data }: Props) {
                         {item.dangBai}
                       </h4>
                       <p className="text-[11px] text-slate-600">
-                        Độ thành thạo: <strong>{pct}%</strong> • Ghi nhớ:{" "}
+                        Chỉ số làm chủ: <strong>{pct}%</strong> • Ghi nhớ:{" "}
                         <strong>{retentionPct}%</strong> (Mục tiêu 85%)
                         {item.doBenTriNho && (
                           <>
