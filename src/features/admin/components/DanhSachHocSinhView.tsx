@@ -71,7 +71,7 @@ export function DanhSachHocSinhView({ danhSachHocSinh }: Props) {
     const totalSessions = filteredList.reduce((acc, cur) => acc + cur.tongSoLanLuyen, 0);
     const avgMastery =
       total > 0
-        ? Math.round(filteredList.reduce((acc, cur) => acc + cur.doThanhThaoTB, 0) / total)
+        ? Number((filteredList.reduce((acc, cur) => acc + cur.doThanhThaoTB, 0) / total).toFixed(1))
         : 0;
     const totalMasteredKC = filteredList.reduce((acc, cur) => acc + cur.soDangThanhThao, 0);
 

@@ -230,7 +230,7 @@ export default async function AdminDashboardPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {recentPhienLuyen.map((phien) => {
-                  const masteryPercent = Math.round(phien.doThanhThao * 100);
+                  const masteryPercent = Number((phien.doThanhThao * 100).toFixed(1));
                   return (
                     <tr key={phien.id} className="hover:bg-slate-50/60 transition-colors">
                       <td className="py-3 px-3">
@@ -269,7 +269,7 @@ export default async function AdminDashboardPage() {
                               : "bg-amber-100 text-amber-800 border border-amber-200"
                           }`}
                         >
-                          {masteryPercent}%
+                          {masteryPercent.toFixed(1)}%
                         </span>
                       </td>
                       <td className="py-3 px-3 text-right text-slate-500">

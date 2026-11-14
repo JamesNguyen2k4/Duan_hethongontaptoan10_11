@@ -145,7 +145,7 @@ export function PhongLamBaiForm({
     }
   };
 
-  // Tính % độ thành thạo hiển thị trực tiếp (cập nhật ngay khi học sinh vừa bấm Nộp bài)
+  // Tính % độ thành thạo hiển thị trực tiếp dạng thập phân (1 chữ số thập phân để theo dõi chính xác từng biến động)
   const rawBefore =
     ketQua?.adaptiveUpdate?.xacSuatThanhThaoTruoc ??
     adaptiveContext?.xacSuatThanhThao ??
@@ -155,19 +155,9 @@ export function PhongLamBaiForm({
     adaptiveContext?.xacSuatThanhThao ??
     0;
 
-  let masteryBefore = Math.round(rawBefore * 100);
-  let masteryCurrent = Math.round(rawCurrent * 100);
-
-  // Bảo đảm tính nhất quán trực quan:
-  // Nếu làm SAI và trước đó có điểm, độ thành thạo hiển thị PHẢI giảm ít nhất 1-2%
-  if (ketQua) {
-    if (ketQua.ketQua !== "DUNG" && masteryBefore > 0 && masteryCurrent >= masteryBefore) {
-      masteryCurrent = Math.max(1, masteryBefore - 2);
-    } else if (ketQua.ketQua === "DUNG" && masteryCurrent <= masteryBefore && masteryBefore < 98) {
-      masteryCurrent = masteryBefore + 1;
-    }
-  }
-  const masteryDelta = masteryCurrent - masteryBefore;
+  const masteryBefore = Number((rawBefore * 100).toFixed(1));
+  const masteryCurrent = Number((rawCurrent * 100).toFixed(1));
+  const masteryDelta = Number((masteryCurrent - masteryBefore).toFixed(1));
 
   // Xử lý Dừng luyện tập: Lưu phiên làm 1 lần luyện tập kèm % thành thạo vào CSDL
   const handleDungLuyenTap = async (destinationUrl?: string) => {
@@ -347,7 +337,7 @@ export function PhongLamBaiForm({
                     : "bg-amber-100 text-amber-800"
                 }`}
               >
-                {masteryCurrent}%
+                {masteryCurrent.toFixed(1)}%
               </span>
               {ketQua && masteryDelta !== 0 && (
                 <span
@@ -355,7 +345,7 @@ export function PhongLamBaiForm({
                     masteryDelta > 0 ? "text-emerald-600" : "text-rose-600"
                   }`}
                 >
-                  ({masteryDelta > 0 ? `+${masteryDelta}%` : `${masteryDelta}%`})
+                  ({masteryDelta > 0 ? `+${masteryDelta.toFixed(1)}%` : `${masteryDelta.toFixed(1)}%`})
                 </span>
               )}
             </div>
@@ -504,15 +494,15 @@ export function PhongLamBaiForm({
                   <div className="flex items-center gap-1.5 font-bold text-slate-800">
                     <TrendingUp className="w-3.5 h-3.5 text-blue-600" />
                     <span>
-                      Thành thạo: {masteryBefore}% →{" "}
-                      <strong className="text-blue-700">{masteryCurrent}%</strong>
+                      Thành thạo: {masteryBefore.toFixed(1)}% →{" "}
+                      <strong className="text-blue-700">{masteryCurrent.toFixed(1)}%</strong>
                       {masteryDelta !== 0 && (
                         <span
                           className={`ml-1 font-bold ${
                             masteryDelta > 0 ? "text-emerald-600" : "text-rose-600"
                           }`}
                         >
-                          ({masteryDelta > 0 ? `+${masteryDelta}%` : `${masteryDelta}%`})
+                          ({masteryDelta > 0 ? `+${masteryDelta.toFixed(1)}%` : `${masteryDelta.toFixed(1)}%`})
                         </span>
                       )}
                     </span>

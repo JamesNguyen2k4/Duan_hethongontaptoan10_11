@@ -233,12 +233,12 @@ export async function layBaoCaoChiTietHocSinhAction(
         const nangLuc = nangLucMap.get(key);
         const historyForDang = lichSuByDangMap.get(key) || [];
 
-        // Lấy % thành thạo hiện tại
+        // Lấy % thành thạo hiện tại (dạng số thập phân 1 chữ số)
         let mastery = 0;
         if (nangLuc) {
-          mastery = Math.round(nangLuc.xacSuatThanhThao * 100);
+          mastery = Number((nangLuc.xacSuatThanhThao * 100).toFixed(1));
         } else if (historyForDang.length > 0) {
-          mastery = Math.round(historyForDang[0].doThanhThao * 100);
+          mastery = Number((historyForDang[0].doThanhThao * 100).toFixed(1));
         }
 
         totalMasterySum += mastery;
@@ -273,7 +273,7 @@ export async function layBaoCaoChiTietHocSinhAction(
           cacLanLuyen: historyForDang.map((h, idx) => ({
             lanThu: historyForDang.length - idx,
             id: h.id,
-            doThanhThao: Math.round(h.doThanhThao * 100),
+            doThanhThao: Number((h.doThanhThao * 100).toFixed(1)),
             soCauDaLam: h.soCauDaLam,
             soCauDung: h.soCauDung,
             thoiGianGiay: h.thoiGianGiay,
@@ -285,9 +285,11 @@ export async function layBaoCaoChiTietHocSinhAction(
       // Độ thành thạo trung bình của Bài học
       const avgMasteryBai =
         danhSachDangBai.length > 0
-          ? Math.round(
-              danhSachDangBai.reduce((acc, cur) => acc + cur.doThanhThao, 0) /
+          ? Number(
+              (
+                danhSachDangBai.reduce((acc, cur) => acc + cur.doThanhThao, 0) /
                 danhSachDangBai.length
+              ).toFixed(1)
             )
           : 0;
 
@@ -333,7 +335,7 @@ export async function layBaoCaoChiTietHocSinhAction(
       lanThu: `Lần ${idx + 1}`,
       dangBai: item.dangBai,
       chuDeTen: item.chuDe.ten,
-      doThanhThao: Math.round(item.doThanhThao * 100),
+      doThanhThao: Number((item.doThanhThao * 100).toFixed(1)),
       soCauDung: item.soCauDung,
       soCauDaLam: item.soCauDaLam,
       thoiGianPhut: Number((item.thoiGianGiay / 60).toFixed(1)),
@@ -352,7 +354,7 @@ export async function layBaoCaoChiTietHocSinhAction(
 
   const doThanhThaoTB =
     totalDangsInGrade > 0
-      ? Math.round(totalMasterySum / totalDangsInGrade)
+      ? Number((totalMasterySum / totalDangsInGrade).toFixed(1))
       : 0;
 
   return {
@@ -381,7 +383,7 @@ export async function layBaoCaoChiTietHocSinhAction(
       chuDeId: item.chuDeId,
       chuDeTen: item.chuDe.ten,
       dangBai: item.dangBai,
-      doThanhThao: Math.round(item.doThanhThao * 100),
+      doThanhThao: Number((item.doThanhThao * 100).toFixed(1)),
       soCauDaLam: item.soCauDaLam,
       soCauDung: item.soCauDung,
       thoiGianGiay: item.thoiGianGiay,

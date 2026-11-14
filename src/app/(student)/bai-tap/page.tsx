@@ -85,10 +85,12 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
 
     const avgMastery =
       nangLucDangs.length > 0
-        ? Math.round(
-            (nangLucDangs.reduce((s, d) => s + d.xacSuatHieuDung, 0) /
-              nangLucDangs.length) *
+        ? Number(
+            (
+              (nangLucDangs.reduce((s, d) => s + d.xacSuatHieuDung, 0) /
+                nangLucDangs.length) *
               100
+            ).toFixed(1)
           )
         : 0;
 
@@ -278,7 +280,7 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
 
           <div className="grid grid-cols-1 gap-4">
             {nangLucDangs.map((dang, idx) => {
-              const masteryPct = Math.round(dang.xacSuatHieuDung * 100);
+              const masteryPct = Number((dang.xacSuatHieuDung * 100).toFixed(1));
               const retentionPct = Math.round(dang.doNhoHienTai * 100);
 
               let badgeStyle =
@@ -359,7 +361,7 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
                                   : "text-blue-600"
                               }
                             >
-                              {masteryPct}%
+                              {masteryPct.toFixed(1)}%
                             </strong>{" "}
                             <span className="text-slate-400 font-normal">
                               (Mục tiêu: 85%)

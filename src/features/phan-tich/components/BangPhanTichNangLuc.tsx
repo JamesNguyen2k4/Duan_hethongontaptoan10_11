@@ -45,7 +45,7 @@ export function BangPhanTichNangLuc({ data }: Props) {
   let chartData = data.danhSachChuDe.map((cd) => ({
     subject: cd.tenChuDe.replace(/^Bài \d+\.\s*/, "").slice(0, 18),
     fullSubject: cd.tenChuDe,
-    doThanhThao: Math.round(cd.doThanhThao * 100),
+    doThanhThao: Number((cd.doThanhThao * 100).toFixed(1)),
     doNho: Math.round((cd.doNhoTrungBinh ?? 1) * 100),
   }));
 
@@ -209,7 +209,7 @@ export function BangPhanTichNangLuc({ data }: Props) {
           {dangBaiCanOnList.length > 0 ? (
             <div className="space-y-3 max-h-[290px] overflow-y-auto pr-1">
               {dangBaiCanOnList.map((item) => {
-                const pct = Math.round(item.xacSuatHieuDung * 100);
+                const pct = (item.xacSuatHieuDung * 100).toFixed(1);
                 const retentionPct = Math.round(item.doNhoHienTai * 100);
                 const isFSRSDue = item.trangThai === "CAN_ON_LAI";
                 return (
@@ -310,7 +310,7 @@ export function BangPhanTichNangLuc({ data }: Props) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {danhSachDangBai.map((d) => {
-              const pEffPct = Math.round(d.xacSuatHieuDung * 100);
+              const pEffPct = Number((d.xacSuatHieuDung * 100).toFixed(1));
               const rPct = Math.round(d.doNhoHienTai * 100);
 
               return (
