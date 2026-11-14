@@ -11,15 +11,29 @@ const NAV_ITEMS = [
   { href: "/dien-dan", label: "Diễn đàn" },
 ];
 
-export function ThanhDieuHuongNav({ className = "" }: { className?: string }) {
+export function ThanhDieuHuongNav({
+  className = "",
+  vaiTro,
+}: {
+  className?: string;
+  vaiTro?: string;
+}) {
   const pathname = usePathname();
+  const isQuanTri = vaiTro === "QUAN_TRI" || vaiTro === "GIAO_VIEN";
+
+  const navItems = [
+    ...NAV_ITEMS,
+    ...(isQuanTri ? [{ href: "/admin", label: "Trang Quản trị" }] : []),
+  ];
 
   return (
     <nav className={cn("flex items-center gap-2 text-sm font-medium", className)}>
-      {NAV_ITEMS.map((item) => {
+      {navItems.map((item) => {
         const isActive =
           item.href === "/dashboard"
             ? pathname === "/dashboard"
+            : item.href === "/admin"
+            ? pathname.startsWith("/admin")
             : pathname.startsWith(item.href) ||
               (item.href === "/bai-tap" && pathname.startsWith("/lam-bai"));
 
@@ -43,22 +57,28 @@ export function ThanhDieuHuongNav({ className = "" }: { className?: string }) {
   );
 }
 
-export function MobileBottomNav() {
+export function MobileBottomNav({ vaiTro }: { vaiTro?: string }) {
   const pathname = usePathname();
+  const isQuanTri = vaiTro === "QUAN_TRI" || vaiTro === "GIAO_VIEN";
 
-  const MOBILE_ITEMS = [
-    { href: "/dashboard", label: "Tổng quan", icon: "🏠" },
-    { href: "/ly-thuyet", label: "Lý thuyết", icon: "📚" },
-    { href: "/bai-tap", label: "Luyện tập", icon: "🎯" },
-    { href: "/dien-dan", label: "Diễn đàn", icon: "💬" },
+  const mobileItems = [
+    ...[
+      { href: "/dashboard", label: "Tổng quan", icon: "🏠" },
+      { href: "/ly-thuyet", label: "Lý thuyết", icon: "📚" },
+      { href: "/bai-tap", label: "Luyện tập", icon: "🎯" },
+      { href: "/dien-dan", label: "Diễn đàn", icon: "💬" },
+    ],
+    ...(isQuanTri ? [{ href: "/admin", label: "Quản trị", icon: "⚙️" }] : []),
   ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden h-16 items-center justify-around border-t bg-white px-2 shadow-lg">
-      {MOBILE_ITEMS.map((item) => {
+      {mobileItems.map((item) => {
         const isActive =
           item.href === "/dashboard"
             ? pathname === "/dashboard"
+            : item.href === "/admin"
+            ? pathname.startsWith("/admin")
             : pathname.startsWith(item.href) ||
               (item.href === "/bai-tap" && pathname.startsWith("/lam-bai"));
 

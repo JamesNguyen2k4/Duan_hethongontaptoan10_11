@@ -87,16 +87,6 @@ export default async function DashboardPage() {
               <Sparkles className="w-4 h-4" /> Bắt đầu Luyện tập thích ứng →
             </Link>
           )}
-
-          {(session.user.role === "QUAN_TRI" ||
-            session.user.role === "GIAO_VIEN") && (
-            <Link
-              href="/admin"
-              className="px-4 py-2.5 bg-white text-slate-900 hover:bg-slate-100 font-bold text-xs rounded-xl shadow-md transition-all"
-            >
-              Trang Quản trị →
-            </Link>
-          )}
         </div>
       </div>
 

@@ -17,6 +17,8 @@ export default async function StudentLayout({
   const session = await auth();
   if (!session) redirect("/dang-nhap");
   const lopHienTai = await layLopHienTai();
+  const isQuanTri =
+    session.user?.role === "QUAN_TRI" || session.user?.role === "GIAO_VIEN";
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -26,6 +28,14 @@ export default async function StudentLayout({
           Σ Ôn Tập Toán
         </Link>
         <div className="flex items-center gap-2">
+          {isQuanTri && (
+            <Link
+              href="/admin"
+              className="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200"
+            >
+              Quản trị
+            </Link>
+          )}
           <BoChuyenLop lopHienTai={lopHienTai} />
           <NutDangXuat />
         </div>
@@ -39,7 +49,7 @@ export default async function StudentLayout({
         >
           Σ Ôn Tập Toán
         </Link>
-        <ThanhDieuHuongNav />
+        <ThanhDieuHuongNav vaiTro={session.user?.role} />
         <div className="ml-auto flex items-center gap-3">
           <BoChuyenLop lopHienTai={lopHienTai} />
           <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
@@ -53,7 +63,7 @@ export default async function StudentLayout({
       <main className="flex-1 pb-20 md:pb-8">{children}</main>
 
       {/* Thanh điều hướng dưới đáy trên mobile */}
-      <MobileBottomNav />
+      <MobileBottomNav vaiTro={session.user?.role} />
     </div>
   );
 }
