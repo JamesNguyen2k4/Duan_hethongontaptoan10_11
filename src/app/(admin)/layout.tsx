@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { LayoutDashboard, BookOpen, Layers, Users, LogOut, ShieldCheck } from "lucide-react";
+import { NutDangXuat } from "@/components/shared/NutDangXuat";
 
 export default async function AdminLayout({
   children,
@@ -65,12 +66,10 @@ export default async function AdminLayout({
             <p className="text-[11px] text-slate-400 truncate">{session.user.email}</p>
           </div>
 
-          <a
-            href="/api/auth/signout"
+          <NutDangXuat
+            showIcon
             className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-rose-400 hover:bg-rose-500/10 transition-colors w-full"
-          >
-            <LogOut className="w-4 h-4" /> Đăng xuất
-          </a>
+          />
         </div>
       </aside>
 

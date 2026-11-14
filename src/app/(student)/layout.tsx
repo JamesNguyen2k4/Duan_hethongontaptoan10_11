@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { layLopHienTai } from "@/lib/lop-context";
 import { BoChuyenLop } from "@/components/shared/BoChuyenLop";
+import { NutDangXuat } from "@/components/shared/NutDangXuat";
 
 export default async function StudentLayout({
   children,
@@ -63,12 +64,7 @@ export default async function StudentLayout({
           <span className="text-sm text-muted-foreground">
             {session.user?.name}
           </span>
-          <a
-            href="/api/auth/signout"
-            className="text-xs text-muted-foreground hover:text-destructive transition-colors"
-          >
-            Đăng xuất
-          </a>
+          <NutDangXuat />
         </div>
       </header>
 
