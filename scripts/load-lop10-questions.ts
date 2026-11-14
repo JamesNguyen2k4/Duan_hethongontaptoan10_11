@@ -37,6 +37,8 @@ async function main() {
 
   const preparedQuestions: any[] = [];
 
+  const clean = (s: string | null | undefined): string => (s ? s.replace(/\0/g, "") : "");
+
   for (const [chuDeId, questions] of byChuDe.entries()) {
     const config = DANH_MUC_DANG_BAI_LOP10[chuDeId];
     const dangs = config?.dangs || [];
@@ -53,14 +55,14 @@ async function main() {
       const dangTen = dangs[dangIndex]?.ten || `Dạng ${dangIndex + 1}`;
 
       preparedQuestions.push({
-        id: q.id,
-        chuDeId: q.chuDeId,
-        deBai: q.deBai,
+        id: clean(q.id),
+        chuDeId: clean(q.chuDeId),
+        deBai: clean(q.deBai),
         loai: q.loai,
         mucDo: q.mucDo,
-        dapAn: q.dapAn,
-        loiGiaiChiTiet: q.loiGiaiChiTiet,
-        dangBai: dangTen,
+        dapAn: clean(q.dapAn),
+        loiGiaiChiTiet: clean(q.loiGiaiChiTiet),
+        dangBai: clean(dangTen),
         doKhoIRT: q.doKhoIRT,
         doPhanBiet: q.doPhanBiet,
       });

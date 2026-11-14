@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ─────────────────────────────────────────────
@@ -354,7 +355,7 @@ model HinhAnh {
   id           String    @id @default(cuid())
   baiVietId    String?
   binhLuanId   String?
-  duLieuBase64 String    @db.LongText
+  duLieuBase64 String    @db.Text
   mimeType     String    @default("image/jpeg")
   dungLuong    Int       @default(0)
   taoLuc       DateTime  @default(now())
