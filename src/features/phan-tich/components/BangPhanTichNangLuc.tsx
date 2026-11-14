@@ -41,11 +41,32 @@ interface Props {
 }
 
 export function BangPhanTichNangLuc({ data }: Props) {
-  const chartData = data.danhSachChuDe.map((cd) => ({
+  let chartData = data.danhSachChuDe.map((cd) => ({
     subject: cd.tenChuDe.replace(/^Bài \d+\.\s*/, "").slice(0, 18),
+    fullSubject: cd.tenChuDe,
     doThanhThao: Math.round(cd.doThanhThao * 100),
     doNho: Math.round((cd.doNhoTrungBinh ?? 1) * 100),
   }));
+
+  // Đảm bảo biểu đồ Mạng nhện (RadarChart) luôn có ít nhất 3 trục để hình thành mạng lưới đa giác tròn
+  if (chartData.length > 0 && chartData.length < 3) {
+    const defaultAxes = [
+      { subject: "Mệnh đề & Tập hợp", fullSubject: "Chương 1. Mệnh đề và tập hợp" },
+      { subject: "Hệ thức lượng tam giác", fullSubject: "Chương 3. Hệ thức lượng trong tam giác" },
+      { subject: "Vectơ & Tọa độ", fullSubject: "Chương 4. Vectơ" },
+    ];
+    for (const axis of defaultAxes) {
+      if (chartData.length >= 3) break;
+      if (!chartData.some((c) => c.subject.includes(axis.subject) || axis.subject.includes(c.subject))) {
+        chartData.push({
+          subject: axis.subject,
+          fullSubject: axis.fullSubject,
+          doThanhThao: 0,
+          doNho: 0,
+        });
+      }
+    }
+  }
 
   const tiLeTong =
     data.tongBaiDaLam > 0
@@ -99,14 +120,14 @@ export function BangPhanTichNangLuc({ data }: Props) {
 
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Cần ôn tập lại
+            Cần ôn tập & củng cố
           </p>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-3xl font-black text-amber-600">
               {data.soDangCanOn ?? dangBaiCanOnList.length}
             </span>
             <span className="text-xs text-slate-400">
-              dạng đến hạn ôn (FSRS)
+              dạng bài (&lt; 85%)
             </span>
           </div>
         </div>
@@ -131,7 +152,10 @@ export function BangPhanTichNangLuc({ data }: Props) {
                     tick={{ fontSize: 10, fill: "#64748b" }}
                   />
                   <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 9 }} />
-                  <Tooltip />
+                  <Tooltip
+                    formatter={(value: any, name: any) => [`${value}%`, name]}
+                    labelFormatter={(_, payload) => payload?.[0]?.payload?.fullSubject || ""}
+                  />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   <Radar
                     name="Độ thành thạo (%)"
@@ -165,7 +189,7 @@ export function BangPhanTichNangLuc({ data }: Props) {
         <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 font-bold text-slate-800 text-sm">
-              <Repeat className="w-4 h-4 text-amber-600" /> Danh sách Dạng bài cần ưu tiên Ôn tập
+              <Repeat className="w-4 h-4 text-amber-600" /> Danh sách Dạng bài cần ưu tiên Ôn tập & Củng cố
             </div>
             <span className="text-[11px] font-semibold text-slate-400">
               Ưu tiên theo độ cần ôn
@@ -177,20 +201,31 @@ export function BangPhanTichNangLuc({ data }: Props) {
               {dangBaiCanOnList.map((item) => {
                 const pct = Math.round(item.xacSuatHieuDung * 100);
                 const retentionPct = Math.round(item.doNhoHienTai * 100);
+                const isFSRSDue = item.trangThai === "CAN_ON_LAI";
                 return (
                   <div
                     key={item.id}
-                    className="p-4 bg-amber-50/60 border border-amber-200 rounded-xl flex items-center justify-between gap-3"
+                    className={`p-4 rounded-xl flex items-center justify-between gap-3 border ${
+                      isFSRSDue
+                        ? "bg-amber-50/60 border-amber-200"
+                        : "bg-blue-50/60 border-blue-200"
+                    }`}
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[10px] font-bold bg-white text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md">
                           {item.tenChuDe}
                         </span>
-                        <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">
-                          {item.nhanTrangThai}
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                            isFSRSDue
+                              ? "bg-amber-100 text-amber-900"
+                              : "bg-blue-100 text-blue-900"
+                          }`}
+                        >
+                          {isFSRSDue ? item.nhanTrangThai : `Cần củng cố (${pct}%)`}
                         </span>
-                        {item.thongTinLich && (
+                        {item.thongTinLich && isFSRSDue && (
                           <span
                             className={`text-[10px] px-2 py-0.5 rounded-md border ${item.thongTinLich.mauSacBadge}`}
                           >
@@ -203,7 +238,7 @@ export function BangPhanTichNangLuc({ data }: Props) {
                       </h4>
                       <p className="text-[11px] text-slate-600">
                         Độ thành thạo: <strong>{pct}%</strong> • Ghi nhớ:{" "}
-                        <strong>{retentionPct}%</strong> (Mục tiêu 90%)
+                        <strong>{retentionPct}%</strong> (Mục tiêu 85%)
                         {item.doBenTriNho && (
                           <>
                             {" "}• Độ bền:{" "}
@@ -219,9 +254,13 @@ export function BangPhanTichNangLuc({ data }: Props) {
                       href={`/lam-bai/chu-de/${
                         item.chuDeId
                       }?dangBai=${encodeURIComponent(item.dangBai)}`}
-                      className="text-xs bg-amber-500 text-white font-bold px-3.5 py-2 rounded-xl hover:bg-amber-600 transition-colors whitespace-nowrap shadow-xs shrink-0"
+                      className={`text-xs font-bold px-3.5 py-2 rounded-xl transition-colors whitespace-nowrap shadow-xs shrink-0 ${
+                        isFSRSDue
+                          ? "bg-amber-500 text-white hover:bg-amber-600"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
+                      }`}
                     >
-                      Ôn tập ngay
+                      {isFSRSDue ? "Ôn tập ngay" : "Củng cố ngay"}
                     </Link>
                   </div>
                 );

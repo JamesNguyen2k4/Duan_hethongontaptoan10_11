@@ -211,13 +211,21 @@ export async function phanTichDiemYeuHocSinh(
     if (laDiemYeu) diemYeuList.push(item);
   }
 
-  // 5. Chỉ lọc các dạng bài THỰC SỰ ĐẾN HẠN ÔN TẬP THEO LỊCH RIÊNG FSRS
-  // (trangThai === "CAN_ON_LAI": khi xác suất nhớ R < 90% hoặc đã tới ngày hẹn ngayOnKeTiep)
-  // Các dạng bài đang rèn luyện bình thường (chưa tới lịch hẹn) có tiến trình học tập riêng,
-  // tuyệt đối không bị gom nhầm vào mục "Cần ôn tập lại".
+  // 5. Danh sách các dạng bài cần ưu tiên Ôn tập & Củng cố:
+  // - Bao gồm dạng bài đến hạn ôn tập ngắt quãng FSRS (trangThai === "CAN_ON_LAI")
+  // - VÀ các dạng bài đang rèn luyện nhưng có độ thành thạo thấp (< 70%) cần củng cố
   const dangBaiCanOnList = danhSachDangBai
-    .filter((d) => d.trangThai === "CAN_ON_LAI")
-    .sort((a, b) => a.doNhoHienTai - b.doNhoHienTai);
+    .filter(
+      (d) =>
+        d.trangThai === "CAN_ON_LAI" ||
+        (d.trangThai === "DANG_REN_LUYEN" && d.xacSuatHieuDung < 0.7)
+    )
+    .sort((a, b) => {
+      // Ưu tiên dạng đến hạn ôn FSRS lên đầu, tiếp đến là dạng có pEff thấp nhất
+      if (a.trangThai === "CAN_ON_LAI" && b.trangThai !== "CAN_ON_LAI") return -1;
+      if (b.trangThai === "CAN_ON_LAI" && a.trangThai !== "CAN_ON_LAI") return 1;
+      return a.xacSuatHieuDung - b.xacSuatHieuDung;
+    });
 
   const soDangThanhThao = danhSachDangBai.filter(
     (d) => d.trangThai === "THANH_THAO"

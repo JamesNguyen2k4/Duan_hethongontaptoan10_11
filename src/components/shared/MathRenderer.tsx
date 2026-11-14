@@ -12,7 +12,59 @@ interface MathRendererProps {
   className?: string;
 }
 
+/**
+ * Tiền xử lý nội dung để bảo đảm các công thức LaTeX, phân số \frac,
+ * căn thức \sqrt, vectơ \vec và tọa độ điểm luôn được bọc trong $...$
+ * kể cả khi dữ liệu thô chưa bọc math delimiters.
+ */
+function preprocessMathContent(content: string): string {
+  if (!content) return "";
+
+  // 1. Dọn dẹp ký tự điều khiển font scan và dấu trừ Unicode
+  let s = content
+    .replace(/[\u0000\u0010]/g, "(")
+    .replace(/[\u0001\u0011]/g, ")")
+    .replace(/\u0008/g, "{")
+    .replace(/[\u0002-\u0007\u000B\u000C\u000E-\u001F]/g, "")
+    .replace(/\u2212/g, "-");
+
+  // Xóa newline thừa trong tọa độ: C\n(\n\sqrt{2} -> C(\sqrt{2}
+  s = s.replace(/([A-Z])\s*\n\s*\(/g, "$1(");
+  s = s.replace(/\(\s*\n\s*/g, "(");
+  s = s.replace(/\s*\n\s*\)/g, ")");
+
+  // 2. Tách theo các khối toán học đã có ($...$ và $$...$$) để không bọc đúp
+  const parts = s.split(/(\$\$[\s\S]*?\$\$|\$[^$]*?\$)/g);
+
+  for (let i = 0; i < parts.length; i += 2) {
+    let p = parts[i];
+    if (!p) continue;
+
+    // Bọc tọa độ hoàn chỉnh: M(1; \frac{3}{2}), C(\sqrt{2}; \sqrt{2})
+    p = p.replace(
+      /\b([A-Z]\s*\([^\)]*\\(?:frac|sqrt)[^\)]*\))/g,
+      (m) => `$${m.replace(/\s+/g, " ").replace(/;\s*/g, "; ")}$`
+    );
+
+    // Tách lại để các tọa độ vừa bọc không bị bọc đúp lần 2
+    const subParts = p.split(/(\$[^$]*?\$)/g);
+    for (let j = 0; j < subParts.length; j += 2) {
+      if (!subParts[j]) continue;
+      // Bọc các lệnh LaTeX độc lập còn sót ngoài $: \frac{a}{b}, \sqrt{x}, \vec{v}
+      subParts[j] = subParts[j].replace(
+        /(\\(?:frac\{[^{}]*\}\{[^{}]*\}|sqrt\{[^{}]*\}|vec\{[^{}]*\}))/g,
+        "$$$1$"
+      );
+    }
+    parts[i] = subParts.join("");
+  }
+
+  return parts.join("");
+}
+
 export function MathRenderer({ content, className = "" }: MathRendererProps) {
+  const processed = preprocessMathContent(content);
+
   return (
     <div className={`prose max-w-none text-slate-800 ${className}`}>
       <ReactMarkdown
@@ -39,7 +91,7 @@ export function MathRenderer({ content, className = "" }: MathRendererProps) {
           li: ({ node, ...props }) => <li className="leading-relaxed pl-1" {...props} />,
         }}
       >
-        {content}
+        {processed}
       </ReactMarkdown>
     </div>
   );
