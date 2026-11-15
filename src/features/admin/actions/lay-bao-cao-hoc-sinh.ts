@@ -27,10 +27,11 @@ function tinhSoPhienTuLanLam(lanLams: { thoiDiem: Date }[]): number {
 }
 
 /**
- * 1. Lấy danh sách học sinh theo lớp học kèm các chỉ số tổng hợp
+ * 1. Lấy danh sách học sinh theo khối lớp ôn tập kèm các chỉ số tổng hợp
+ *    (Dữ liệu tách bạch 100% giữa Toán 10 và Toán 11)
  */
 export async function layDanhSachHocSinhAction({
-  lopId,
+  lopId = "lop-10",
   tuKhoa,
 }: {
   lopId?: string;
@@ -44,18 +45,13 @@ export async function layDanhSachHocSinhAction({
     throw new Error("Không có quyền truy cập");
   }
 
-  // Điều kiện lọc học sinh
+  // Khối lớp mục tiêu (chuẩn hóa chỉ nhận 'lop-10' hoặc 'lop-11')
+  const lopMucTieu = lopId === "lop-11" ? "lop-11" : "lop-10";
+
+  // Điều kiện tìm kiếm học sinh
   const whereCondition: any = {
     vaiTro: "HOC_SINH",
   };
-
-  if (lopId && lopId !== "all") {
-    whereCondition.OR = [
-      { lopDangHocId: lopId },
-      { lichSuLuyenTaps: { some: { lopId } } },
-      { lanLamBais: { some: { lopId } } },
-    ];
-  }
 
   if (tuKhoa && tuKhoa.trim()) {
     const kw = tuKhoa.trim();
@@ -76,7 +72,6 @@ export async function layDanhSachHocSinhAction({
       tenHienThi: true,
       email: true,
       anhDaiDien: true,
-      lopDangHocId: true,
       taoLuc: true,
       lichSuLuyenTaps: {
         select: {
@@ -115,9 +110,7 @@ export async function layDanhSachHocSinhAction({
   });
 
   return hocSinhs.map((hs) => {
-    // Nếu lọc theo lopId cụ thể thì ưu tiên số liệu của lớp đó, nếu xem tất cả thì hiển thị theo lớp học sinh đang học
-    const lopMucTieu = (lopId && lopId !== "all") ? lopId : (hs.lopDangHocId || "lop-10");
-
+    // Chỉ lấy lịch sử, lần làm, năng lực thuộc lopMucTieu (Toán 10 hoặc Toán 11)
     const filteredLichSu = hs.lichSuLuyenTaps.filter(
       (l) => l.lopId === lopMucTieu || (!l.lopId && lopMucTieu === "lop-10")
     );
@@ -127,6 +120,12 @@ export async function layDanhSachHocSinhAction({
     const filteredNangLuc = hs.nangLucDangBais.filter(
       (n) => n.lopId === lopMucTieu || (!n.lopId && lopMucTieu === "lop-10")
     );
+
+    // Xác định học sinh đã từng học kiến thức của khối lớp này chưa
+    const daHocLopNay =
+      filteredLanLam.length > 0 ||
+      filteredLichSu.length > 0 ||
+      filteredNangLuc.some((n) => n.soLanLuyen > 0);
 
     const phienTuLanLam = tinhSoPhienTuLanLam(filteredLanLam);
     const tongSoLanLuyen = Math.max(
@@ -143,7 +142,7 @@ export async function layDanhSachHocSinhAction({
       (n) => n.xacSuatThanhThao >= 0.85
     ).length;
 
-    // Độ thành thạo trung bình các dạng bài đã rèn luyện
+    // Độ thành thạo trung bình các dạng bài đã rèn luyện của riêng khối lớp này
     const practicedNangLuc = filteredNangLuc.filter((n) => n.soLanLuyen > 0);
     const doThanhThaoTB =
       practicedNangLuc.length > 0
@@ -159,22 +158,11 @@ export async function layDanhSachHocSinhAction({
       filteredLanLam[0]?.thoiDiem ||
       null;
 
-    // Kiểm tra số lần luyện ở lớp học khác (nếu học sinh luyện cả 2 khối lớp)
-    const khacLopId = lopMucTieu === "lop-10" ? "lop-11" : "lop-10";
-    const khacLichSu = hs.lichSuLuyenTaps.filter((l) => l.lopId === khacLopId);
-    const khacLanLam = hs.lanLamBais.filter((l) => l.lopId === khacLopId);
-    const soLanLuyenLopKhac = Math.max(
-      khacLichSu.length,
-      tinhSoPhienTuLanLam(khacLanLam),
-      khacLanLam.length > 0 ? 1 : 0
-    );
-
     return {
       id: hs.id,
       tenHienThi: hs.tenHienThi,
       email: hs.email,
       anhDaiDien: hs.anhDaiDien,
-      lopDangHocId: hs.lopDangHocId || "lop-10",
       taoLuc: hs.taoLuc,
       tongSoLanLuyen,
       tongCauDaLam,
@@ -183,8 +171,8 @@ export async function layDanhSachHocSinhAction({
       soDangThanhThao,
       doThanhThaoTB,
       lanLuyenCuoi,
-      soLanLuyenLopKhac,
-      tenLopKhac: khacLopId === "lop-10" ? "Toán 10" : "Toán 11",
+      daHocLopNay,
+      lopMucTieu,
     };
   });
 }

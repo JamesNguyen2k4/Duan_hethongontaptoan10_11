@@ -22,8 +22,10 @@ export default async function AdminHocSinhPage({ searchParams }: Props) {
     redirect("/dashboard");
   }
 
+  const currentLopId = searchParams?.lopId === "lop-11" ? "lop-11" : "lop-10";
+
   const danhSachHocSinh = await layDanhSachHocSinhAction({
-    lopId: searchParams?.lopId,
+    lopId: currentLopId,
     tuKhoa: searchParams?.tuKhoa,
   });
 
@@ -36,23 +38,26 @@ export default async function AdminHocSinhPage({ searchParams }: Props) {
             <Users className="w-4 h-4" /> Quản lý người học & Báo cáo
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Báo Cáo Học Sinh Theo Lớp Học
+            Báo Cáo Ôn Tập Theo Khối Lớp
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Thu thập và theo dõi độ thành thạo, số lần luyện tập và lịch sử rèn luyện của từng học sinh
+            Theo dõi độ thành thạo, số lần luyện tập và lịch sử rèn luyện kiến thức từng lớp của học sinh
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <span className="text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded-xl font-bold border border-blue-100 flex items-center gap-1.5">
             <GraduationCap className="w-4 h-4" />
-            Tổng cộng: {danhSachHocSinh.length} học sinh
+            Đang xem: {currentLopId === "lop-11" ? "Toán 11" : "Toán 10"}
           </span>
         </div>
       </div>
 
       {/* Main View */}
-      <DanhSachHocSinhView danhSachHocSinh={danhSachHocSinh} />
+      <DanhSachHocSinhView
+        danhSachHocSinh={danhSachHocSinh}
+        currentLopId={currentLopId}
+      />
     </div>
   );
 }

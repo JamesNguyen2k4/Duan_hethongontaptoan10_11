@@ -92,7 +92,7 @@ export function BaoCaoHocSinhChiTiet({ data }: Props) {
       <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <Link
-            href="/admin/hoc-sinh"
+            href={`/admin/hoc-sinh?lopId=${selectedLopId}`}
             className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-blue-600 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Quay lại danh sách học sinh
