@@ -25,14 +25,17 @@ export async function guiTinNhanTelegram(
   htmlText: string,
   buttons?: InlineButton[]
 ): Promise<{ ok: boolean; message?: string; error?: string }> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+  const token =
+    process.env.TELEGRAM_BOT_TOKEN ||
+    "9255388468:AAGD3-_NeSQcTWjt6W8r-ix-Vv2YXdFFLFc";
+  const chatId =
+    process.env.TELEGRAM_CHAT_ID ||
+    "-5339588384";
 
   if (!token || !chatId) {
-    // Không có cấu hình token, bỏ qua không báo lỗi hệ thống
     return {
       ok: false,
-      message: "Chưa cấu hình TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID trong biến môi trường",
+      message: "Chưa cấu hình TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID",
     };
   }
 
@@ -110,7 +113,7 @@ export async function guiThongBaoBaiVietMoiTelegram(params: {
     process.env.NEXT_PUBLIC_APP_URL ||
     process.env.AUTH_URL ||
     process.env.NEXTAUTH_URL ||
-    "http://localhost:3000";
+    "https://duan-hethongontaptoan10-11.onrender.com";
 
   const postUrl = `${appUrl}/dien-dan/${baiVietId}`;
 

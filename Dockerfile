@@ -33,5 +33,8 @@ USER nextjs
 EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
+ENV TELEGRAM_BOT_TOKEN="9255388468:AAGD3-_NeSQcTWjt6W8r-ix-Vv2YXdFFLFc"
+ENV TELEGRAM_CHAT_ID="-5339588384"
+ENV NEXTAUTH_URL="https://duan-hethongontaptoan10-11.onrender.com"
 
 CMD ["node", "server.js"]
