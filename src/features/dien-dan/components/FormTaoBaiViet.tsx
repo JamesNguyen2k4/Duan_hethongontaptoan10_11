@@ -16,6 +16,7 @@ interface Props {
       ten: string;
       lopId: string;
     };
+    danhSachDangBai?: string[];
   }[];
   baiTapMacDinh?: {
     id: string;
@@ -41,6 +42,7 @@ export function FormTaoBaiViet({
       : ""
   );
   const [chuDeId, setChuDeId] = useState(chuDeIdMacDinh || "");
+  const [dangBai, setDangBai] = useState(baiTapMacDinh?.dangBai || "");
   const [noiDung, setNoiDung] = useState("");
   const [danhSachAnh, setDanhSachAnh] = useState<DuLieuAnhUpload[]>([]);
   const [dangGui, setDangGui] = useState(false);
@@ -65,6 +67,7 @@ export function FormTaoBaiViet({
       tieuDe,
       noiDung,
       chuDeId: chuDeId || undefined,
+      dangBai: dangBai || undefined,
       baiTapId: baiTapMacDinh?.id,
       danhSachAnh,
     });
@@ -132,23 +135,55 @@ export function FormTaoBaiViet({
         />
       </div>
 
-      {/* 2. Chọn chủ đề bài học */}
-      <div className="space-y-1.5">
-        <label className="text-xs font-bold text-slate-800 block">
-          Chủ đề / Bài học liên quan
-        </label>
-        <select
-          value={chuDeId}
-          onChange={(e) => setChuDeId(e.target.value)}
-          className="w-full text-xs sm:text-sm p-3 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-700"
-        >
-          <option value="">-- Chọn bài học liên quan (tùy chọn) --</option>
-          {danhSachChuDe.map((cd) => (
-            <option key={cd.id} value={cd.id}>
-              {cd.chuong.ten} • {cd.ten}
+      {/* 2. Chọn bài học & Dạng bài (tách thành 2 dropdown) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-slate-800 block">
+            Bài học liên quan
+          </label>
+          <select
+            value={chuDeId}
+            onChange={(e) => {
+              const newId = e.target.value;
+              setChuDeId(newId);
+              const cd = danhSachChuDe.find((c) => c.id === newId);
+              if (cd && !cd.danhSachDangBai?.includes(dangBai)) {
+                setDangBai("");
+              }
+            }}
+            className="w-full text-xs sm:text-sm p-3 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-700"
+          >
+            <option value="">-- Chọn bài học liên quan (tùy chọn) --</option>
+            {danhSachChuDe.map((cd) => (
+              <option key={cd.id} value={cd.id}>
+                {cd.chuong.ten.split(":")[0] || cd.chuong.ten} • {cd.ten}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-slate-800 block">
+            Dạng bài toán (tùy chọn)
+          </label>
+          <select
+            value={dangBai}
+            onChange={(e) => setDangBai(e.target.value)}
+            disabled={!chuDeId}
+            className="w-full text-xs sm:text-sm p-3 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-700 disabled:bg-slate-50 disabled:text-slate-400"
+          >
+            <option value="">
+              {chuDeId ? "-- Chọn dạng bài toán --" : "-- Chọn bài học trước --"}
             </option>
-          ))}
-        </select>
+            {danhSachChuDe
+              .find((c) => c.id === chuDeId)
+              ?.danhSachDangBai?.map((dang) => (
+                <option key={dang} value={dang}>
+                  {dang}
+                </option>
+              ))}
+          </select>
+        </div>
       </div>
 
       {/* 3. KHU VỰC CHỤP ẢNH / TẢI ẢNH BÀI LÀM */}

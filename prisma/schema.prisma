@@ -349,6 +349,7 @@ model BaiViet {
 
   noiDungSearch String?        @db.Text
   lopId         String?        // Bài hỏi thuộc lớp nào (lọc diễn đàn theo lớp)
+  dangBai       String?        // Dạng bài của câu hỏi (nếu có)
 
   nguoiDung  NguoiDung  @relation(fields: [nguoiDungId], references: [id])
   chuDe      ChuDe?     @relation(fields: [chuDeId], references: [id])

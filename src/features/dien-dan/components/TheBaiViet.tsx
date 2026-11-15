@@ -20,6 +20,7 @@ interface Props {
     id: string;
     tieuDe: string;
     noiDung: string;
+    dangBai?: string | null;
     taoLuc: Date | string;
     nguoiDung: {
       id: string;
@@ -139,6 +140,15 @@ export function TheBaiViet({ baiViet }: Props) {
                   <span>•</span>
                   <span className="text-blue-600 font-semibold hover:underline">
                     {baiViet.chuDe.ten.replace(/^Bài \d+\.\s*/, "")}
+                  </span>
+                </>
+              )}
+
+              {(baiViet.dangBai || baiViet.baiTap?.dangBai) && (
+                <>
+                  <span>•</span>
+                  <span className="text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100 text-[10px] font-bold">
+                    {baiViet.dangBai || baiViet.baiTap?.dangBai}
                   </span>
                 </>
               )}

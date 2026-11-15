@@ -18,11 +18,14 @@ import {
 import { TheBaiViet } from "@/features/dien-dan/components/TheBaiViet";
 import { layLopHienTai, thongTinLop } from "@/lib/lop-context";
 
+import { ThanhLocDienDan } from "@/features/dien-dan/components/ThanhLocDienDan";
+
 export const dynamic = "force-dynamic";
 
 interface Props {
   searchParams: {
     chuDeId?: string;
+    dangBai?: string;
     tuKhoa?: string;
     trang?: string;
     chiBaiTap?: string;
@@ -38,6 +41,7 @@ export default async function DienDanPage({ searchParams }: Props) {
 
   const trang = parseInt(searchParams.trang || "1", 10);
   const chuDeId = searchParams.chuDeId || undefined;
+  const dangBai = searchParams.dangBai || undefined;
   const tuKhoa = searchParams.tuKhoa || undefined;
   const chiBaiTap = searchParams.chiBaiTap === "true";
 
@@ -45,6 +49,7 @@ export default async function DienDanPage({ searchParams }: Props) {
     layDanhSachBaiViet({
       lopId: lopFilter,
       chuDeId,
+      dangBai,
       tuKhoa,
       chiBaiTap,
       trang,
@@ -93,46 +98,13 @@ export default async function DienDanPage({ searchParams }: Props) {
 
       {/* Thanh công cụ tìm kiếm và lọc bài */}
       <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3">
-        <form method="GET" className="grid grid-cols-1 md:grid-cols-12 gap-3">
-          {/* Ô tìm kiếm từ khóa */}
-          <div className="md:col-span-6 relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              name="tuKhoa"
-              defaultValue={tuKhoa || ""}
-              placeholder="Tìm kiếm bài hỏi, thắc mắc..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none"
-            />
-          </div>
-
-          {/* Chọn chủ đề */}
-          <div className="md:col-span-4">
-            <select
-              name="chuDeId"
-              defaultValue={chuDeId || ""}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm bg-white focus:border-emerald-500 outline-none font-medium text-slate-700"
-            >
-              <option value="">Tất cả bài học / chủ đề</option>
-              {danhSachChuDe.map((cd) => (
-                <option key={cd.id} value={cd.id}>
-                  {cd.chuong.ten} • {cd.ten}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Nút lọc */}
-          <div className="md:col-span-2">
-            <button
-              type="submit"
-              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-            >
-              <Filter className="w-3.5 h-3.5" />
-              <span>Lọc bài</span>
-            </button>
-          </div>
-        </form>
+        <ThanhLocDienDan
+          danhSachChuDe={danhSachChuDe}
+          tuKhoaMacDinh={tuKhoa}
+          chuDeIdMacDinh={chuDeId}
+          dangBaiMacDinh={dangBai}
+          lopFilter={searchParams.lop}
+        />
 
         {/* Bộ lọc nhanh (Quick Pills) */}
         <div className="flex items-center gap-2 pt-1 border-t border-slate-100 text-xs text-slate-500 flex-wrap">

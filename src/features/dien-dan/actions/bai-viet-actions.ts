@@ -22,6 +22,7 @@ export async function taoBaiVietAction(params: {
   noiDung: string;
   chuDeId?: string;
   baiTapId?: string;
+  dangBai?: string;
   danhSachAnh?: DuLieuAnhUpload[];
 }) {
   const session = await auth();
@@ -29,7 +30,7 @@ export async function taoBaiVietAction(params: {
     return { ok: false, message: "Vui lòng đăng nhập để đăng bài" };
   }
 
-  const { tieuDe, noiDung, chuDeId, baiTapId, danhSachAnh = [] } = params;
+  const { tieuDe, noiDung, chuDeId, baiTapId, dangBai, danhSachAnh = [] } = params;
 
   if (!tieuDe || tieuDe.trim().length < 5) {
     return { ok: false, message: "Tiêu đề bài viết cần có ít nhất 5 ký tự" };
@@ -56,6 +57,7 @@ export async function taoBaiVietAction(params: {
           noiDung: noiDung.trim() || "Em có đính kèm ảnh bài làm chi tiết bên dưới, nhờ thầy cô và các bạn xem giúp em.",
           chuDeId: chuDeId || null,
           baiTapId: baiTapId || null,
+          dangBai: dangBai || null,
           lopId,
           noiDungSearch: `${tieuDe} ${noiDung}`.slice(0, 1000),
         },
