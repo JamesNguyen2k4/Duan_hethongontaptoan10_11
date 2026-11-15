@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, BookOpen, Layers, CheckCircle2, TrendingUp, ShieldAlert, Brain } from "lucide-react";
+import { Users, BookOpen, Layers, CheckCircle2, TrendingUp, ShieldAlert, Brain, Target, Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +12,7 @@ export default async function AdminDashboardPage() {
     redirect("/dashboard");
   }
 
-  const [totalUsers, totalBais, totalBaiTaps, totalLanLam, totalPhienLuyen, recentUsers, recentAttempts, recentPhienLuyen] = await Promise.all([
+  const [totalUsers, totalBais, totalBaiTaps, totalLanLam, totalPhienLuyen, recentUsers, recentDangBaiLuyenTap, recentPhienLuyen] = await Promise.all([
     db.nguoiDung.count(),
     db.bai.count(),
     db.baiTap.count(),
@@ -22,13 +22,14 @@ export default async function AdminDashboardPage() {
       take: 5,
       orderBy: { taoLuc: "desc" },
     }),
-    db.lanLamBai.findMany({
+    db.nangLucDangBai.findMany({
+      where: { soLanLuyen: { gt: 0 } },
       take: 8,
-      orderBy: { thoiDiem: "desc" },
+      orderBy: { lanLuyenCuoi: "desc" },
       include: {
         nguoiDung: true,
-        baiTap: {
-          include: { chuDe: true },
+        chuDe: {
+          include: { chuong: true },
         },
       },
     }),
@@ -124,38 +125,123 @@ export default async function AdminDashboardPage() {
 
       {/* Grid Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Attempts */}
+        {/* Hoạt động luyện tập dạng bài & độ thành thạo gần đây */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">
-          <h2 className="text-base font-bold text-slate-800 flex items-center justify-between">
-            <span>Hoạt động làm bài mới nhất</span>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                <Target className="w-4 h-4 text-indigo-600" />
+                <span>Hoạt động luyện tập dạng bài mới nhất</span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Theo dõi dạng bài học sinh vừa luyện tập và mức độ thành thạo đạt được
+              </p>
+            </div>
             <span className="text-xs text-slate-400 font-normal">Thời gian thực</span>
-          </h2>
+          </div>
 
           <div className="divide-y divide-slate-100">
-            {recentAttempts.map((att) => (
-              <div key={att.id} className="py-3 flex items-center justify-between gap-4">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-800">{att.nguoiDung.tenHienThi}</span>
-                    <span className="text-[11px] text-slate-400">({att.nguoiDung.email})</span>
-                  </div>
-                  <p className="text-xs text-slate-600">
-                    Làm bài: <strong className="text-slate-700">{att.baiTap.chuDe.ten}</strong>
-                  </p>
-                </div>
+            {recentDangBaiLuyenTap.length > 0 ? (
+              recentDangBaiLuyenTap.map((item) => {
+                const masteryPercent = Number((item.xacSuatThanhThao * 100).toFixed(1));
+                const lopIdFinal = item.lopId || item.chuDe.chuong.lopId || "lop-10";
+                const lopLabel = lopIdFinal === "lop-11" ? "Toán 11" : "Toán 10";
 
-                <div className="text-right shrink-0">
-                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                    att.ketQua === 'DUNG' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                  }`}>
-                    {att.ketQua === 'DUNG' ? 'Đúng' : 'Sai'}
-                  </span>
-                  <div className="text-[10px] text-slate-400 mt-1">
-                    {new Date(att.thoiDiem).toLocaleTimeString('vi-VN')}
+                return (
+                  <div
+                    key={item.id}
+                    className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/70 p-2 rounded-xl transition-colors"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Link
+                          href={`/admin/hoc-sinh/${item.nguoiDungId}?lopId=${lopIdFinal}`}
+                          className="text-xs font-bold text-slate-900 hover:text-indigo-600 transition-colors"
+                        >
+                          {item.nguoiDung.tenHienThi}
+                        </Link>
+                        <span className="text-[11px] text-slate-400">
+                          ({item.nguoiDung.email})
+                        </span>
+                        <span className="text-[10px] font-semibold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-md border border-indigo-100">
+                          {lopLabel}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 text-xs text-slate-600 flex-wrap">
+                        <span className="font-medium text-slate-700">
+                          {item.chuDe.ten}
+                        </span>
+                        <span className="text-slate-400">→</span>
+                        <span className="font-semibold text-indigo-700 bg-indigo-50/80 px-2 py-0.5 rounded">
+                          {item.dangBai}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-[11px] text-slate-500 pt-0.5">
+                        <span>
+                          Đã làm:{" "}
+                          <strong className="text-slate-700">
+                            {item.soLanDung}/{item.soLanLuyen}
+                          </strong>{" "}
+                          câu đúng
+                        </span>
+                        <span>•</span>
+                        <span>
+                          Độ bền trí nhớ:{" "}
+                          <strong className="text-slate-700">
+                            {item.doBenTriNho.toFixed(1)} ngày
+                          </strong>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex sm:flex-col items-center sm:items-end justify-between gap-1.5 shrink-0">
+                      <div className="flex items-center gap-2">
+                        <div className="w-20 sm:w-24 bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              masteryPercent >= 85
+                                ? "bg-emerald-500"
+                                : masteryPercent >= 60
+                                ? "bg-blue-500"
+                                : "bg-amber-500"
+                            }`}
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                Math.max(5, masteryPercent)
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                        <span
+                          className={`text-xs font-black px-2.5 py-0.5 rounded-full ${
+                            masteryPercent >= 85
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                              : masteryPercent >= 60
+                              ? "bg-blue-100 text-blue-800 border border-blue-200"
+                              : "bg-amber-100 text-amber-800 border border-amber-200"
+                          }`}
+                        >
+                          {masteryPercent.toFixed(1)}%
+                        </span>
+                      </div>
+
+                      <div className="text-[10px] text-slate-400 text-right">
+                        {new Date(item.lanLuyenCuoi).toLocaleTimeString("vi-VN")}{" "}
+                        -{" "}
+                        {new Date(item.lanLuyenCuoi).toLocaleDateString("vi-VN")}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-8 text-slate-400 text-xs">
+                Chưa có dữ liệu luyện tập dạng bài nào từ học sinh.
               </div>
-            ))}
+            )}
           </div>
         </div>
 

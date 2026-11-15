@@ -6,7 +6,6 @@ import {
   BookOpen,
   Layers,
   Repeat,
-  Clock,
   MessageSquare,
   Sparkles,
 } from "lucide-react";
@@ -24,17 +23,7 @@ export default async function DashboardPage() {
   const lopId = await layLopHienTai();
   const lop = thongTinLop(lopId);
 
-  const [lanLams, analysisData, thongKeLop] = await Promise.all([
-    db.lanLamBai.findMany({
-      where: { nguoiDungId: session.user.id, lopId },
-      take: 5,
-      orderBy: { thoiDiem: "desc" },
-      include: {
-        baiTap: {
-          include: { chuDe: true },
-        },
-      },
-    }),
+  const [analysisData, thongKeLop] = await Promise.all([
     phanTichDiemYeuHocSinh(session.user.id, lopId),
     layThongKeNoiDungLop(lopId),
   ]);
@@ -147,76 +136,6 @@ export default async function DashboardPage() {
 
       {/* Hồ sơ Năng lực & Học thích ứng hợp nhất (Radar + Đường cong quên + ZPD) */}
       <BangPhanTichNangLuc data={{ ...analysisData, lopId }} />
-
-      {/* Recent History */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">
-        <div className="flex items-center justify-between border-b pb-4">
-          <h2 className="font-bold text-slate-800 text-base flex items-center gap-2">
-            <Clock className="w-4 h-4 text-blue-600" /> Bài làm gần đây của bạn
-          </h2>
-          <Link
-            href="/bai-tap"
-            className="text-xs font-semibold text-blue-600 hover:underline"
-          >
-            Luyện thêm câu hỏi mới →
-          </Link>
-        </div>
-
-        {lanLams.length > 0 ? (
-          <div className="divide-y divide-slate-100">
-            {lanLams.map((l) => (
-              <div
-                key={l.id}
-                className="py-3 flex items-center justify-between gap-4"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Link
-                      href={`/bai-tap?chuDeId=${l.baiTap.chuDeId}`}
-                      className="text-xs font-bold text-slate-800 hover:text-blue-600 bg-slate-100 px-2.5 py-0.5 rounded-full transition-colors"
-                    >
-                      {l.baiTap.chuDe.ten}
-                    </Link>
-                    <span className="text-[11px] font-medium text-slate-500">
-                      Mức độ: {l.baiTap.mucDo}
-                    </span>
-                  </div>
-                  {l.baiTap.dangBai && (
-                    <Link
-                      href={`/lam-bai/chu-de/${l.baiTap.chuDeId}?dangBai=${encodeURIComponent(
-                        l.baiTap.dangBai
-                      )}`}
-                      className="text-xs font-semibold text-blue-700 hover:underline block"
-                    >
-                      {l.baiTap.dangBai} →
-                    </Link>
-                  )}
-                </div>
-
-                <div className="text-right shrink-0">
-                  <span
-                    className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                      l.ketQua === "DUNG"
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-rose-100 text-rose-800"
-                    }`}
-                  >
-                    {l.ketQua === "DUNG" ? "Đúng" : "Sai"}
-                  </span>
-                  <p className="text-[10px] text-slate-400 mt-0.5">
-                    {new Date(l.thoiDiem).toLocaleTimeString("vi-VN")}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-xs text-slate-400 py-6 text-center">
-            Bạn chưa có lần làm bài nào. Hãy vào mục{" "}
-            <strong>Luyện tập thích ứng</strong> để bắt đầu thử sức!
-          </p>
-        )}
-      </div>
     </div>
   );
 }
