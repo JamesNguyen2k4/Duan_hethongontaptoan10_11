@@ -65,49 +65,79 @@ export async function layDanhSachHocSinhAction({
     ];
   }
 
-  const hocSinhs = await db.nguoiDung.findMany({
-    where: whereCondition,
-    select: {
-      id: true,
-      tenHienThi: true,
-      email: true,
-      anhDaiDien: true,
-      taoLuc: true,
-      lichSuLuyenTaps: {
-        select: {
-          id: true,
-          doThanhThao: true,
-          soCauDaLam: true,
-          soCauDung: true,
-          thoiDiemKetThuc: true,
-          lopId: true,
-        },
-        orderBy: { thoiDiemKetThuc: "desc" },
-      },
-      lanLamBais: {
-        select: {
-          id: true,
-          ketQua: true,
-          thoiDiem: true,
-          lopId: true,
-        },
-        orderBy: { thoiDiem: "desc" },
-      },
-      nangLucDangBais: {
-        select: {
-          id: true,
-          dangBai: true,
-          xacSuatThanhThao: true,
-          nangLucIRT: true,
-          soLanLuyen: true,
-          soLanDung: true,
-          lanLuyenCuoi: true,
-          lopId: true,
+  const [chapters, hocSinhs] = await Promise.all([
+    db.chuong.findMany({
+      where: { lopId: lopMucTieu },
+      include: {
+        chuDes: {
+          orderBy: { thuTu: "asc" },
         },
       },
-    },
-    orderBy: { taoLuc: "desc" },
+      orderBy: { thuTu: "asc" },
+    }),
+    db.nguoiDung.findMany({
+      where: whereCondition,
+      select: {
+        id: true,
+        tenHienThi: true,
+        email: true,
+        anhDaiDien: true,
+        taoLuc: true,
+        lichSuLuyenTaps: {
+          select: {
+            id: true,
+            chuDeId: true,
+            dangBai: true,
+            doThanhThao: true,
+            soCauDaLam: true,
+            soCauDung: true,
+            thoiDiemKetThuc: true,
+            lopId: true,
+          },
+          orderBy: { thoiDiemKetThuc: "desc" },
+        },
+        lanLamBais: {
+          select: {
+            id: true,
+            ketQua: true,
+            thoiDiem: true,
+            lopId: true,
+          },
+          orderBy: { thoiDiem: "desc" },
+        },
+        nangLucDangBais: {
+          select: {
+            id: true,
+            chuDeId: true,
+            dangBai: true,
+            xacSuatThanhThao: true,
+            nangLucIRT: true,
+            soLanLuyen: true,
+            soLanDung: true,
+            lanLuyenCuoi: true,
+            lopId: true,
+          },
+        },
+      },
+      orderBy: { taoLuc: "desc" },
+    }),
+  ]);
+
+  // Thu thập danh sách toàn bộ các dạng bài trong toàn khóa học của khối lớp này
+  const tatCaDangBaiCuaKhoa: Array<{ chuDeId: string; dangTen: string }> = [];
+  chapters.forEach((chuong) => {
+    chuong.chuDes.forEach((chuDe) => {
+      const configDangs = DANH_MUC_DANG_BAI[chuDe.id]?.dangs || [];
+      configDangs.forEach((dang) => {
+        tatCaDangBaiCuaKhoa.push({
+          chuDeId: chuDe.id,
+          dangTen: dang.ten,
+        });
+      });
+    });
   });
+
+  const tongSoDangToanKhoa = tatCaDangBaiCuaKhoa.length;
 
   return hocSinhs.map((hs) => {
     // Chỉ lấy lịch sử, lần làm, năng lực thuộc lopMucTieu (Toán 10 hoặc Toán 11)
@@ -140,21 +170,44 @@ export async function layDanhSachHocSinhAction({
         ? Number(((soCauDung / tongCauDaLam) * 100).toFixed(1))
         : 0;
 
-    const soDangThanhThao = filteredNangLuc.filter(
-      (n) => n.xacSuatThanhThao >= 0.85
-    ).length;
+    // Map tra cứu nhanh cho NangLucDangBai
+    const nangLucMap = new Map<string, any>();
+    filteredNangLuc.forEach((nl) => {
+      nangLucMap.set(`${nl.chuDeId}__${nl.dangBai}`, nl);
+    });
 
-    // Độ thành thạo trung bình các dạng bài đã rèn luyện của riêng khối lớp này
-    const practicedNangLuc = filteredNangLuc.filter((n) => n.soLanLuyen > 0);
+    // Map tra cứu LichSuLuyenTap mới nhất
+    const lichSuMap = new Map<string, any>();
+    filteredLichSu.forEach((ls) => {
+      const key = `${ls.chuDeId}__${ls.dangBai}`;
+      if (!lichSuMap.has(key)) {
+        lichSuMap.set(key, ls);
+      }
+    });
+
+    let tongDiemThanhThaoToanKhoa = 0;
+    let soDangThanhThao = 0;
+
+    tatCaDangBaiCuaKhoa.forEach((dang) => {
+      const key = `${dang.chuDeId}__${dang.dangTen}`;
+      const nangLuc = nangLucMap.get(key);
+      const historyForDang = lichSuMap.get(key);
+
+      let mastery = 0;
+      if (nangLuc) {
+        mastery = Number((nangLuc.xacSuatThanhThao * 100).toFixed(1));
+      } else if (historyForDang) {
+        mastery = Number((historyForDang.doThanhThao * 100).toFixed(1));
+      }
+
+      tongDiemThanhThaoToanKhoa += mastery;
+      if (mastery >= 85) soDangThanhThao++;
+    });
+
+    // Độ thành thạo trung bình tính trên TOÀN BỘ KHÓA HỌC (chương trình của lớp)
     const doThanhThaoTB =
-      practicedNangLuc.length > 0
-        ? Number(
-            (
-              (practicedNangLuc.reduce((acc, cur) => acc + cur.xacSuatThanhThao, 0) /
-                practicedNangLuc.length) *
-              100
-            ).toFixed(1)
-          )
+      tongSoDangToanKhoa > 0
+        ? Number((tongDiemThanhThaoToanKhoa / tongSoDangToanKhoa).toFixed(1))
         : 0;
 
     const lanLuyenCuoi =

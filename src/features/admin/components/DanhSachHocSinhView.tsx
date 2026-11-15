@@ -131,7 +131,7 @@ export function DanhSachHocSinhView({
             <TrendingUp className="w-4 h-4 text-amber-600" />
           </div>
           <div className="text-3xl font-black text-slate-900">{stats.avgMastery.toFixed(1)}%</div>
-          <p className="text-xs text-slate-400">Độ thành thạo trung bình</p>
+          <p className="text-xs text-slate-400">Trung bình trên toàn khóa học</p>
         </div>
       </div>
 
