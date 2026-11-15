@@ -20,6 +20,7 @@ export interface DangBaiReport {
     doThanhThao: number;
     soCauDaLam: number;
     soCauDung: number;
+    tiLeDung?: number;
     thoiGianGiay: number;
     thoiDiemKetThuc: Date | string;
   }>;

@@ -6,6 +6,27 @@ import { DANH_MUC_DANG_BAI } from "@/lib/danh-muc-dang-bai";
 import type { BaoCaoChiTietHocSinhData, TrangThaiThanhThao } from "../types";
 
 /**
+ * Hàm tính số phiên làm bài thực tế dựa trên khoảng thời gian giữa các câu trả lời
+ * (Nếu 2 câu làm cách nhau hơn 20 phút thì được tính là 2 phiên luyện tập khác nhau)
+ */
+function tinhSoPhienTuLanLam(lanLams: { thoiDiem: Date }[]): number {
+  if (!lanLams || lanLams.length === 0) return 0;
+  const sorted = [...lanLams].sort(
+    (a, b) => new Date(a.thoiDiem).getTime() - new Date(b.thoiDiem).getTime()
+  );
+  let soPhien = 1;
+  for (let i = 1; i < sorted.length; i++) {
+    const diffMs =
+      new Date(sorted[i].thoiDiem).getTime() -
+      new Date(sorted[i - 1].thoiDiem).getTime();
+    if (diffMs > 20 * 60 * 1000) {
+      soPhien++;
+    }
+  }
+  return soPhien;
+}
+
+/**
  * 1. Lấy danh sách học sinh theo lớp học kèm các chỉ số tổng hợp
  */
 export async function layDanhSachHocSinhAction({
@@ -109,7 +130,12 @@ export async function layDanhSachHocSinhAction({
       ? hs.nangLucDangBais.filter((n) => n.lopId === filterLop || !n.lopId)
       : hs.nangLucDangBais;
 
-    const tongSoLanLuyen = filteredLichSu.length;
+    const phienTuLanLam = tinhSoPhienTuLanLam(filteredLanLam);
+    const tongSoLanLuyen = Math.max(
+      filteredLichSu.length,
+      phienTuLanLam,
+      filteredLanLam.length > 0 ? 1 : 0
+    );
     const tongCauDaLam = filteredLanLam.length;
     const soCauDung = filteredLanLam.filter((l) => l.ketQua === "DUNG").length;
     const tiLeDung =
@@ -244,10 +270,28 @@ export async function layBaoCaoChiTietHocSinhAction(
         totalMasterySum += mastery;
         if (mastery >= 85) totalDangsMastered++;
 
-        // Tổng số lần đã luyện dạng toán này (từ bảng LichSuLuyenTap)
-        const soLanLuyenPhien = historyForDang.length;
-        const soCauDaLam = nangLuc?.soLanLuyen || historyForDang.reduce((a, b) => a + b.soCauDaLam, 0);
-        const soCauDung = nangLuc?.soLanDung || historyForDang.reduce((a, b) => a + b.soCauDung, 0);
+        // Lấy danh sách câu hỏi đã làm của riêng dạng bài này từ student.lanLamBais
+        const lanLamForDang = student.lanLamBais.filter(
+          (l) => l.baiTap.chuDeId === chuDe.id && l.baiTap.dangBai === dang.ten
+        );
+        const phienTuLanLam = tinhSoPhienTuLanLam(lanLamForDang);
+
+        const soCauDaLam =
+          nangLuc?.soLanLuyen ||
+          lanLamForDang.length ||
+          historyForDang.reduce((a, b) => a + b.soCauDaLam, 0);
+
+        const soCauDung =
+          nangLuc?.soLanDung ??
+          lanLamForDang.filter((l) => l.ketQua === "DUNG").length;
+
+        // Số lần luyện phiên: Nếu có bản ghi trong LichSuLuyenTap thì lấy,
+        // nếu chưa có bản ghi (do học sinh chưa bấm nút dừng) nhưng đã làm bài thì tính theo phiên thực tế
+        const soLanLuyenPhien = Math.max(
+          historyForDang.length,
+          phienTuLanLam,
+          soCauDaLam > 0 ? 1 : 0
+        );
 
         return {
           id: dang.id,
@@ -269,16 +313,77 @@ export async function layBaoCaoChiTietHocSinhAction(
             : mastery > 0
             ? "CAN_LUYEN"
             : "CHUA_HOC") as TrangThaiThanhThao,
-          // Lịch sử các lần luyện riêng của dạng toán này
-          cacLanLuyen: historyForDang.map((h, idx) => ({
-            lanThu: historyForDang.length - idx,
-            id: h.id,
-            doThanhThao: Number((h.doThanhThao * 100).toFixed(1)),
-            soCauDaLam: h.soCauDaLam,
-            soCauDung: h.soCauDung,
-            thoiGianGiay: h.thoiGianGiay,
-            thoiDiemKetThuc: h.thoiDiemKetThuc,
-          })),
+          // Lịch sử các lần luyện riêng của dạng toán này (sắp xếp tăng dần theo thời gian: Lần 1 -> Lần 2 -> ...)
+          cacLanLuyen: (() => {
+            if (historyForDang.length > 0) {
+              const sorted = [...historyForDang].sort(
+                (a, b) =>
+                  new Date(a.thoiDiemKetThuc).getTime() -
+                  new Date(b.thoiDiemKetThuc).getTime()
+              );
+              return sorted.map((h, idx) => ({
+                lanThu: idx + 1,
+                id: h.id,
+                doThanhThao: Number((h.doThanhThao * 100).toFixed(1)),
+                soCauDaLam: h.soCauDaLam,
+                soCauDung: h.soCauDung,
+                tiLeDung:
+                  h.soCauDaLam > 0
+                    ? Math.round((h.soCauDung / h.soCauDaLam) * 100)
+                    : 0,
+                thoiGianGiay: h.thoiGianGiay,
+                thoiDiemKetThuc: h.thoiDiemKetThuc,
+              }));
+            }
+
+            // Nếu chưa có trong bảng LichSuLuyenTap nhưng đã có các câu làm trong LanLamBai
+            if (lanLamForDang.length > 0) {
+              const sortedLanLam = [...lanLamForDang].sort(
+                (a, b) =>
+                  new Date(a.thoiDiem).getTime() -
+                  new Date(b.thoiDiem).getTime()
+              );
+              // Chia thành các phiên nếu cách nhau > 20 phút
+              const sessions: typeof lanLamForDang[] = [];
+              let curSession = [sortedLanLam[0]];
+              for (let i = 1; i < sortedLanLam.length; i++) {
+                const diffMs =
+                  new Date(sortedLanLam[i].thoiDiem).getTime() -
+                  new Date(sortedLanLam[i - 1].thoiDiem).getTime();
+                if (diffMs > 20 * 60 * 1000) {
+                  sessions.push(curSession);
+                  curSession = [sortedLanLam[i]];
+                } else {
+                  curSession.push(sortedLanLam[i]);
+                }
+              }
+              if (curSession.length > 0) sessions.push(curSession);
+
+              return sessions.map((s, idx) => {
+                const soLam = s.length;
+                const soDung = s.filter((x) => x.ketQua === "DUNG").length;
+                const endTime = s[s.length - 1].thoiDiem;
+                const isLast = idx === sessions.length - 1;
+                // Nếu là phiên cuối thì lấy mastery hiện tại, nếu phiên trước thì ước lượng theo tỉ lệ đúng
+                const mVal = isLast
+                  ? mastery
+                  : Number(Math.min(mastery, Math.max(5.0, (soDung / soLam) * 20)).toFixed(1));
+
+                return {
+                  lanThu: idx + 1,
+                  id: `fallback-${idx + 1}`,
+                  doThanhThao: mVal,
+                  soCauDaLam: soLam,
+                  soCauDung: soDung,
+                  tiLeDung: soLam > 0 ? Math.round((soDung / soLam) * 100) : 0,
+                  thoiGianGiay: s.reduce((acc, cur) => acc + (cur.thoiGianGiay || 30), 0),
+                  thoiDiemKetThuc: endTime,
+                };
+              });
+            }
+
+            return [];
+          })(),
         };
       });
 
