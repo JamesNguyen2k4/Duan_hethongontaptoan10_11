@@ -118,6 +118,10 @@ export async function guiThongBaoBaiVietMoiTelegram(params: {
   const now = new Date();
   const thoiGian = now.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
 
+  // Nếu là domain https hợp lệ (production), dùng inline button
+  // Nếu là localhost/http (dev), gắn trực tiếp link vào nội dung tin nhắn để tránh lỗi Telegram API
+  const isHttps = postUrl.startsWith("https://");
+
   const message = [
     `🔔 <b>[HỆ THỐNG ÔN TẬP TOÁN] CÓ BÀI HỎI MỚI!</b>`,
     ``,
@@ -126,13 +130,19 @@ export async function guiThongBaoBaiVietMoiTelegram(params: {
     `📝 <b>Tiêu đề:</b> ${escapeHtml(tieuDe)}`,
     `💬 <b>Nội dung:</b> <i>${escapeHtml(trichDoan)}</i>`,
     `⏰ <b>Thời gian:</b> ${thoiGian}`,
-  ].join("\n");
+    !isHttps ? `🔗 <b>Xem bài:</b> ${postUrl}` : ``,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
-  // Gửi với inline button
-  return guiTinNhanTelegram(message, [
-    {
-      text: "👉 Xem & Giải đáp bài viết",
-      url: postUrl,
-    },
-  ]);
+  const buttons = isHttps
+    ? [
+        {
+          text: "👉 Xem & Giải đáp bài viết",
+          url: postUrl,
+        },
+      ]
+    : undefined;
+
+  return guiTinNhanTelegram(message, buttons);
 }
