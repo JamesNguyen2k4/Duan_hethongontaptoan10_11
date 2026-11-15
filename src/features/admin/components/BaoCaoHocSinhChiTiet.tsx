@@ -2,7 +2,6 @@
 
 import { useState, Fragment } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   ResponsiveContainer,
   LineChart,
@@ -41,7 +40,6 @@ interface Props {
 }
 
 export function BaoCaoHocSinhChiTiet({ data }: Props) {
-  const router = useRouter();
   const { hocSinh, selectedLopId, thongKeTheoLop, tongQuan, danhSachChuong, lichSuCacLanLuyen, bieuDoTienTrinh } =
     data;
 
@@ -64,10 +62,6 @@ export function BaoCaoHocSinhChiTiet({ data }: Props) {
       ...prev,
       [dangId]: !prev[dangId],
     }));
-  };
-
-  const handleLopChange = (newLopId: string) => {
-    router.push(`/admin/hoc-sinh/${hocSinh.id}?lopId=${newLopId}`);
   };
 
   // Lọc dữ liệu biểu đồ và bảng lịch sử theo dạng bài nếu có chọn
@@ -98,82 +92,11 @@ export function BaoCaoHocSinhChiTiet({ data }: Props) {
             <ArrowLeft className="w-4 h-4" /> Quay lại danh sách học sinh
           </Link>
 
-          {/* Bộ chuyển đổi Lớp học xem báo cáo */}
-          <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl">
-            <button
-              type="button"
-              onClick={() => handleLopChange("lop-10")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                selectedLopId === "lop-10"
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              <GraduationCap className="w-3.5 h-3.5" />
-              <span>Toán 10</span>
-              {thongKeTheoLop && (
-                <span
-                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                    selectedLopId === "lop-10"
-                      ? "bg-white/20 text-white"
-                      : "bg-slate-200 text-slate-700"
-                  }`}
-                >
-                  {thongKeTheoLop.lop10.soLanLuyen} lần
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleLopChange("lop-11")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                selectedLopId === "lop-11"
-                  ? "bg-indigo-600 text-white shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              <GraduationCap className="w-3.5 h-3.5" />
-              <span>Toán 11</span>
-              {thongKeTheoLop && (
-                <span
-                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                    selectedLopId === "lop-11"
-                      ? "bg-white/20 text-white"
-                      : "bg-slate-200 text-slate-700"
-                  }`}
-                >
-                  {thongKeTheoLop.lop11.soLanLuyen} lần
-                </span>
-              )}
-            </button>
-          </div>
+          <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1.5">
+            <GraduationCap className="w-3.5 h-3.5" />
+            Báo cáo: {selectedLopId === "lop-11" ? "Toán 11" : "Toán 10"}
+          </span>
         </div>
-
-        {/* Thông báo phân chia số lần luyện theo lớp nếu học sinh luyện cả 2 khối */}
-        {thongKeTheoLop &&
-          thongKeTheoLop.lop10.soLanLuyen > 0 &&
-          thongKeTheoLop.lop11.soLanLuyen > 0 && (
-            <div className="p-3 bg-blue-50/80 border border-blue-200 rounded-xl flex items-center justify-between gap-3 text-xs text-blue-900 flex-wrap">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0" />
-                <span>
-                  Học sinh có tổng cộng <strong>{thongKeTheoLop.tongSoLanTatCa} lần luyện tập</strong> trên toàn hệ thống (gồm{" "}
-                  <strong>{thongKeTheoLop.lop10.soLanLuyen} lần ở Toán 10</strong> và{" "}
-                  <strong>{thongKeTheoLop.lop11.soLanLuyen} lần ở Toán 11</strong>). Bạn đang xem số liệu môn{" "}
-                  <strong>{selectedLopId === "lop-10" ? "Toán 10" : "Toán 11"}</strong>.
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  handleLopChange(selectedLopId === "lop-10" ? "lop-11" : "lop-10")
-                }
-                className="px-2.5 py-1 bg-white border border-blue-300 rounded-lg text-blue-700 font-bold hover:bg-blue-100 transition-colors shrink-0 cursor-pointer"
-              >
-                Chuyển sang {selectedLopId === "lop-10" ? "Toán 11" : "Toán 10"} →
-              </button>
-            </div>
-          )}
 
         {/* Thông tin học sinh */}
         <div className="flex items-center gap-4 flex-wrap pt-2">
@@ -194,9 +117,6 @@ export function BaoCaoHocSinhChiTiet({ data }: Props) {
               <h1 className="text-xl sm:text-2xl font-black text-slate-900">
                 {hocSinh.tenHienThi}
               </h1>
-              <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200">
-                Lớp học: {selectedLopId === "lop-10" ? "Toán 10" : "Toán 11"}
-              </span>
             </div>
             <p className="text-xs text-slate-500">
               Email: <strong className="text-slate-700">{hocSinh.email}</strong> •
