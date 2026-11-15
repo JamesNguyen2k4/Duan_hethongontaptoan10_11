@@ -54,6 +54,12 @@ export interface BaoCaoChiTietHocSinhData {
     taoLuc: Date | string;
   };
   selectedLopId: string;
+  thongKeTheoLop: {
+    lop10: { soLanLuyen: number; soCauDaLam: number; soCauDung: number };
+    lop11: { soLanLuyen: number; soCauDaLam: number; soCauDung: number };
+    tongSoLanTatCa: number;
+    tongSoCauTatCa: number;
+  };
   tongQuan: {
     tongSoLanLuyen: number;
     tongSoCauLam: number;

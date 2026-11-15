@@ -115,20 +115,18 @@ export async function layDanhSachHocSinhAction({
   });
 
   return hocSinhs.map((hs) => {
-    // Nếu lọc theo lopId cụ thể thì ưu tiên số liệu của lớp đó
-    const filterLop = lopId && lopId !== "all" ? lopId : null;
+    // Nếu lọc theo lopId cụ thể thì ưu tiên số liệu của lớp đó, nếu xem tất cả thì hiển thị theo lớp học sinh đang học
+    const lopMucTieu = (lopId && lopId !== "all") ? lopId : (hs.lopDangHocId || "lop-10");
 
-    const filteredLichSu = filterLop
-      ? hs.lichSuLuyenTaps.filter((l) => l.lopId === filterLop || !l.lopId)
-      : hs.lichSuLuyenTaps;
-
-    const filteredLanLam = filterLop
-      ? hs.lanLamBais.filter((l) => l.lopId === filterLop || !l.lopId)
-      : hs.lanLamBais;
-
-    const filteredNangLuc = filterLop
-      ? hs.nangLucDangBais.filter((n) => n.lopId === filterLop || !n.lopId)
-      : hs.nangLucDangBais;
+    const filteredLichSu = hs.lichSuLuyenTaps.filter(
+      (l) => l.lopId === lopMucTieu || (!l.lopId && lopMucTieu === "lop-10")
+    );
+    const filteredLanLam = hs.lanLamBais.filter(
+      (l) => l.lopId === lopMucTieu || (!l.lopId && lopMucTieu === "lop-10")
+    );
+    const filteredNangLuc = hs.nangLucDangBais.filter(
+      (n) => n.lopId === lopMucTieu || (!n.lopId && lopMucTieu === "lop-10")
+    );
 
     const phienTuLanLam = tinhSoPhienTuLanLam(filteredLanLam);
     const tongSoLanLuyen = Math.max(
@@ -161,6 +159,16 @@ export async function layDanhSachHocSinhAction({
       filteredLanLam[0]?.thoiDiem ||
       null;
 
+    // Kiểm tra số lần luyện ở lớp học khác (nếu học sinh luyện cả 2 khối lớp)
+    const khacLopId = lopMucTieu === "lop-10" ? "lop-11" : "lop-10";
+    const khacLichSu = hs.lichSuLuyenTaps.filter((l) => l.lopId === khacLopId);
+    const khacLanLam = hs.lanLamBais.filter((l) => l.lopId === khacLopId);
+    const soLanLuyenLopKhac = Math.max(
+      khacLichSu.length,
+      tinhSoPhienTuLanLam(khacLanLam),
+      khacLanLam.length > 0 ? 1 : 0
+    );
+
     return {
       id: hs.id,
       tenHienThi: hs.tenHienThi,
@@ -175,6 +183,8 @@ export async function layDanhSachHocSinhAction({
       soDangThanhThao,
       doThanhThaoTB,
       lanLuyenCuoi,
+      soLanLuyenLopKhac,
+      tenLopKhac: khacLopId === "lop-10" ? "Toán 10" : "Toán 11",
     };
   });
 }
@@ -452,8 +462,39 @@ export async function layBaoCaoChiTietHocSinhAction(
       }),
     }));
 
-  const tongSoCauLam = student.lanLamBais.length;
-  const soCauDung = student.lanLamBais.filter((l) => l.ketQua === "DUNG").length;
+  const ls10 = student.lichSuLuyenTaps.filter((l) => l.lopId === "lop-10");
+  const ll10 = student.lanLamBais.filter((l) => l.lopId === "lop-10");
+  const soLanLop10 = Math.max(
+    ls10.length,
+    tinhSoPhienTuLanLam(ll10),
+    ll10.length > 0 ? 1 : 0
+  );
+
+  const ls11 = student.lichSuLuyenTaps.filter((l) => l.lopId === "lop-11");
+  const ll11 = student.lanLamBais.filter((l) => l.lopId === "lop-11");
+  const soLanLop11 = Math.max(
+    ls11.length,
+    tinhSoPhienTuLanLam(ll11),
+    ll11.length > 0 ? 1 : 0
+  );
+
+  const thongKeTheoLop = {
+    lop10: {
+      soLanLuyen: soLanLop10,
+      soCauDaLam: ll10.length,
+      soCauDung: ll10.filter((x) => x.ketQua === "DUNG").length,
+    },
+    lop11: {
+      soLanLuyen: soLanLop11,
+      soCauDaLam: ll11.length,
+      soCauDung: ll11.filter((x) => x.ketQua === "DUNG").length,
+    },
+    tongSoLanTatCa: soLanLop10 + soLanLop11,
+    tongSoCauTatCa: student.lanLamBais.length,
+  };
+
+  const tongSoCauLam = student.lanLamBais.filter((l) => (l.lopId || "lop-10") === selectedLopId).length;
+  const soCauDung = student.lanLamBais.filter((l) => (l.lopId || "lop-10") === selectedLopId && l.ketQua === "DUNG").length;
   const tiLeDung =
     tongSoCauLam > 0 ? Math.round((soCauDung / tongSoCauLam) * 100) : 0;
 
@@ -472,8 +513,9 @@ export async function layBaoCaoChiTietHocSinhAction(
       taoLuc: student.taoLuc,
     },
     selectedLopId,
+    thongKeTheoLop,
     tongQuan: {
-      tongSoLanLuyen: allFilteredHistory.length,
+      tongSoLanLuyen: selectedLopId === "lop-10" ? soLanLop10 : soLanLop11,
       tongSoCauLam,
       soCauDung,
       tiLeDung,

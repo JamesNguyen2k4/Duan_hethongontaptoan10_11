@@ -267,6 +267,11 @@ export function DanhSachHocSinhView({ danhSachHocSinh }: Props) {
                           <Brain className="w-3.5 h-3.5 text-indigo-600" />
                           {hs.tongSoLanLuyen} lần
                         </span>
+                        {(hs as any).soLanLuyenLopKhac > 0 && (
+                          <div className="text-[10px] text-slate-400 mt-0.5">
+                            (+{(hs as any).soLanLuyenLopKhac} lần {(hs as any).tenLopKhac})
+                          </div>
+                        )}
                       </td>
 
                       {/* Tỉ lệ câu đúng */}
