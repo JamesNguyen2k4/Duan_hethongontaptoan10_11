@@ -130,14 +130,14 @@ export function BangPhanTichNangLuc({ data }: Props) {
 
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Cần ôn tập & củng cố
+            Cần ôn lại hôm nay
           </p>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-3xl font-black text-amber-600">
               {data.soDangCanOn ?? dangBaiCanOnList.length}
             </span>
             <span className="text-xs text-slate-400">
-              dạng bài (&lt; 85%)
+              dạng đến hạn ôn
             </span>
           </div>
         </div>
@@ -199,26 +199,27 @@ export function BangPhanTichNangLuc({ data }: Props) {
         <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 font-bold text-slate-800 text-sm">
-              <Repeat className="w-4 h-4 text-amber-600" /> Danh sách Dạng bài cần ưu tiên Ôn tập & Củng cố
+              <Repeat className="w-4 h-4 text-amber-600" /> Danh sách Dạng bài cần ôn lại hôm nay
             </div>
-            <span className="text-[11px] font-semibold text-slate-400">
-              Ưu tiên theo độ cần ôn
+            <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200">
+              Đến hạn ôn ngắt quãng (FSRS)
             </span>
           </div>
 
           {dangBaiCanOnList.length > 0 ? (
-            <div className="space-y-3 max-h-[290px] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
               {dangBaiCanOnList.map((item) => {
                 const pct = (item.xacSuatHieuDung * 100).toFixed(1);
                 const retentionPct = Math.round(item.doNhoHienTai * 100);
-                const isFSRSDue = item.trangThai === "CAN_ON_LAI";
+                const isOverdue = item.thongTinLich?.trangThaiLich === "QUA_HAN";
+
                 return (
                   <div
                     key={item.id}
                     className={`p-4 rounded-xl flex items-center justify-between gap-3 border ${
-                      isFSRSDue
-                        ? "bg-amber-50/60 border-amber-200"
-                        : "bg-blue-50/60 border-blue-200"
+                      isOverdue
+                        ? "bg-rose-50/60 border-rose-200"
+                        : "bg-amber-50/60 border-amber-200"
                     }`}
                   >
                     <div className="space-y-1">
@@ -226,22 +227,22 @@ export function BangPhanTichNangLuc({ data }: Props) {
                         <span className="text-[10px] font-bold bg-white text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md">
                           {item.tenChuDe}
                         </span>
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                            isFSRSDue
-                              ? "bg-amber-100 text-amber-900"
-                              : "bg-blue-100 text-blue-900"
-                          }`}
-                        >
-                          {isFSRSDue ? item.nhanTrangThai : `Cần củng cố (${pct}%)`}
-                        </span>
-                        {item.thongTinLich && isFSRSDue && (
+                        {item.thongTinLich && (
                           <span
                             className={`text-[10px] px-2 py-0.5 rounded-md border ${item.thongTinLich.mauSacBadge}`}
                           >
                             {item.thongTinLich.vanBanLich}
                           </span>
                         )}
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                            isOverdue
+                              ? "bg-rose-100 text-rose-900 border border-rose-200"
+                              : "bg-amber-100 text-amber-900 border border-amber-200"
+                          }`}
+                        >
+                          {isOverdue ? "Quá hạn ôn tập" : "Cần ôn lại hôm nay"}
+                        </span>
                       </div>
                       <h4 className="text-xs font-bold text-slate-900">
                         {item.dangBai}
@@ -265,12 +266,12 @@ export function BangPhanTichNangLuc({ data }: Props) {
                         item.chuDeId
                       }?dangBai=${encodeURIComponent(item.dangBai)}`}
                       className={`text-xs font-bold px-3.5 py-2 rounded-xl transition-colors whitespace-nowrap shadow-xs shrink-0 ${
-                        isFSRSDue
-                          ? "bg-amber-500 text-white hover:bg-amber-600"
-                          : "bg-blue-600 text-white hover:bg-blue-700"
+                        isOverdue
+                          ? "bg-rose-600 text-white hover:bg-rose-700"
+                          : "bg-amber-500 text-white hover:bg-amber-600"
                       }`}
                     >
-                      {isFSRSDue ? "Ôn tập ngay" : "Củng cố ngay"}
+                      Ôn tập ngay
                     </Link>
                   </div>
                 );
@@ -281,11 +282,10 @@ export function BangPhanTichNangLuc({ data }: Props) {
               <CheckCircle className="w-6 h-6 text-emerald-600 shrink-0" />
               <div className="text-xs space-y-1">
                 <strong className="block font-bold">
-                  Kiến thức của bạn đang ở trạng thái rất tốt!
+                  Tuyệt vời! Không có dạng bài nào cần ôn lại hôm nay.
                 </strong>
                 <span>
-                  Không có dạng toán nào bị suy giảm dưới ngưỡng an toàn. Hãy
-                  khám phá thêm các bài học mới trong Ngân hàng bài tập.
+                  Tất cả các dạng bài bạn đã học đều đang ở trạng thái ghi nhớ tốt. Hãy khám phá thêm bài mới trong Ngân hàng bài tập hoặc quay lại vào ngày mai!
                 </span>
               </div>
             </div>

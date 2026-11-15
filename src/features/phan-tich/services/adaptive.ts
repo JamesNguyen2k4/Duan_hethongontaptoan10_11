@@ -218,20 +218,36 @@ export async function phanTichDiemYeuHocSinh(
     if (laDiemYeu) diemYeuList.push(item);
   }
 
-  // 5. Danh sách các dạng bài cần ưu tiên Ôn tập & Củng cố:
-  // - Bao gồm dạng bài đến hạn ôn tập ngắt quãng FSRS (trangThai === "CAN_ON_LAI")
-  // - VÀ các dạng bài đang rèn luyện nhưng có độ thành thạo thấp (< 70%) cần củng cố
+  const endToday = new Date(now);
+  endToday.setHours(23, 59, 59, 999);
+
+  // 5. Danh sách các dạng bài CẦN ÔN LẠI HÔM NAY:
+  // - Chỉ bao gồm các dạng bài đã từng luyện (soLanLuyen > 0)
+  // - Đã đến hạn ôn tập ngắt quãng FSRS hôm nay hoặc quá hạn (ngayOnKeTiep <= endToday hoặc trangThai === "CAN_ON_LAI")
   const dangBaiCanOnList = danhSachDangBai
-    .filter(
-      (d) =>
-        d.trangThai === "CAN_ON_LAI" ||
-        (d.trangThai === "DANG_REN_LUYEN" && d.xacSuatHieuDung < 0.7)
-    )
+    .filter((d) => {
+      if (d.soLanLuyen === 0) return false;
+      const isDueTodayOrOverdue =
+        d.thongTinLich?.trangThaiLich === "DEN_HAN" ||
+        d.thongTinLich?.trangThaiLich === "QUA_HAN";
+      const isDueByDate = d.ngayOnKeTiep ? new Date(d.ngayOnKeTiep) <= endToday : false;
+      const isCanOnLai = d.trangThai === "CAN_ON_LAI";
+
+      return isDueTodayOrOverdue || isDueByDate || isCanOnLai;
+    })
     .sort((a, b) => {
-      // Ưu tiên dạng đến hạn ôn FSRS lên đầu, tiếp đến là dạng có pEff thấp nhất
-      if (a.trangThai === "CAN_ON_LAI" && b.trangThai !== "CAN_ON_LAI") return -1;
-      if (b.trangThai === "CAN_ON_LAI" && a.trangThai !== "CAN_ON_LAI") return 1;
-      return a.xacSuatHieuDung - b.xacSuatHieuDung;
+      // Ưu tiên: Quá hạn trước -> Đến hạn hôm nay -> Trí nhớ R thấp nhất
+      const priorityOrder = (item: typeof a) => {
+        if (item.thongTinLich?.trangThaiLich === "QUA_HAN") return 1;
+        if (item.thongTinLich?.trangThaiLich === "DEN_HAN") return 2;
+        if (item.trangThai === "CAN_ON_LAI") return 3;
+        return 4;
+      };
+
+      const diffPriority = priorityOrder(a) - priorityOrder(b);
+      if (diffPriority !== 0) return diffPriority;
+
+      return a.doNhoHienTai - b.doNhoHienTai;
     });
 
   const soDangThanhThao = danhSachDangBai.filter(
