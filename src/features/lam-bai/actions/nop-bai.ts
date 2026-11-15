@@ -39,35 +39,35 @@ export async function nopBaiTapAction(
   const dung =
     luaChonHocSinh.trim().toUpperCase() === dapAnDung.trim().toUpperCase();
 
-  // 1. Lưu bản ghi lần làm bài
-  await db.lanLamBai.create({
-    data: {
+  // 1 & 2. Lưu bản ghi lần làm bài và cập nhật Mô hình người học song song
+  const [, adaptiveUpdate] = await Promise.all([
+    db.lanLamBai.create({
+      data: {
+        nguoiDungId: session.user.id,
+        baiTapId: baiTap.id,
+        baiLam: luaChonHocSinh,
+        ketQua: dung ? "DUNG" : "SAI",
+        thoiGianGiay: thoiGianGiay,
+        lopId,
+      },
+    }),
+    capNhatMoHinhNguoiHoc({
       nguoiDungId: session.user.id,
       baiTapId: baiTap.id,
-      baiLam: luaChonHocSinh,
-      ketQua: dung ? "DUNG" : "SAI",
-      thoiGianGiay: thoiGianGiay,
+      chuDeId: baiTap.chuDeId,
+      dangBai: baiTap.dangBai,
+      mucDo: baiTap.mucDo,
+      loai: baiTap.loai,
+      dapAnJson: baiTap.dapAn,
+      dung,
+      thoiGianGiay,
+      doKhoIRT: baiTap.doKhoIRT,
+      doPhanBiet: baiTap.doPhanBiet,
+      soLanLam: baiTap.soLanLam,
+      soLanDung: baiTap.soLanDung,
       lopId,
-    },
-  });
-
-  // 2. Cập nhật Mô hình người học hợp nhất: BKT + IRT 3PL + PFA + FSRS
-  const adaptiveUpdate = await capNhatMoHinhNguoiHoc({
-    nguoiDungId: session.user.id,
-    baiTapId: baiTap.id,
-    chuDeId: baiTap.chuDeId,
-    dangBai: baiTap.dangBai,
-    mucDo: baiTap.mucDo,
-    loai: baiTap.loai,
-    dapAnJson: baiTap.dapAn,
-    dung,
-    thoiGianGiay,
-    doKhoIRT: baiTap.doKhoIRT,
-    doPhanBiet: baiTap.doPhanBiet,
-    soLanLam: baiTap.soLanLam,
-    soLanDung: baiTap.soLanDung,
-    lopId,
-  });
+    }),
+  ]);
 
   // 3. Tự động chọn câu hỏi tiếp theo trong Vùng phát triển gần (ZPD: P(correct) ~ 70%)
   const nextZPD = await chonCauHoiThichUngZPD({

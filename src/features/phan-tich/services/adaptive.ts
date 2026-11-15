@@ -60,27 +60,37 @@ export async function phanTichDiemYeuHocSinh(
 ) {
   const locLop = lopId ? { lopId } : {};
 
-  // 1. Lấy lịch sử làm bài của học sinh (chỉ trong lớp đang học)
-  const lanLamBais = await db.lanLamBai.findMany({
-    where: { nguoiDungId, ...locLop },
-    include: {
-      baiTap: {
-        include: {
-          chuDe: true,
+  // 1. Lấy hồ sơ NangLucDangBai + thống kê nhanh số câu đã làm/đúng song song (tránh kéo toàn bộ đề bài/lời giải cũ)
+  const [initialNangLucRecords, lanLamCounts] = await Promise.all([
+    db.nangLucDangBai.findMany({
+      where: { nguoiDungId, ...locLop },
+      include: { chuDe: { select: { ten: true } } },
+    }),
+    db.lanLamBai.groupBy({
+      by: ["ketQua"],
+      where: { nguoiDungId, ...locLop },
+      _count: true,
+    }),
+  ]);
+
+  let nangLucRecords = initialNangLucRecords;
+  const tongBaiDaLam = lanLamCounts.reduce((s, c) => s + c._count, 0);
+  const soBaiDung = lanLamCounts.find((c) => c.ketQua === "DUNG")?._count ?? 0;
+
+  // Tự động đồng bộ (Backfill) chỉ khi học sinh đã có lịch sử làm bài cũ nhưng chưa có NangLucDangBai
+  if (nangLucRecords.length === 0 && tongBaiDaLam > 0) {
+    const lanLamBais = await db.lanLamBai.findMany({
+      where: { nguoiDungId, ...locLop },
+      include: {
+        baiTap: {
+          include: {
+            chuDe: true,
+          },
         },
       },
-    },
-    orderBy: { thoiDiem: "asc" },
-  });
+      orderBy: { thoiDiem: "asc" },
+    });
 
-  // 2. Lấy hồ sơ NangLucDangBai hiện tại
-  let nangLucRecords = await db.nangLucDangBai.findMany({
-    where: { nguoiDungId, ...locLop },
-    include: { chuDe: true },
-  });
-
-  // Tự động đồng bộ (Backfill) nếu học sinh đã có lịch sử làm bài cũ trước khi nâng cấp bảng NangLucDangBai
-  if (nangLucRecords.length === 0 && lanLamBais.length > 0) {
     for (const item of lanLamBais) {
       await capNhatMoHinhNguoiHoc({
         nguoiDungId,
@@ -102,7 +112,7 @@ export async function phanTichDiemYeuHocSinh(
     }
     nangLucRecords = await db.nangLucDangBai.findMany({
       where: { nguoiDungId, ...locLop },
-      include: { chuDe: true },
+      include: { chuDe: { select: { ten: true } } },
     });
   }
 
@@ -255,8 +265,8 @@ export async function phanTichDiemYeuHocSinh(
   ).length;
 
   return {
-    tongBaiDaLam: lanLamBais.length,
-    soBaiDung: lanLamBais.filter((l) => l.ketQua === "DUNG").length,
+    tongBaiDaLam,
+    soBaiDung,
     soDangDaLuyen: danhSachDangBai.length,
     soDangThanhThao,
     soDangCanOn: dangBaiCanOnList.length,

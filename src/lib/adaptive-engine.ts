@@ -1,5 +1,18 @@
 import { db } from "@/lib/db";
+import { unstable_cache } from "next/cache";
 import { DANH_MUC_DANG_BAI } from "@/lib/danh-muc-dang-bai";
+
+const laySoCauTheoDangCached = unstable_cache(
+  async (chuDeId: string) => {
+    return db.baiTap.groupBy({
+      by: ["dangBai"],
+      where: { chuDeId },
+      _count: true,
+    });
+  },
+  ["so-cau-theo-dang-chude"],
+  { revalidate: 3600, tags: ["curriculum-stats"] }
+);
 import {
   FSRS_CONFIG,
   FSRSGrade,
@@ -525,8 +538,8 @@ export async function capNhatMoHinhNguoiHoc(params: {
     DANH_MUC_DANG_BAI[chuDeId]?.dangs[0]?.ten || "Dạng 1. Kiến thức trọng tâm";
   const dangBai = params.dangBai || fallbackDang;
 
-  // Lấy hồ sơ năng lực hiện tại và số câu trong ngân hàng của dạng bài này
-  const [hienTai, soCauTrongNganHang] = await Promise.all([
+  // Lấy hồ sơ năng lực hiện tại và số câu trong ngân hàng (từ cache) của dạng bài này
+  const [hienTai, dangsCount] = await Promise.all([
     db.nangLucDangBai.findUnique({
       where: {
         nguoiDungId_chuDeId_dangBai: {
@@ -536,10 +549,10 @@ export async function capNhatMoHinhNguoiHoc(params: {
         },
       },
     }),
-    db.baiTap.count({
-      where: { chuDeId, dangBai },
-    }),
+    laySoCauTheoDangCached(chuDeId),
   ]);
+  const soCauTrongNganHang =
+    dangsCount.find((d) => (d.dangBai || "") === dangBai)?._count ?? 0;
 
   const pLPrev = hienTai ? hienTai.xacSuatThanhThao : BKT_DEFAULTS.P_L0;
   const thetaPrev = hienTai ? hienTai.nangLucIRT : BKT_DEFAULTS.THETA_BASE;
@@ -703,56 +716,54 @@ export async function capNhatMoHinhNguoiHoc(params: {
 
   const soChuoiDungNew = dung ? soChuoiDungPrev + 1 : 0;
 
-  // 1. Lưu cập nhật vào bảng NangLucDangBai
-  const banGhiNangLuc = await db.nangLucDangBai.upsert({
-    where: {
-      nguoiDungId_chuDeId_dangBai: {
+  // 1-3. Lưu đồng thời cập nhật NangLucDangBai, thống kê câu hỏi và thẻ FSRS để giảm độ trễ
+  const [banGhiNangLuc] = await Promise.all([
+    db.nangLucDangBai.upsert({
+      where: {
+        nguoiDungId_chuDeId_dangBai: {
+          nguoiDungId,
+          chuDeId,
+          dangBai,
+        },
+      },
+      update: {
+        xacSuatThanhThao: pLNew,
+        nangLucIRT: thetaNew,
+        doBenTriNho: stabilityNew,
+        heSoDe: dNew,
+        soLanLuyen: { increment: 1 },
+        soLanDung: dung ? { increment: 1 } : undefined,
+        soChuoiDung: soChuoiDungNew,
+        lanLuyenCuoi: now,
+        ngayOnKeTiep,
+        lopId,
+      },
+      create: {
         nguoiDungId,
         chuDeId,
         dangBai,
+        lopId,
+        xacSuatThanhThao: pLNew,
+        nangLucIRT: thetaNew,
+        doBenTriNho: stabilityNew,
+        heSoDe: dNew,
+        soLanLuyen: 1,
+        soLanDung: dung ? 1 : 0,
+        soChuoiDung: soChuoiDungNew,
+        lanLuyenCuoi: now,
+        ngayOnKeTiep,
       },
-    },
-    update: {
-      xacSuatThanhThao: pLNew,
-      nangLucIRT: thetaNew,
-      doBenTriNho: stabilityNew,
-      heSoDe: dNew,
-      soLanLuyen: { increment: 1 },
-      soLanDung: dung ? { increment: 1 } : undefined,
-      soChuoiDung: soChuoiDungNew,
-      lanLuyenCuoi: now,
-      ngayOnKeTiep,
-      lopId,
-    },
-    create: {
-      nguoiDungId,
-      chuDeId,
-      dangBai,
-      lopId,
-      xacSuatThanhThao: pLNew,
-      nangLucIRT: thetaNew,
-      doBenTriNho: stabilityNew,
-      heSoDe: dNew,
-      soLanLuyen: 1,
-      soLanDung: dung ? 1 : 0,
-      soChuoiDung: soChuoiDungNew,
-      lanLuyenCuoi: now,
-      ngayOnKeTiep,
-    },
-  });
-
-  // 2. Cập nhật tham số câu hỏi (soLanLam, soLanDung, doKhoIRT hiệu chỉnh Elo)
-  await db.baiTap.update({
-    where: { id: baiTapId },
-    data: {
-      soLanLam: { increment: 1 },
-      soLanDung: dung ? { increment: 1 } : undefined,
-      doKhoIRT: bNew,
-    },
-  });
-
-  // 3. Đồng bộ thẻ ôn tập cấp câu hỏi cụ thể (TheOnTap)
-  await capNhatTheOnTapFSRS(nguoiDungId, baiTapId, fsrsGrade, now, lopId);
+    }),
+    db.baiTap.update({
+      where: { id: baiTapId },
+      data: {
+        soLanLam: { increment: 1 },
+        soLanDung: dung ? { increment: 1 } : undefined,
+        doKhoIRT: bNew,
+      },
+    }),
+    capNhatTheOnTapFSRS(nguoiDungId, baiTapId, fsrsGrade, now, lopId),
+  ]);
 
   const soLanLuyenMoi = soLanLuyenPrev + 1;
   const soLanDungMoi = soLanDungPrev + (dung ? 1 : 0);
@@ -828,11 +839,7 @@ export async function layNangLucTheoChuDe(
   const configDangs = DANH_MUC_DANG_BAI[chuDeId]?.dangs || [];
 
   const [dangsCount, userRecords] = await Promise.all([
-    db.baiTap.groupBy({
-      by: ["dangBai"],
-      where: { chuDeId },
-      _count: true,
-    }),
+    laySoCauTheoDangCached(chuDeId),
     nguoiDungId
       ? db.nangLucDangBai.findMany({
           where: { nguoiDungId, chuDeId },
@@ -1013,7 +1020,7 @@ export async function chonCauHoiThichUngZPD(params: {
     }
   }
 
-  // Truy vấn danh sách câu hỏi ứng viên kèm loại câu hỏi, đáp án và thống kê thực nghiệm
+  // Truy vấn danh sách câu hỏi ứng viên (bỏ cột dapAn nặng không cần thiết khi lọc ZPD)
   const candidates = await db.baiTap.findMany({
     where: {
       chuDeId,
@@ -1023,7 +1030,6 @@ export async function chonCauHoiThichUngZPD(params: {
     select: {
       id: true,
       loai: true,
-      dapAn: true,
       mucDo: true,
       dangBai: true,
       doKhoIRT: true,
@@ -1042,14 +1048,13 @@ export async function chonCauHoiThichUngZPD(params: {
       select: {
         id: true,
         loai: true,
-        dapAn: true,
         doKhoIRT: true,
         doPhanBiet: true,
         dangBai: true,
       },
     });
     if (!fallback) return null;
-    const cFallback = tinhXacSuatDoanMoC(fallback.loai, fallback.dapAn);
+    const cFallback = tinhXacSuatDoanMoC(fallback.loai);
     return {
       baiTapId: fallback.id,
       dangBai: fallback.dangBai,
@@ -1113,7 +1118,6 @@ export async function chonCauHoiThichUngZPD(params: {
       item.doPhanBiet,
       {
         loai: item.loai,
-        dapAnJson: item.dapAn,
         soLanLam: item.soLanLam,
         soLanDung: item.soLanDung,
       }

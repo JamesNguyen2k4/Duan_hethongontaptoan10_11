@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import {
   BookOpen,
   ArrowLeft,
@@ -24,6 +25,32 @@ import {
   phanLoaiTrangThaiDangBai,
 } from "@/lib/adaptive-engine";
 import { layLopHienTai, thongTinLop } from "@/lib/lop-context";
+
+const layDanhMucBaiTapCached = unstable_cache(
+  async (lopId: string) => {
+    return db.chuong.findMany({
+      where: { lopId },
+      orderBy: { thuTu: "asc" },
+      select: {
+        id: true,
+        ten: true,
+        chuDes: {
+          orderBy: { thuTu: "asc" },
+          select: {
+            id: true,
+            ten: true,
+            thuTu: true,
+            _count: {
+              select: { baiTaps: true },
+            },
+          },
+        },
+      },
+    });
+  },
+  ["danh-muc-bai-tap"],
+  { revalidate: 3600, tags: ["curriculum-stats"] }
+);
 
 export const dynamic = "force-dynamic";
 
@@ -460,24 +487,10 @@ export default async function BaiTapIndexPage({ searchParams }: Props) {
   const lopInfo = thongTinLop(lopId);
 
   const [chuongs, allUserMastery] = await Promise.all([
-    db.chuong.findMany({
-      where: { lopId },
-      orderBy: { thuTu: "asc" },
-      include: {
-        chuDes: {
-          orderBy: { thuTu: "asc" },
-          include: {
-            _count: {
-              select: { baiTaps: true },
-            },
-          },
-        },
-      },
-    }),
+    layDanhMucBaiTapCached(lopId),
     userId
       ? db.nangLucDangBai.findMany({
           where: { nguoiDungId: userId, lopId },
-          include: { chuDe: true },
         })
       : Promise.resolve([]),
   ]);

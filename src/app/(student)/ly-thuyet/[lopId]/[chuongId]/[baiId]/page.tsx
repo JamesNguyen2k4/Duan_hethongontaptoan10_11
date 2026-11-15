@@ -18,18 +18,35 @@ export const dynamic = "force-dynamic";
 export default async function BaiLyThuyetDetailPage({ params }: Props) {
   const { lopId, chuongId, baiId } = params;
 
-  const bai = await db.bai.findUnique({
-    where: { id: baiId },
-    include: {
-      chuong: {
-        include: {
-          bais: {
-            orderBy: { thuTu: "asc" },
+  const [bai, chuDesInChuong] = await Promise.all([
+    db.bai.findUnique({
+      where: { id: baiId },
+      include: {
+        chuong: {
+          include: {
+            bais: {
+              orderBy: { thuTu: "asc" },
+              select: {
+                id: true,
+                tieu_de: true,
+                thuTu: true,
+              },
+            },
           },
         },
       },
-    },
-  });
+    }),
+    db.chuDe.findMany({
+      where: { chuongId: chuongId },
+      select: {
+        id: true,
+        thuTu: true,
+        _count: {
+          select: { baiTaps: true },
+        },
+      },
+    }),
+  ]);
 
   if (!bai) {
     notFound();
@@ -40,15 +57,7 @@ export default async function BaiLyThuyetDetailPage({ params }: Props) {
   const prevBai = currentIndex > 0 ? bai.chuong.bais[currentIndex - 1] : null;
   const nextBai = currentIndex < bai.chuong.bais.length - 1 ? bai.chuong.bais[currentIndex + 1] : null;
 
-  // Lấy câu hỏi liên quan đến bài này
-  const chuDe = await db.chuDe.findFirst({
-    where: { chuongId: chuongId, thuTu: bai.thuTu },
-    include: {
-      _count: {
-        select: { baiTaps: true }
-      }
-    }
-  });
+  const chuDe = chuDesInChuong.find((c) => c.thuTu === bai.thuTu) ?? null;
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">

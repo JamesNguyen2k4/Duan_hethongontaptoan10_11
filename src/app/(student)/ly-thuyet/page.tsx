@@ -1,30 +1,44 @@
 import { db } from "@/lib/db";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { BookOpen, ArrowRight } from "lucide-react";
 import { layLopHienTai, thongTinLop } from "@/lib/lop-context";
 
 export const dynamic = "force-dynamic";
 
-export default async function LyThuyetIndexPage() {
-  const lopId = await layLopHienTai();
-  const lopInfo = thongTinLop(lopId);
-
-  const lopData = await db.lop.findFirst({
-    where: { id: lopId },
-    include: {
-      chuongs: {
-        orderBy: { thuTu: "asc" },
-        include: {
-          bais: {
-            orderBy: { thuTu: "asc" },
-            include: {
-              tienDos: true,
+const layMucLucLyThuyetCached = unstable_cache(
+  async (lopId: string) => {
+    return db.lop.findFirst({
+      where: { id: lopId },
+      select: {
+        id: true,
+        chuongs: {
+          orderBy: { thuTu: "asc" },
+          select: {
+            id: true,
+            ten: true,
+            bais: {
+              orderBy: { thuTu: "asc" },
+              select: {
+                id: true,
+                tieu_de: true,
+                thuTu: true,
+              },
             },
           },
         },
       },
-    },
-  });
+    });
+  },
+  ["muc-luc-ly-thuyet"],
+  { revalidate: 3600, tags: ["curriculum-stats"] }
+);
+
+export default async function LyThuyetIndexPage() {
+  const lopId = await layLopHienTai();
+  const lopInfo = thongTinLop(lopId);
+
+  const lopData = await layMucLucLyThuyetCached(lopId);
 
   const soChuong = lopData?.chuongs.length ?? 0;
 

@@ -23,10 +23,13 @@ export function thongTinLop(id: string) {
 
 /**
  * Lấy lớp học sinh đang học (ngữ cảnh hiển thị).
- * Thứ tự ưu tiên: NguoiDung.lopDangHocId → cookie → mặc định lớp 11.
+ * Thứ tự ưu tiên: Cookie (nhanh, 0 DB query) → NguoiDung.lopDangHocId → mặc định lớp 11.
  * Được cache trong 1 request.
  */
 export const layLopHienTai = cache(async (): Promise<LopId> => {
+  const c = cookies().get(COOKIE_LOP)?.value;
+  if (laLopHopLe(c)) return c;
+
   const session = await auth();
   const userId = session?.user?.id;
 
@@ -37,9 +40,6 @@ export const layLopHienTai = cache(async (): Promise<LopId> => {
     });
     if (laLopHopLe(u?.lopDangHocId)) return u!.lopDangHocId as LopId;
   }
-
-  const c = cookies().get(COOKIE_LOP)?.value;
-  if (laLopHopLe(c)) return c;
 
   return LOP_MAC_DINH;
 });
