@@ -1,8 +1,9 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, BookOpen, Layers, Users, LogOut, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, BookOpen, Layers, Users, LogOut, ShieldCheck, Bell } from "lucide-react";
 import { NutDangXuat } from "@/components/shared/NutDangXuat";
+import { ThongBaoDropdown } from "@/components/shared/ThongBaoDropdown";
 
 export default async function AdminLayout({
   children,
@@ -81,8 +82,34 @@ export default async function AdminLayout({
       </aside>
 
       {/* Main Admin Area */}
-      <main className="flex-1 overflow-y-auto">
-        {children}
+      <main className="flex-1 overflow-y-auto flex flex-col">
+        {/* Top bar */}
+        <header className="h-16 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between shrink-0 shadow-xs">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+              Cổng Giáo Viên & Quản Trị
+            </span>
+            <span className="hidden sm:inline text-xs text-slate-400">|</span>
+            <span className="hidden sm:inline text-xs text-slate-500 font-medium">
+              Thông báo hỏi đáp thời gian thực
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <ThongBaoDropdown />
+            <Link
+              href="/dashboard"
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 transition-colors"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+              Xem web Học sinh
+            </Link>
+          </div>
+        </header>
+
+        <div className="flex-1">
+          {children}
+        </div>
       </main>
     </div>
   );

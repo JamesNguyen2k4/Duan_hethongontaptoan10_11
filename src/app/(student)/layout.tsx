@@ -4,6 +4,7 @@ import Link from "next/link";
 import { layLopHienTai } from "@/lib/lop-context";
 import { BoChuyenLop } from "@/components/shared/BoChuyenLop";
 import { NutDangXuat } from "@/components/shared/NutDangXuat";
+import { ThongBaoDropdown } from "@/components/shared/ThongBaoDropdown";
 import {
   ThanhDieuHuongNav,
   MobileBottomNav,
@@ -36,6 +37,7 @@ export default async function StudentLayout({
               Quản trị
             </Link>
           )}
+          <ThongBaoDropdown />
           <BoChuyenLop lopHienTai={lopHienTai} />
           <NutDangXuat />
         </div>
@@ -51,6 +53,7 @@ export default async function StudentLayout({
         </Link>
         <ThanhDieuHuongNav vaiTro={session.user?.role} />
         <div className="ml-auto flex items-center gap-3">
+          <ThongBaoDropdown />
           <BoChuyenLop lopHienTai={lopHienTai} />
           <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
             {session.user?.name}

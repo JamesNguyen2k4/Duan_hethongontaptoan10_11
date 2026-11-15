@@ -8,6 +8,8 @@ import {
   layLopIdTuBaiTap,
   layLopIdTuChuDe,
 } from "@/lib/lop-context";
+import { taoThongBaoChoTatCaGiaoVien } from "@/features/thong-bao/actions/thong-bao-actions";
+import { guiThongBaoBaiVietMoiTelegram } from "@/lib/telegram";
 
 export interface DuLieuAnhUpload {
   base64: string;
@@ -72,6 +74,33 @@ export async function taoBaiVietAction(params: {
 
       return baiViet;
     });
+
+    // Thông báo cho Giáo viên & Quản trị viên (In-app + Telegram)
+    try {
+      const nguoiDangTen = session.user.name || "Học sinh";
+      const tieuDeThongBao = `Bài hỏi mới từ ${nguoiDangTen}`;
+      const noiDungThongBao = `${tieuDe.slice(0, 100)}`;
+      const duongDan = `/dien-dan/${baiVietMoi.id}`;
+
+      // 1. Tạo thông báo trong hệ thống (In-app)
+      await taoThongBaoChoTatCaGiaoVien({
+        tieuDe: tieuDeThongBao,
+        noiDung: noiDungThongBao,
+        duongDan,
+        loai: "BAI_VIET_MOI",
+      });
+
+      // 2. Bắn tin nhắn qua Telegram Bot (không await để phản hồi cho học sinh ngay)
+      guiThongBaoBaiVietMoiTelegram({
+        tieuDe,
+        noiDung: noiDung || "Học sinh đính kèm ảnh bài làm chi tiết",
+        nguoiDangTen,
+        lopId,
+        baiVietId: baiVietMoi.id,
+      }).catch((err) => console.warn("Lỗi gửi Telegram Bot:", err));
+    } catch (errThongBao) {
+      console.warn("Lỗi tạo thông báo cho giáo viên:", errThongBao);
+    }
 
     revalidatePath("/dien-dan");
     return { ok: true, baiVietId: baiVietMoi.id };

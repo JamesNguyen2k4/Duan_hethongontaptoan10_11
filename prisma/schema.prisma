@@ -47,6 +47,7 @@ model NguoiDung {
   baiViets        BaiViet[]
   binhLuans       BinhLuan[]
   baoCaos         BaoCao[]
+  thongBaos       ThongBao[]
 
   @@map("nguoi_dung")
 }
@@ -411,4 +412,30 @@ model BaoCao {
   binhLuan  BinhLuan? @relation(fields: [binhLuanId], references: [id])
 
   @@map("bao_cao")
+}
+
+// ─────────────────────────────────────────────
+// THÔNG BÁO HỆ THỐNG
+// ─────────────────────────────────────────────
+
+enum LoaiThongBao {
+  BAI_VIET_MOI
+  BINH_LUAN_MOI
+  BAO_CAO_VI_PHAM
+}
+
+model ThongBao {
+  id          String        @id @default(cuid())
+  nguoiNhanId String
+  tieuDe      String
+  noiDung     String
+  duongDan    String
+  loai        LoaiThongBao  @default(BAI_VIET_MOI)
+  daDoc       Boolean       @default(false)
+  taoLuc      DateTime      @default(now())
+
+  nguoiNhan   NguoiDung     @relation(fields: [nguoiNhanId], references: [id], onDelete: Cascade)
+
+  @@index([nguoiNhanId, daDoc, taoLuc(sort: Desc)])
+  @@map("thong_bao")
 }
