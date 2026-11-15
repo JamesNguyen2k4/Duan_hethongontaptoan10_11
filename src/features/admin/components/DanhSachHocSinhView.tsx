@@ -130,7 +130,7 @@ export function DanhSachHocSinhView({
             <span className="text-xs font-bold uppercase tracking-wider">Thành thạo TB</span>
             <TrendingUp className="w-4 h-4 text-amber-600" />
           </div>
-          <div className="text-3xl font-black text-slate-900">{stats.avgMastery}%</div>
+          <div className="text-3xl font-black text-slate-900">{stats.avgMastery.toFixed(1)}%</div>
           <p className="text-xs text-slate-400">Độ thành thạo trung bình</p>
         </div>
       </div>
@@ -277,7 +277,7 @@ export function DanhSachHocSinhView({
                       {/* Tỉ lệ câu đúng */}
                       <td className="py-3.5 px-3 text-center">
                         <div className="font-bold text-slate-800">
-                          {hs.tiLeDung}%
+                          {Number(hs.tiLeDung).toFixed(1)}%
                         </div>
                         <div className="text-[10px] text-slate-400">
                           {hs.soCauDung}/{hs.tongCauDaLam} câu
@@ -298,7 +298,7 @@ export function DanhSachHocSinhView({
                                 : "bg-slate-100 text-slate-500"
                             }`}
                           >
-                            {hs.doThanhThaoTB}%
+                            {Number(hs.doThanhThaoTB).toFixed(1)}%
                           </span>
                         </div>
                       </td>

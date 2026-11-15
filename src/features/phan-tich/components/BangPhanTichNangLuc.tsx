@@ -80,7 +80,7 @@ export function BangPhanTichNangLuc({ data }: Props) {
 
   const tiLeTong =
     data.tongBaiDaLam > 0
-      ? Math.round((data.soBaiDung / data.tongBaiDaLam) * 100)
+      ? Number(((data.soBaiDung / data.tongBaiDaLam) * 100).toFixed(1))
       : 0;
 
   const danhSachDangBai = data.danhSachDangBai || [];
@@ -99,7 +99,7 @@ export function BangPhanTichNangLuc({ data }: Props) {
               {data.tongBaiDaLam}
             </span>
             <span className="text-xs text-slate-400">
-              câu ({tiLeTong}% chính xác)
+              câu ({Number(tiLeTong).toFixed(1)}% chính xác)
             </span>
           </div>
         </div>

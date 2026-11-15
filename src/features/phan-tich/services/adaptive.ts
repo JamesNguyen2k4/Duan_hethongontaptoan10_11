@@ -198,7 +198,7 @@ export async function phanTichDiemYeuHocSinh(
     const doThanhThao = Number((g.sumPEff / totalDangsInChuDe).toFixed(2));
     const doNhoTrungBinh = Number((g.sumR / g.countDang).toFixed(2));
     const nangLucIRT = Number((g.sumTheta / g.countDang).toFixed(2));
-    const tiLeDung = Number(((g.soDung / Math.max(1, g.tongLam)) * 100).toFixed(0));
+    const tiLeDung = Number(((g.soDung / Math.max(1, g.tongLam)) * 100).toFixed(1));
     const laDiemYeu = doThanhThao < 0.65;
 
     const item: ThongKeChuDe = {

@@ -136,7 +136,9 @@ export async function layDanhSachHocSinhAction({
     const tongCauDaLam = filteredLanLam.length;
     const soCauDung = filteredLanLam.filter((l) => l.ketQua === "DUNG").length;
     const tiLeDung =
-      tongCauDaLam > 0 ? Math.round((soCauDung / tongCauDaLam) * 100) : 0;
+      tongCauDaLam > 0
+        ? Number(((soCauDung / tongCauDaLam) * 100).toFixed(1))
+        : 0;
 
     const soDangThanhThao = filteredNangLuc.filter(
       (n) => n.xacSuatThanhThao >= 0.85
@@ -146,10 +148,12 @@ export async function layDanhSachHocSinhAction({
     const practicedNangLuc = filteredNangLuc.filter((n) => n.soLanLuyen > 0);
     const doThanhThaoTB =
       practicedNangLuc.length > 0
-        ? Math.round(
-            (practicedNangLuc.reduce((acc, cur) => acc + cur.xacSuatThanhThao, 0) /
-              practicedNangLuc.length) *
+        ? Number(
+            (
+              (practicedNangLuc.reduce((acc, cur) => acc + cur.xacSuatThanhThao, 0) /
+                practicedNangLuc.length) *
               100
+            ).toFixed(1)
           )
         : 0;
 
@@ -301,7 +305,10 @@ export async function layBaoCaoChiTietHocSinhAction(
           soLanLuyenPhien,
           soCauDaLam,
           soCauDung,
-          tiLeDung: soCauDaLam > 0 ? Math.round((soCauDung / soCauDaLam) * 100) : 0,
+          tiLeDung:
+            soCauDaLam > 0
+              ? Number(((soCauDung / soCauDaLam) * 100).toFixed(1))
+              : 0,
           ngayOnKeTiep: nangLuc?.ngayOnKeTiep || null,
           lanLuyenCuoi: nangLuc?.lanLuyenCuoi || historyForDang[0]?.thoiDiemKetThuc || null,
           trangThai: (mastery >= 85
@@ -327,7 +334,7 @@ export async function layBaoCaoChiTietHocSinhAction(
                 soCauDung: h.soCauDung,
                 tiLeDung:
                   h.soCauDaLam > 0
-                    ? Math.round((h.soCauDung / h.soCauDaLam) * 100)
+                    ? Number(((h.soCauDung / h.soCauDaLam) * 100).toFixed(1))
                     : 0,
                 thoiGianGiay: h.thoiGianGiay,
                 thoiDiemKetThuc: h.thoiDiemKetThuc,
@@ -373,7 +380,10 @@ export async function layBaoCaoChiTietHocSinhAction(
                   doThanhThao: mVal,
                   soCauDaLam: soLam,
                   soCauDung: soDung,
-                  tiLeDung: soLam > 0 ? Math.round((soDung / soLam) * 100) : 0,
+                  tiLeDung:
+                    soLam > 0
+                      ? Number(((soDung / soLam) * 100).toFixed(1))
+                      : 0,
                   thoiGianGiay: s.reduce((acc, cur) => acc + (cur.thoiGianGiay || 30), 0),
                   thoiDiemKetThuc: endTime,
                 };
@@ -484,7 +494,9 @@ export async function layBaoCaoChiTietHocSinhAction(
   const tongSoCauLam = student.lanLamBais.filter((l) => (l.lopId || "lop-10") === selectedLopId).length;
   const soCauDung = student.lanLamBais.filter((l) => (l.lopId || "lop-10") === selectedLopId && l.ketQua === "DUNG").length;
   const tiLeDung =
-    tongSoCauLam > 0 ? Math.round((soCauDung / tongSoCauLam) * 100) : 0;
+    tongSoCauLam > 0
+      ? Number(((soCauDung / tongSoCauLam) * 100).toFixed(1))
+      : 0;
 
   const doThanhThaoTB =
     totalDangsInGrade > 0

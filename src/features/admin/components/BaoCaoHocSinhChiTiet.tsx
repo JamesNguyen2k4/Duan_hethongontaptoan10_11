@@ -228,7 +228,7 @@ export function BaoCaoHocSinhChiTiet({ data }: Props) {
             <TrendingUp className="w-4 h-4 text-blue-600" />
           </div>
           <div className="text-3xl font-black text-slate-900">
-            {tongQuan.doThanhThaoTB}%
+            {Number(tongQuan.doThanhThaoTB).toFixed(1)}%
           </div>
           <p className="text-xs text-slate-400">Trung bình trên toàn bộ chương trình</p>
         </div>
@@ -250,7 +250,7 @@ export function BaoCaoHocSinhChiTiet({ data }: Props) {
             <Award className="w-4 h-4 text-amber-600" />
           </div>
           <div className="text-3xl font-black text-slate-900">
-            {tongQuan.tiLeDung}%
+            {Number(tongQuan.tiLeDung).toFixed(1)}%
           </div>
           <p className="text-xs text-slate-400">
             {tongQuan.soCauDung} / {tongQuan.tongSoCauLam} câu nộp đúng
@@ -341,7 +341,7 @@ export function BaoCaoHocSinhChiTiet({ data }: Props) {
                                     : "text-amber-700"
                                 }
                               >
-                                {bai.doThanhThaoBai}%
+                                {Number(bai.doThanhThaoBai).toFixed(1)}%
                               </span>
                             </div>
                             <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
@@ -447,7 +447,7 @@ export function BaoCaoHocSinhChiTiet({ data }: Props) {
                                                 : "bg-slate-100 text-slate-400"
                                             }`}
                                           >
-                                            {dang.doThanhThao}%
+                                            {Number(dang.doThanhThao).toFixed(1)}%
                                           </span>
                                         </td>
                                         <td className="py-3 px-3 text-center">
@@ -465,7 +465,7 @@ export function BaoCaoHocSinhChiTiet({ data }: Props) {
                                             {dang.soCauDung} / {dang.soCauDaLam} câu
                                           </span>
                                           {dang.soCauDaLam > 0 && (
-                                            <div className="text-[10px] text-slate-400">({dang.tiLeDung}%)</div>
+                                            <div className="text-[10px] text-slate-400">({Number(dang.tiLeDung).toFixed(1)}%)</div>
                                           )}
                                         </td>
                                         <td className="py-3 px-3 text-right text-slate-500">
@@ -502,7 +502,7 @@ export function BaoCaoHocSinhChiTiet({ data }: Props) {
                                                     Tổng số lần luyện: <strong>{dang.soLanLuyenPhien} lần</strong>
                                                   </span>
                                                   <span className="bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-lg text-indigo-700 font-bold">
-                                                    Thành thạo hiện tại: <strong>{dang.doThanhThao}%</strong>
+                                                    Thành thạo hiện tại: <strong>{Number(dang.doThanhThao).toFixed(1)}%</strong>
                                                   </span>
                                                 </div>
                                               </div>
@@ -614,7 +614,7 @@ export function BaoCaoHocSinhChiTiet({ data }: Props) {
                                                             const prevLan = idx > 0 ? dang.cacLanLuyen[idx - 1] : null;
                                                             const delta = prevLan ? Number((lan.doThanhThao - prevLan.doThanhThao).toFixed(1)) : null;
                                                             const phut = Number(((lan.thoiGianGiay || 30) / 60).toFixed(1));
-                                                            const tiLe = lan.tiLeDung ?? (lan.soCauDaLam > 0 ? Math.round((lan.soCauDung / lan.soCauDaLam) * 100) : 0);
+                                                            const tiLe = lan.tiLeDung ?? (lan.soCauDaLam > 0 ? Number(((lan.soCauDung / lan.soCauDaLam) * 100).toFixed(1)) : 0);
 
                                                             return (
                                                               <tr key={lan.id || idx} className="hover:bg-slate-50/50">
@@ -643,7 +643,7 @@ export function BaoCaoHocSinhChiTiet({ data }: Props) {
                                                                         : "bg-amber-100 text-amber-800"
                                                                     }`}
                                                                   >
-                                                                    {tiLe}%
+                                                                    {Number(tiLe).toFixed(1)}%
                                                                   </span>
                                                                 </td>
                                                                 <td className="py-2.5 px-3 text-center text-slate-500">
@@ -660,7 +660,7 @@ export function BaoCaoHocSinhChiTiet({ data }: Props) {
                                                                           : "bg-amber-100 text-amber-800 border border-amber-200"
                                                                       }`}
                                                                     >
-                                                                      {lan.doThanhThao}%
+                                                                      {Number(lan.doThanhThao).toFixed(1)}%
                                                                     </span>
                                                                     {delta !== null && delta !== 0 && (
                                                                       <span
@@ -768,7 +768,7 @@ export function BaoCaoHocSinhChiTiet({ data }: Props) {
                         const d = payload[0].payload;
                         return (
                           <div className="bg-slate-900 text-white p-3 rounded-xl text-xs space-y-1 shadow-lg border border-slate-800">
-                            <p className="font-bold text-amber-300">{d.lanThu}: {d.doThanhThao}% Thành thạo</p>
+                            <p className="font-bold text-amber-300">{d.lanThu}: {Number(d.doThanhThao).toFixed(1)}% Thành thạo</p>
                             <p className="text-slate-300">{d.dangBai}</p>
                             <p className="text-[11px] text-slate-400">
                               Làm đúng: {d.soCauDung}/{d.soCauDaLam} câu ({d.thoiGianPhut} phút)
@@ -843,7 +843,7 @@ export function BaoCaoHocSinhChiTiet({ data }: Props) {
                               : "bg-amber-100 text-amber-800 border border-amber-200"
                           }`}
                         >
-                          {phien.doThanhThao}%
+                          {Number(phien.doThanhThao).toFixed(1)}%
                         </span>
                       </td>
                       <td className="py-3 px-3 text-right text-slate-500">
